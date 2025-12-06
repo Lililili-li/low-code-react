@@ -1,0 +1,20 @@
+{
+  "login": {
+    "welcome": "Welcome",
+    "description": "Log in with GitHub or account",
+    "scanCode": "Log in with GitHub",
+    "otherMethod": "Login in other ways",
+    "account": "Username",
+    "password": "Password",
+    "remember": "Remember password",
+    "forgetPassword": "Forgot your password?",
+    "login": "Login"
+  },
+   "theme": {
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "message": {
+    "loginSuccess": "Login success"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "login": {
+    "welcome": "欢迎使用",
+    "description": "使用 GitHub 或账号登录",
+    "scanCode": "使用GitHub登录",
+    "otherMethod": "其他方式登录",
+    "account": "用户名",
+    "password": "密码",
+    "remember": "记住我",
+    "forgetPassword": "忘记密码？",
+    "login": "登录"
+  },
+  "theme": {
+    "light": "明亮",
+    "dark": "黑暗"
+  },
+  "message": {
+    "loginSuccess": "登录成功",
+    "noAuth": "授权过期 请重新登录"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@repo/shared",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint \"**/*.ts\""
+  },
+  "peerDependencies": {
+    "axios": "^1.13.2",
+    "@douyinfe/semi-ui": "^2.88.3",
+    "sonner": "^2.0.7"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "eslint": "^8.57.0",
+    "typescript": "5.5.4"
+  }
+}

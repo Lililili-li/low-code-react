@@ -1,0 +1,14 @@
+{
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "cSpell.words": [
+    "ahooks",
+    "doucreator",
+    "douyinfe",
+    "partialize",
+    "unocss"
+  ]
+}

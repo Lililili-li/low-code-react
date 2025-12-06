@@ -1,0 +1,122 @@
+<svg
+  width="64"
+  height="64"
+  viewBox="0 0 64 64"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 深蓝野兽渐变 -->
+    <linearGradient id="beastGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E40AF" />
+      <stop offset="50%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#60A5FA" />
+    </linearGradient>
+    <!-- 爪痕 - 冷蓝色 -->
+    <linearGradient id="clawGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#93C5FD" />
+    </linearGradient>
+    <!-- 科技青蓝 -->
+    <linearGradient id="techGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5E9" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+    <!-- 眼睛 - 冰蓝发光 -->
+    <linearGradient id="eyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7DD3FC" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+    <!-- 发光效果 -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="eyeGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景弧线 -->
+  <path
+    d="M32 2 A30 30 0 0 1 58 22"
+    stroke="url(#techGradient)"
+    stroke-width="2"
+    stroke-linecap="round"
+    fill="none"
+    opacity="0.5"
+  />
+  <path
+    d="M60 35 A30 30 0 0 1 40 60"
+    stroke="url(#beastGradient)"
+    stroke-width="2"
+    stroke-linecap="round"
+    fill="none"
+    opacity="0.5"
+  />
+  <path
+    d="M25 60 A30 30 0 0 1 4 30"
+    stroke="url(#techGradient)"
+    stroke-width="2"
+    stroke-linecap="round"
+    fill="none"
+    opacity="0.5"
+  />
+
+  <!-- 野兽头部 -->
+  <g filter="url(#glow)">
+    <path
+      d="M32 8 L48 18 L48 38 L32 52 L16 38 L16 18 Z"
+      fill="url(#beastGradient)"
+      opacity="0.9"
+    />
+    <!-- 尖耳朵 -->
+    <path d="M16 18 L8 6 L20 14 Z" fill="url(#beastGradient)" opacity="0.9" />
+    <path d="M48 18 L56 6 L44 14 Z" fill="url(#beastGradient)" opacity="0.9" />
+  </g>
+
+  <!-- 眼睛 -->
+  <g filter="url(#eyeGlow)">
+    <ellipse cx="24" cy="26" rx="4" ry="5" fill="url(#eyeGradient)" />
+    <ellipse cx="40" cy="26" rx="4" ry="5" fill="url(#eyeGradient)" />
+    <!-- 竖瞳 -->
+    <ellipse cx="24" cy="26" rx="1.5" ry="4" fill="#0F172A" />
+    <ellipse cx="40" cy="26" rx="1.5" ry="4" fill="#0F172A" />
+    <!-- 高光 -->
+    <circle cx="22" cy="24" r="1" fill="white" opacity="0.8" />
+    <circle cx="38" cy="24" r="1" fill="white" opacity="0.8" />
+  </g>
+
+  <!-- AI 电路纹路 -->
+  <g stroke="url(#techGradient)" stroke-width="1" fill="none" opacity="0.6">
+    <path d="M32 18 L32 22 L28 26" />
+    <path d="M32 22 L36 26" />
+    <path d="M24 34 L32 38 L40 34" />
+    <circle cx="32" cy="22" r="1.5" fill="url(#techGradient)" />
+  </g>
+
+  <!-- 獠牙 -->
+  <g fill="#E2E8F0" opacity="0.9">
+    <path d="M22 40 L24 50 L26 40 Z" />
+    <path d="M38 40 L40 50 L42 40 Z" />
+  </g>
+
+  <!-- 爪痕 -->
+  <g stroke="url(#clawGradient)" stroke-width="2" stroke-linecap="round" opacity="0.7">
+    <path d="M50 44 L58 56" />
+    <path d="M53 42 L61 54" />
+    <path d="M56 40 L64 52" />
+  </g>
+
+  <!-- 低代码积木 -->
+  <g opacity="0.8">
+    <rect x="2" y="44" width="12" height="8" rx="2" fill="url(#techGradient)" />
+    <rect x="6" y="50" width="12" height="8" rx="2" fill="url(#techGradient)" opacity="0.6" />
+  </g>
+</svg>

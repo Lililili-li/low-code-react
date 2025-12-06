@@ -1,0 +1,47 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --clearScreen false",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@douyinfe/semi-icons": "^2.88.3",
+    "@hookform/resolvers": "^5.2.2",
+    "@repo/ui": "workspace:*",
+    "@tailwindcss/vite": "^4.1.17",
+    "ahooks": "^3.9.6",
+    "axios": "^1.13.2",
+    "i18next": "^25.7.1",
+    "immer": "^11.0.1",
+    "less": "^4.4.2",
+    "lucide-react": "^0.555.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-hook-form": "^7.68.0",
+    "react-i18next": "^16.3.5",
+    "react-router": "^7.10.0",
+    "scss": "^0.2.4",
+    "sonner": "^2.0.7",
+    "tailwindcss": "^4.1.17",
+    "vite-plugin-semi-theme": "^0.6.0",
+    "zod": "^3.25.76",
+    "zustand": "^5.0.9"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^8.57.0",
+    "typescript": "5.9.2",
+    "vite": "^7.2.6"
+  }
+}
