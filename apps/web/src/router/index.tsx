@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Login = lazy(() => import('@/pages/Login'));
-const Manage = lazy(() => import('@/layout/manage'));
+const Layout = lazy(() => import('@/layout'));
 const Dashboard = lazy(() => import('@/pages/manage/Dashboard'));
 
 const router = createBrowserRouter([{
@@ -14,7 +14,7 @@ const router = createBrowserRouter([{
     {
       path: 'manage',
       element: <Suspense fallback={<LoadingSpinner />}>
-        <Manage />
+        <Layout />
       </Suspense>,
       children: [
         {

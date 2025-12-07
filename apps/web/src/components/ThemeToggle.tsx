@@ -17,8 +17,8 @@ export default function ThemeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8">
-          {theme === 'light' && <Sun className="scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" style={{ width: 20, height: 20 }} />}
-          {theme === 'dark' && <Moon className="absolute scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" style={{ width: 20, height: 20 }} />}
+          {theme === 'light' && <Sun style={{ width: 20, height: 20 }} />}
+          {theme === 'dark' && <Moon style={{ width: 20, height: 20 }} />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
