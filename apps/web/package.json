@@ -11,11 +11,13 @@
   },
   "dependencies": {
     "@douyinfe/semi-icons": "^2.88.3",
+    "@douyinfe/semi-icons-lab": "^2.89.0",
     "@hookform/resolvers": "^5.2.2",
     "@repo/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.17",
     "ahooks": "^3.9.6",
     "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
     "i18next": "^25.7.1",
     "immer": "^11.0.1",
     "less": "^4.4.2",

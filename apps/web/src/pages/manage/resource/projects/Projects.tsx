@@ -1,0 +1,186 @@
+import { Card, CardTitle } from '@/components/Card';
+import { Button } from '@repo/ui/components/button';
+import { CircleX, Search } from 'lucide-react';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupButton,
+} from '@repo/ui/components/input-group';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@repo/ui/components/table';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from '@repo/ui/components/empty';
+import Pagination from '@/components/Pagination';
+import { useState } from 'react';
+import CreateProject from './CreateProject';
+import projectApi from '@/api/project';
+import { useRequest } from 'ahooks';
+import dayjs from 'dayjs';
+import { IconEmpty } from '@douyinfe/semi-icons-lab';
+import { Spinner } from '@repo/ui/components/spinner';
+import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
+
+const Projects = () => {
+  const {
+    data: projects,
+    loading,
+    runAsync: getProjects,
+  } = useRequest(() => projectApi.getProjects(queryParams), {
+    onSuccess: (data) => {
+      data.list = data.list.map((item) => {
+        item.created_at = dayjs(item.created_at).format('YYYY-MM-DD HH:mm:ss');
+        item.updated_at = dayjs(item.updated_at).format('YYYY-MM-DD HH:mm:ss');
+        return item;
+      });
+    },
+  });
+
+  const [queryParams, setQueryParams] = useState({
+    page: 1,
+    size: 10,
+    name: '',
+  });
+
+  const handleDeleteProject = async (id: number) => {
+    await projectApi.deleteProject(id);
+    toast.success('删除成功');
+    getProjects();
+  };
+
+  return (
+    <div className="projects-container flex flex-col h-full">
+      <Card>
+        <CardTitle>
+          <div className="flex justify-between items-center">
+            <InputGroup className="w-[240px] h-[32px] group">
+              <InputGroupInput
+                placeholder="请输入项目名称"
+                className="w-[240px]"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    getProjects();
+                  }
+                }}
+                value={queryParams.name}
+                onChange={(e) => {
+                  setQueryParams({ ...queryParams, name: e.target.value });
+                }}
+              />
+              <InputGroupAddon>
+                <Search />
+              </InputGroupAddon>
+              {queryParams.name && (
+                <InputGroupButton asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-[50%] size-5 mr-1 opacity-0 group-focus-within:opacity-100 transition-opacity"
+                    onClick={() => setQueryParams({ ...queryParams, name: '' })}
+                  >
+                    <CircleX className="size-4" />
+                  </Button>
+                </InputGroupButton>
+              )}
+            </InputGroup>
+            <CreateProject getProjects={getProjects} />
+          </div>
+        </CardTitle>
+      </Card>
+      <Card className="mt-4 flex-1">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">ID</TableHead>
+              <TableHead>名称</TableHead>
+              <TableHead className="w-[300px]">描述</TableHead>
+              <TableHead>创建人</TableHead>
+              <TableHead>创建时间</TableHead>
+              <TableHead>更新时间</TableHead>
+              <TableHead>操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {!loading && projects?.total! > 0 && (
+              <>
+                {projects?.list?.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell className="font-medium">{project.id}</TableCell>
+                    <TableCell className="font-medium">{project.name}</TableCell>
+                    <TableCell>{project.description}</TableCell>
+                    <TableCell>{project.created_by}</TableCell>
+                    <TableCell>{project.created_at}</TableCell>
+                    <TableCell>{project.updated_at}</TableCell>
+                    <TableCell className="flex gap-4">
+                      <Button variant="link" size="sm" className="p-0">
+                        进入项目
+                      </Button>
+                      <Button variant="link" size="sm" className="p-0">
+                        编辑
+                      </Button>
+                      <ConfirmDialog
+                        trigger={
+                          <Button variant="link" size="sm" className="text-red-500 p-0">
+                            删除
+                          </Button>
+                        }
+                        title="温馨提示!"
+                        description="是否确定要删除该项目？"
+                        onConfirm={() => handleDeleteProject(project.id)}
+                      ></ConfirmDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
+          </TableBody>
+        </Table>
+        {loading && (
+          <div className="flex items-center justify-center w-full mt-4">
+            <Spinner className="text-primary size-6" />
+            <span className="ml-2">加载中...</span>
+          </div>
+        )}
+        {!loading && projects?.total! === 0 && (
+          <div className="flex items-center justify-center w-full">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <IconEmpty size="extra-large" />
+                </EmptyMedia>
+                <EmptyDescription>暂无数据</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <CreateProject getProjects={getProjects} />
+              </EmptyContent>
+            </Empty>
+          </div>
+        )}
+        <Pagination
+          currentPage={queryParams.page}
+          pageSize={queryParams.size}
+          total={projects?.total || 0}
+          onPageChange={(page) => {
+            setQueryParams({ ...queryParams, page });
+            getProjects();
+          }}
+          className="mt-4 justify-end"
+        />
+      </Card>
+    </div>
+  );
+};
+
+export default Projects;

@@ -15,9 +15,9 @@ const AppSidebar = () => {
       label: "我的应用",
       icon: <FolderKanban className="size-4" />,
       children: [
-        { key: "application", label: "项目管理", icon: <Globe className="size-4" />, path: "/manage/resources/application" },
-        { key: "components", label: "组件资源", icon: <Layers className="size-4" />, path: "/manage/resources/components" },
-        { key: "images", label: "图片资源", icon: <Image className="size-4" />, path: "/manage/resources/images" },
+        { key: "application", label: "项目管理", icon: <Globe className="size-4" />, path: "/manage/resource/projects" },
+        { key: "components", label: "组件资源", icon: <Layers className="size-4" />, path: "/manage/resource/components" },
+        { key: "images", label: "图片资源", icon: <Image className="size-4" />, path: "/manage/resource/images" },
       ],
     },
     { key: "template", label: "社区模板", icon: <Component className="size-4" />, path: "/manage/template" },
