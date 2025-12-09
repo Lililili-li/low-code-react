@@ -18,7 +18,6 @@ import {
 } from '@repo/ui/components/form';
 import { Input } from '@repo/ui/components/input';
 import { Textarea } from '@repo/ui/components/textarea';
-import { FolderPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,17 +25,31 @@ import { Spinner } from '@repo/ui/components/spinner';
 import { useRequest } from 'ahooks';
 import projectApi from '@/api/project';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const CreateProject = ({getProjects}: {getProjects: () => void}) => {
+const CreateProject = ({
+  getProjects,
+  renderTrigger,
+  type = 'create',
+  id,
+}: {
+  getProjects: () => void;
+  type?: 'create' | 'update';
+  id?: number;
+  renderTrigger: React.ReactNode;
+}) => {
   const [openDialog, setOpenDialog] = useState(false);
 
-  const { loading, run: onSubmit } = useRequest(() => projectApi.createProject(form.getValues()), {
+  const createOrUpdate = () => {
+    return type === 'create'? projectApi.createProject(form.getValues()): projectApi.updateProject(form.getValues(), id!)
+  }
+
+  const { loading, run: onSubmit } = useRequest(() => createOrUpdate(), {
     manual: true,
     onSuccess: () => {
       toast.success('创建成功');
       setOpenDialog(false);
-      getProjects()
+      getProjects();
     },
   });
 
@@ -53,19 +66,30 @@ const CreateProject = ({getProjects}: {getProjects: () => void}) => {
       description: '',
     },
   });
+
+  const { runAsync: getProjectById } = useRequest(() => projectApi.getProjectById(id!), {
+    manual: true,
+    onSuccess: (data) => {
+      form.reset({
+        name: data.name,
+        description: data.description,
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (type === 'update' && openDialog) {
+      getProjectById();
+    }
+  }, [openDialog]);
   return (
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-      <DialogTrigger asChild>
-        <Button variant="default" size="sm">
-          <FolderPlus />
-          创建项目
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{renderTrigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>创建项目</DialogTitle>
+              <DialogTitle>{`${type === 'create' ? '创建' : '编辑'}`}项目</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <FormField

@@ -19,14 +19,20 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
 import { Toggle } from '@repo/ui/components/toggle';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { FC, useCallback } from 'react';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@repo/ui/components/select';
 
 interface PaginationProps extends React.HTMLAttributes<HTMLElement> {
   currentPage: number;
@@ -96,7 +102,6 @@ const PageItem = ({
     </>
   );
 };
-
 
 const Pagination: FC<PaginationProps> = (props) => {
   const {
@@ -237,6 +242,31 @@ const Pagination: FC<PaginationProps> = (props) => {
             <ChevronRight style={{ width: '20px', height: '20px' }} />
           </Button>
         </PaginationItem>
+        {showSizeChanger && (
+          <PaginationItem>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => onSizeChange?.(Number(value))}
+            >
+              <SelectTrigger
+                className="w-[100px] h-[36px] group justify-between"
+                style={{ height: 32 }}
+                allowClear={false}
+              >
+                <div className="flex items-center gap-2 justify-between flex-1 relative">
+                  <SelectValue placeholder="每页10条" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value={'10'}>每页10条</SelectItem>
+                  <SelectItem value={'20'}>每页20条</SelectItem>
+                  <SelectItem value={'50'}>每页50条</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </PaginationItem>
+        )}
       </PaginationContent>
     </ShaPagination>
   );

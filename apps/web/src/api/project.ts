@@ -12,6 +12,9 @@ export interface ProjectProps {
   created_by: number
   created_at: string
   updated_at: string
+  created_user: {
+    user_name: string
+  }
 }
 
 export interface PaginationProps {
@@ -26,7 +29,7 @@ const getProjects = (data: PaginationProps) => {
   return request.get<{list: ProjectProps[], total: number, page: number, size: number}>('/project', {params: data})
 }
 
-const getProjectById = (id: string) => {
+const getProjectById = (id: number) => {
   return request.get<ProjectProps>(`/project/${id}`)
 }
 

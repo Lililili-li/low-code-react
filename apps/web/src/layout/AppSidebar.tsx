@@ -2,7 +2,7 @@
 import { Button } from "@repo/ui/components/button"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@repo/ui/components/sidebar"
 import { Database, HelpCircle } from "lucide-react"
-import { IconSemiLogo } from '@douyinfe/semi-icons'
+import { IconAppCenter, IconSemiLogo } from '@douyinfe/semi-icons'
 import { Menu, MenuItem } from "@/components/Menu"
 import { LayoutDashboard, FolderKanban, Image, Layers, Globe, Component } from "lucide-react"
 
@@ -11,13 +11,14 @@ const AppSidebar = () => {
   const menuItems: MenuItem[] = [
     { key: "dashboard", label: "工作台", icon: <LayoutDashboard className="size-4" />, path: "/manage/dashboard" },
     {
-      key: "resources",
+      key: "resource",
       label: "我的应用",
       icon: <FolderKanban className="size-4" />,
       children: [
-        { key: "application", label: "项目管理", icon: <Globe className="size-4" />, path: "/manage/resource/projects" },
-        { key: "components", label: "组件资源", icon: <Layers className="size-4" />, path: "/manage/resource/components" },
-        { key: "images", label: "图片资源", icon: <Image className="size-4" />, path: "/manage/resource/images" },
+        { key: "project", label: "项目管理", icon: <Globe className="size-4" />, path: "/manage/resource/project" },
+        { key: "application", label: "应用管理", icon: <IconAppCenter className="size-4" />, path: "/manage/resource/application" },
+        { key: "component", label: "组件资源", icon: <Layers className="size-4" />, path: "/manage/resource/component" },
+        { key: "image", label: "图片资源", icon: <Image className="size-4" />, path: "/manage/resource/image" },
       ],
     },
     { key: "template", label: "社区模板", icon: <Component className="size-4" />, path: "/manage/template" },

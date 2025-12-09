@@ -6,12 +6,11 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 const Login = lazy(() => import('@/pages/Login'));
 const Layout = lazy(() => import('@/layout'));
 
-
-
-const Dashboard = lazy(() => import('@/pages/manage/Dashboard'));
-const Projects = lazy(() => import('@/pages/manage/resource/projects/Projects'))
-const Components = lazy(() => import('@/pages/manage/resource/Components'))
-const Images = lazy(() => import('@/pages/manage/resource/Images'))
+const Dashboard = lazy(() => import('@/pages/dashboard/Dashboard'));
+const Project = lazy(() => import('@/pages/project/Project'));
+const Application = lazy(() => import('@/pages/application/Application'));
+const Components = lazy(() => import('@/pages/component/Component'));
+const Images = lazy(() => import('@/pages/image/Image'));
 
 const router = createBrowserRouter([
   {
@@ -38,15 +37,23 @@ const router = createBrowserRouter([
             path: 'resource',
             children: [
               {
-                path: 'projects',
+                path: 'project',
                 element: (
                   <Suspense fallback={<LoadingSpinner />}>
-                    <Projects />
+                    <Project />
                   </Suspense>
                 ),
               },
               {
-                path: 'components',
+                path: 'application',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Application />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'component',
                 element: (
                   <Suspense fallback={<LoadingSpinner />}>
                     <Components />
@@ -54,14 +61,14 @@ const router = createBrowserRouter([
                 ),
               },
               {
-                path: 'images',
+                path: 'image',
                 element: (
                   <Suspense fallback={<LoadingSpinner />}>
                     <Images />
                   </Suspense>
                 ),
-              }
-            ]
+              },
+            ],
           },
         ],
       },

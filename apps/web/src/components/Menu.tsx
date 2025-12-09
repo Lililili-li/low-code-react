@@ -21,6 +21,33 @@ export function Menu({ items, defaultOpenKeys = [], className }: MenuProps) {
   const location = useLocation()
   const [openKeys, setOpenKeys] = React.useState<string[]>(defaultOpenKeys)
 
+  // 查找包含当前路径的父级菜单 key
+  const findActiveParentKeys = React.useCallback((menuItems: MenuItem[], parentKeys: string[] = []): string[] => {
+    for (const item of menuItems) {
+      if (item.path === location.pathname) {
+        return parentKeys
+      }
+      if (item.children) {
+        const found = findActiveParentKeys(item.children, [...parentKeys, item.key])
+        if (found.length > 0) {
+          return found
+        }
+      }
+    }
+    return []
+  }, [location.pathname])
+
+  // 路由变化时自动展开包含选中项的父级菜单
+  React.useEffect(() => {
+    const activeParentKeys = findActiveParentKeys(items)
+    if (activeParentKeys.length > 0) {
+      setOpenKeys((prev) => {
+        const newKeys = new Set([...prev, ...activeParentKeys])
+        return Array.from(newKeys)
+      })
+    }
+  }, [location.pathname, items, findActiveParentKeys])
+
   const toggle = (key: string) => {
     setOpenKeys((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
@@ -49,7 +76,7 @@ export function Menu({ items, defaultOpenKeys = [], className }: MenuProps) {
         )}
         onClick={() => hasChildren && toggle(item.key)}
       >
-        {item.icon && <span className="shrink-0">{item.icon}</span>}
+        {item.icon && <span className="shrink-0 flex justify-center items-center">{item.icon}</span>}
         <span className="flex-1 truncate">{item.label}</span>
         {hasChildren && (
           <ChevronDown
