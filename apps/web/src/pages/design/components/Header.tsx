@@ -1,0 +1,82 @@
+import LanguageToggle from '@/components/LanguageToggle';
+import Select from '@/components/Select';
+import ThemeToggle from '@/components/ThemeToggle';
+import { useDesignStore } from '@/store/modules/design';
+import { Button } from '@repo/ui/components/button';
+import { Toggle } from '@repo/ui/components/toggle';
+import { AppWindow, CloudUpload, Component, Home, Layers, Save, StickyNote, Variable } from 'lucide-react';
+import { useNavigate } from 'react-router';
+
+const pageOptions = [
+  {
+    label: '综合概览',
+    value: '1',
+  },
+  {
+    label: '客流分析',
+    value: '2',
+  },
+  {
+    label: '景区资源',
+    value: '3',
+  },
+];
+
+const Header = () => {
+  const navigate = useNavigate();
+  const { config, setSiderVisible } = useDesignStore();
+  return (
+    <div className="flex items-center px-4 h-full justify-between relative">
+      <div className="header-left flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => navigate('/manage/dashboard')}>
+          <Home />
+          <span>回到首页</span>
+        </Button>
+        <Toggle size="sm" variant="outline" pressed={config.siderVisible === 'material'} onClick={() => setSiderVisible('material')}>
+          <Component />
+          <span>物料</span>
+        </Toggle>
+        <Toggle size="sm" variant="outline" pressed={config.siderVisible === 'layers'} onClick={() => setSiderVisible('layers')}>
+          <Layers />
+          <span>图层</span>
+        </Toggle>
+        <Toggle size="sm" variant="outline" pressed={config.siderVisible === 'variable'} onClick={() => setSiderVisible('variable')}>
+          <Variable />
+          <span>变量</span>
+        </Toggle>
+      </div>
+      <div className="header-center flex gap-2 items-center absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
+        <Select
+          value="1"
+          onChange={(value) => {}}
+          options={pageOptions}
+          placeholder="请选择页面"
+          allowClear={false}
+          className="w-[240px]"
+        />
+        <Button size="sm" variant="outline">
+          <StickyNote />
+          <span>添加页面</span>
+        </Button>
+      </div>
+      <div className="header-right flex gap-2">
+        <Button size="sm" variant="outline">
+          <Save />
+          <span>保存</span>
+        </Button>
+        <Button size="sm" variant="outline">
+          <AppWindow />
+          <span>预览</span>
+        </Button>
+        <Button size="sm" variant="outline">
+          <CloudUpload />
+          <span>发布</span>
+        </Button>
+        <ThemeToggle />
+        <LanguageToggle />
+      </div>
+    </div>
+  );
+};
+
+export default Header;

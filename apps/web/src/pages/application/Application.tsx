@@ -7,34 +7,27 @@ import {
   InputGroupInput,
 } from '@repo/ui/components/input-group';
 import {
-  Select,
+  // Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@repo/ui/components/select';
-import CreateApplication from './CreateApplication';
-import {
-  AppWindow,
-  CircleX,
-  Copy,
-  Edit,
-  FileInput,
-  FolderPlus,
-  Search,
-  Share,
-  Trash2,
-  Wrench,
-} from 'lucide-react';
-import { useState } from 'react';
+import SaveApplication from './SaveApplication';
+import { CircleX, FileInput, FolderPlus, Search, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@/composable/use-query';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/tooltip';
-import ConfirmDialog from '@/components/ConfirmDialog';
 import Pagination from '@/components/Pagination';
 import Viewer from 'react-viewer';
 import ApplicationCard from './components/ApplicationCard';
+import { useRequest } from 'ahooks';
+import applicationApi, { ApplicationProps } from '@/api/application';
+import projectApi from '@/api/project';
+import Empty from '@/components/Empty';
+import { Spinner } from '@repo/ui/components/spinner';
+import Select from '@/components/Select';
+import { useSystemStore } from '@/store/modules/system';
 
 export const APP_STATUS = {
   1: '开发中',
@@ -42,44 +35,51 @@ export const APP_STATUS = {
   3: '已发布',
 };
 
-const applications = [
-  {
-    id: 1,
-    name: '测试应用',
-    created_by: '张三',
-    development: [
-      {
-        name: '王五',
-      },
-      {
-        name: '李四',
-      },
-    ],
-    title: '智游长白山',
-    status: 3,
-    cover: '//heartmm.xyz/static/cover.png',
-  },
-];
-
 const Application = () => {
+  const industries = useSystemStore((state) => state.industries);
   const [visible, setVisible] = useState(false);
-  const [currentApp, setCurrentApp] = useState<(typeof applications)[0]>(
-    {} as (typeof applications)[0],
-  );
-  const previewImage = (data: (typeof applications)[0]) => {
+  const [currentApp, setCurrentApp] = useState<ApplicationProps>({} as ApplicationProps);
+  const previewImage = (data: any) => {
     setVisible(true);
     setCurrentApp(data);
   };
   const query = useQuery();
 
+  const [searchName, setSearchName] = useState('');
   const [queryParams, setQueryParams] = useState({
     page: 1,
     size: 10,
     name: '',
-    projectId: query?.id,
+    project_id: query?.id || '',
     status: '',
-    industry: '',
+    industry_id: '',
   });
+
+  const {
+    loading,
+    data: applications,
+    runAsync: getApplications,
+  } = useRequest(
+    () =>
+      applicationApi.getApplications({
+        ...queryParams,
+        status: queryParams.status ? Number(queryParams.status) : undefined,
+        project_id: queryParams.project_id ? Number(queryParams.project_id) : undefined,
+        industry_id: queryParams.industry_id ? Number(queryParams.industry_id) : undefined,
+      }),
+    {
+      refreshDeps: [queryParams],
+    },
+  );
+
+  const { data: projectList } = useRequest(() => projectApi.getProjectsByUser());
+
+  const projectOptions = useMemo(() => {
+    return (projectList ?? []).map((item) => ({
+      value: String(item.id),
+      label: item.name,
+    }));
+  }, [projectList]);
 
   return (
     <div className="application-container h-full flex-col flex gap-4">
@@ -93,116 +93,87 @@ const Application = () => {
                   className="w-[240px]"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      setQueryParams({ ...queryParams, name: searchName });
                     }
                   }}
-                  value={queryParams.name}
-                  onChange={(e) => {
-                    setQueryParams({ ...queryParams, name: e.target.value });
-                  }}
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
                 />
                 <InputGroupAddon>
                   <Search />
                 </InputGroupAddon>
-                {queryParams.name && (
+                {searchName && (
                   <InputGroupButton asChild>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="rounded-[50%] size-4 mr-1 opacity-0 group-focus-within:opacity-100 transition-opacity"
-                      onClick={() => setQueryParams({ ...queryParams, name: '' })}
+                      onClick={() => {
+                        setSearchName('');
+                        setQueryParams({ ...queryParams, name: '' });
+                      }}
                     >
-                      <CircleX className="size-4 text-[var(--muted-foreground)]" />
+                      <CircleX className="size-4 text-muted-foreground" />
                     </Button>
                   </InputGroupButton>
                 )}
               </InputGroup>
               {!query && (
-                <Select>
-                  <SelectTrigger
-                    className="w-[240px] h-[32px] group justify-between"
-                    style={{ height: 32 }}
-                  >
-                    <div className="flex items-center gap-2 justify-between flex-1">
-                      <SelectValue placeholder="项目名称" />
-                      {queryParams.projectId && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-[50%] size-5 mr-1 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity"
-                          onClick={() => setQueryParams({ ...queryParams, name: '' })}
-                        >
-                          <CircleX className="size-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Fruits</SelectLabel>
-                      <SelectItem value="apple">Apple</SelectItem>
-                      <SelectItem value="banana">Banana</SelectItem>
-                      <SelectItem value="blueberry">Blueberry</SelectItem>
-                      <SelectItem value="grapes">Grapes</SelectItem>
-                      <SelectItem value="pineapple">Pineapple</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                <Select
+                  value={queryParams.project_id}
+                  onChange={(value) => setQueryParams({ ...queryParams, project_id: value })}
+                  placeholder="请选择项目"
+                  options={projectOptions}
+                  className="w-[240px]"
+                  allowClear={!!queryParams.project_id}
+                />
               )}
               {!query && (
                 <Select
-                  value={queryParams.industry}
-                  onValueChange={(value) => setQueryParams({ ...queryParams, industry: value })}
-                >
-                  <SelectTrigger
-                    className="w-[240px] h-[32px] group justify-between"
-                    style={{ height: 32 }}
-                    allowClear={!!queryParams.industry}
-                    onClear={() => setQueryParams({ ...queryParams, industry: '' })}
-                  >
-                    <div className="flex items-center gap-2 justify-between flex-1 relative">
-                      <SelectValue placeholder="行业" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="1">{APP_STATUS[1]}</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  value={queryParams.industry_id}
+                  onChange={(value) => setQueryParams({ ...queryParams, industry_id: value })}
+                  placeholder="请选择行业"
+                  options={industries.map((item) => ({
+                    label: item.name,
+                    value: item.id.toString(),
+                  }))}
+                  className="w-[240px]"
+                  allowClear={!!queryParams.industry_id}
+                />
               )}
               <Select
                 value={queryParams.status}
-                onValueChange={(value) => setQueryParams({ ...queryParams, status: value })}
-              >
-                <SelectTrigger
-                  className="w-[240px] h-[32px] group justify-between"
-                  style={{ height: 32 }}
-                  allowClear={!!queryParams.status}
-                  onClear={() => setQueryParams({ ...queryParams, status: '' })}
-                >
-                  <div className="flex items-center gap-2 justify-between flex-1 relative">
-                    <SelectValue placeholder="开发状态" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="1">{APP_STATUS[1]}</SelectItem>
-                    <SelectItem value="2">{APP_STATUS[2]}</SelectItem>
-                    <SelectItem value="3">{APP_STATUS[3]}</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+                onChange={(value) => setQueryParams({ ...queryParams, status: value })}
+                placeholder="请选择开发状态"
+                options={[
+                  {
+                    label: APP_STATUS[1],
+                    value: '1',
+                  },
+                  {
+                    label: APP_STATUS[2],
+                    value: '2',
+                  },
+                  {
+                    label: APP_STATUS[3],
+                    value: '3',
+                  },
+                ]}
+                allowClear={!!queryParams.status}
+                className="w-[240px]"
+              />
             </div>
             <div className="operation flex gap-2 items-center">
-              <CreateApplication
-                getProjects={() => {}}
+              <SaveApplication
+                getApplications={getApplications}
+                projectOptions={projectOptions}
                 renderTrigger={
                   <Button variant="default" size="sm">
                     <FolderPlus />
-                    创建应用
+                    添加应用
                   </Button>
                 }
-              ></CreateApplication>
+              ></SaveApplication>
               <Button variant="outline" size="sm">
                 <FileInput />
                 导入应用
@@ -215,17 +186,36 @@ const Application = () => {
           </div>
         </CardTitle>
       </Card>
-      <Card>
+      <Card className="flex-1">
         <CardContent className="mt-0">
-          <div className="applications grid grid-cols-3 gap-4">
-            {applications.map((item) => {
-              return <ApplicationCard data={item} onPreview={() => previewImage(item)} />;
-            })}
-          </div>
+          {!loading && applications?.total && (
+            <div className="applications grid grid-cols-3 gap-4">
+              {applications?.list.map((item) => {
+                return (
+                  <ApplicationCard
+                    data={item}
+                    onPreview={() => previewImage(item)}
+                    getApplications={getApplications}
+                    key={item.id}
+                    projectOptions={projectOptions}
+                  />
+                );
+              })}
+            </div>
+          )}
+          {loading && (
+            <div className="flex items-center justify-center w-full mt-4">
+              <Spinner className="text-primary size-6" />
+              <span className="ml-2">加载中...</span>
+            </div>
+          )}
+          {applications?.total === 0 && !loading && (
+            <Empty renderContent={<div>赶紧去添加一个应用吧</div>} description="暂无数据" />
+          )}
           <Pagination
             currentPage={queryParams.page}
             pageSize={queryParams.size}
-            total={applications.length}
+            total={applications?.total!}
             showSizeChanger
             className="mb-3 mt-4 justify-end"
           />

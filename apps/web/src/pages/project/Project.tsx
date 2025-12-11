@@ -60,7 +60,7 @@ const Projects = () => {
 
   useEffect(() => {
     getProjects();
-  }, [queryParams]);
+  }, []);
 
   const navigate = useNavigate();
   const query = useQuery();

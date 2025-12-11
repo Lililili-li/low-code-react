@@ -21,7 +21,7 @@ import { useLocation } from 'react-router';
 const routeMap: Record<string, string> = {
   resource: '我的应用',
   project: '项目管理',
-  component: '组件管理',
+  component: '组件资源',
   image: '图片资源',
   template: '社区模板',
   dataSource: '数据源',
@@ -73,7 +73,7 @@ const AppHeader = () => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="operation flex items-center gap-2 pr-4">
+      <div className="operation flex items-center gap-2 pr-2">
         <ThemeToggle />
         <LanguageToggle />
         <Popover>
@@ -83,7 +83,7 @@ const AppHeader = () => {
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </PopoverTrigger>
-          <PopoverContent className="w-56 p-2">
+          <PopoverContent className="w-56 p-2" align='end'>
             <div className="information flex gap-2">
               <Avatar>
                 <AvatarImage src={user.avatar || 'https://github.com/shadcn.png'} alt="Avatar" />

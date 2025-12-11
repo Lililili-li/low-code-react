@@ -26,6 +26,8 @@ import { useRequest } from 'ahooks';
 import projectApi from '@/api/project';
 import { toast } from 'sonner';
 import React, { useEffect, useState } from 'react';
+import Select from '@/components/Select';
+import { useSystemStore } from '@/store/modules/system';
 
 const CreateProject = ({
   getProjects,
@@ -38,11 +40,16 @@ const CreateProject = ({
   id?: number;
   renderTrigger: React.ReactNode;
 }) => {
+
+  const industries = useSystemStore(state => state.industries);
+
   const [openDialog, setOpenDialog] = useState(false);
 
   const createOrUpdate = () => {
-    return type === 'create'? projectApi.createProject(form.getValues()): projectApi.updateProject(form.getValues(), id!)
-  }
+    return type === 'create'
+      ? projectApi.createProject(form.getValues())
+      : projectApi.updateProject(form.getValues(), id!);
+  };
 
   const { loading, run: onSubmit } = useRequest(() => createOrUpdate(), {
     manual: true,
@@ -58,12 +65,16 @@ const CreateProject = ({
       message: '项目名称不能为空',
     }),
     description: z.string(),
+    industry_id: z.string().min(1, {
+      message: '行业不能为空',
+    }),
   });
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       name: '',
       description: '',
+      industry_id: '',
     },
   });
 
@@ -73,6 +84,7 @@ const CreateProject = ({
       form.reset({
         name: data.name,
         description: data.description,
+        industry_id: data.industry_id.toString()
       });
     },
   });
@@ -82,6 +94,9 @@ const CreateProject = ({
       getProjectById();
     }
   }, [openDialog]);
+
+  
+
   return (
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
       <DialogTrigger asChild>{renderTrigger}</DialogTrigger>
@@ -102,6 +117,31 @@ const CreateProject = ({
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="请输入项目名称" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="industry_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      项目行业<span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        {...field}
+                        options={
+                          industries?.map((item) => ({
+                            value: item.id.toString(),
+                            label: item.name,
+                          }))!
+                        }
+                        placeholder="请选择行业"
+                        className='w-full'
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

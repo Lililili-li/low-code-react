@@ -4,13 +4,20 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/too
 import { Button } from '@repo/ui/components/button';
 import { AppWindow, Copy, Edit, Share, Trash2, Wrench } from 'lucide-react';
 import ConfirmDialog from '@/components/ConfirmDialog';
-
+import SaveApplication from '../SaveApplication';
+import applicationApi from '@/api/application';
+import { useNavigate } from 'react-router';
 
 interface ApplicationCardProps {
   data: Record<string, any>;
+  projectOptions: {label: string, value: string}[]
   onPreview: () => void;
+  getApplications: () => void;
 }
-const ApplicationCard = ({ data, onPreview }: ApplicationCardProps) => {
+const ApplicationCard = ({ data, onPreview, getApplications, projectOptions }: ApplicationCardProps) => {
+
+  const navigate = useNavigate();
+
   return (
     <Card
       key={data.id}
@@ -25,25 +32,39 @@ const ApplicationCard = ({ data, onPreview }: ApplicationCardProps) => {
         </div>
       </CardTitle>
       <CardContent className="mt-0 p-4">
-        <div className="title font-bold">{data.title}</div>
+        <div className="title font-bold">{data.name}</div>
         <div className="information flex items-center mt-2 text-sm">
           <div className="dev w-[50%] text-muted-foreground">
-            <span>开发人员：</span>
-            {data.development.map((data: {name: string}) => data.name).join('，')}
+            <span>所属项目：</span>
+            {data.project?.name}
           </div>
+          <div className="dev w-[50%] text-muted-foreground">
+            <span>所属行业：</span>
+            {data.industry?.name}
+          </div>
+        </div>
+        <div className="information flex items-center mt-2 text-sm">
           <div className="create w-[40%] text-muted-foreground">
             <span>创建人员：</span>
-            <span>{data.created_by}</span>
+            <span>{data.created_user.user_name}</span>
           </div>
         </div>
         <div className="operations flex items-center justify-between mt-4">
           <div className="export-option flex gap-2">
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" className="size-8">
-                  <Edit className="size-4" />
-                </Button>
-              </TooltipTrigger>
+              <SaveApplication
+                type="update"
+                id={data.id}
+                getApplications={getApplications}
+                projectOptions={projectOptions}
+                renderTrigger={
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" className="size-8">
+                      <Edit className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                }
+              ></SaveApplication>
               <TooltipContent>
                 <span>编辑</span>
               </TooltipContent>
@@ -78,7 +99,11 @@ const ApplicationCard = ({ data, onPreview }: ApplicationCardProps) => {
                   </TooltipTrigger>
                 }
                 description="确定要删除该应用吗？"
-                onConfirm={() => {}}
+                onConfirm={() => {
+                  applicationApi.deleteApplication(data.id).then(() => {
+                    getApplications()
+                  })
+                }}
               />
               <TooltipContent>
                 <span>删除</span>
@@ -90,7 +115,9 @@ const ApplicationCard = ({ data, onPreview }: ApplicationCardProps) => {
               <AppWindow />
               <span>预览</span>
             </Button>
-            <Button variant="default" size="sm">
+            <Button variant="default" size="sm" onClick={() => {
+              window.open('/design?id='+data.id, '_blank')
+            }}>
               <Wrench />
               <span>开发</span>
             </Button>

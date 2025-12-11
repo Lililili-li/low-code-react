@@ -1,0 +1,21 @@
+{
+  "name": "@repo/shared",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint \"**/*.ts\""
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "@repo/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "eslint": "^8.57.0",
+    "typescript": "5.5.4"
+  }
+}

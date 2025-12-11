@@ -12,6 +12,9 @@ const Application = lazy(() => import('@/pages/application/Application'));
 const Components = lazy(() => import('@/pages/component/Component'));
 const Images = lazy(() => import('@/pages/image/Image'));
 
+
+const Design = lazy(() => import('@/pages/design/index'));
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -72,6 +75,14 @@ const router = createBrowserRouter([
           },
         ],
       },
+      {
+        path: 'design',
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Design />
+          </Suspense>
+        )
+      }
     ],
   },
   {
