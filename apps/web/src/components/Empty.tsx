@@ -10,7 +10,7 @@ const Empty = ({
   renderContent,
   description = '暂无数据',
 }: {
-  renderContent: React.ReactNode;
+  renderContent?: React.ReactNode;
   description?: string;
 }) => {
   return (
@@ -21,7 +21,9 @@ const Empty = ({
         </EmptyMedia>
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
-      <EmptyContent>{renderContent}</EmptyContent>
+      {
+        renderContent && <EmptyContent>{renderContent}</EmptyContent>
+      }
     </ShaEmpty>
   );
 };

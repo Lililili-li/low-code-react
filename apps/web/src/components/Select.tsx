@@ -18,6 +18,7 @@ interface SelectProps {
   }[];
   className?: string;
   placeholder: string;
+  disabled?: boolean
 }
 
 const Select = ({
@@ -27,6 +28,7 @@ const Select = ({
   options,
   className,
   placeholder,
+  disabled = false,
   ...props
 }: SelectProps) => {
   return (
@@ -36,10 +38,13 @@ const Select = ({
         style={{ height: 32 }}
         allowClear={allowClear}
         onClear={() => onChange('')}
+        disabled={disabled}
         {...props}
       >
         <div className="flex items-center gap-2 justify-between flex-1 relative">
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={placeholder}>
+            {value ? (options.find((item) => item.value === value)?.label || value + '%') : undefined}
+          </SelectValue>
         </div>
       </SelectTrigger>
       <SelectContent>
@@ -47,7 +52,7 @@ const Select = ({
           {options.map((item) => {
             return (
               <SelectItem key={item.value} value={item.value}>
-                {item.label}
+                {item.label} 
               </SelectItem>
             );
           })}

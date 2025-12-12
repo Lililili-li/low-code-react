@@ -12,6 +12,7 @@ export interface ComponentProps {
   created_by: number
   created_at: string
   updated_at: string
+  cover: string
   created_user: {
     user_name: string
   }
@@ -38,6 +39,10 @@ const getComponents = (data: PaginationProps) => {
   return request.get<{ list: ComponentProps[], total: number, page: number, size: number }>('/component', { params: data })
 }
 
+const getComponentByCategory = (category_id: number) => {
+  return request.get<ComponentProps[]>(`/component/category/${category_id}`)
+}
+
 const getComponentCategories = () => {
   return request.get<ComponentCategoryProps[]>('/component-category')
 }
@@ -45,6 +50,6 @@ const getComponentCategories = () => {
 
 export default {
   getComponents,
-  getComponentCategories
-
+  getComponentCategories,
+  getComponentByCategory
 }

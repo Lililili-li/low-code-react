@@ -4,7 +4,16 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { useDesignStore } from '@/store/modules/design';
 import { Button } from '@repo/ui/components/button';
 import { Toggle } from '@repo/ui/components/toggle';
-import { AppWindow, CloudUpload, Component, Home, Layers, Save, StickyNote, Variable } from 'lucide-react';
+import {
+  AppWindow,
+  CloudUpload,
+  Component,
+  Home,
+  Layers,
+  Save,
+  StickyNote,
+  Variable,
+} from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 const pageOptions = [
@@ -22,6 +31,24 @@ const pageOptions = [
   },
 ];
 
+const designConfig = [
+  {
+    id: 'material',
+    name: '物料',
+    icon: <Component />,
+  },
+  {
+    id: 'layers',
+    name: '图层',
+    icon: <Layers />,
+  },
+  {
+    id: 'variable',
+    name: '变量',
+    icon: <Variable />,
+  },
+];
+
 const Header = () => {
   const navigate = useNavigate();
   const { config, setSiderVisible } = useDesignStore();
@@ -32,18 +59,19 @@ const Header = () => {
           <Home />
           <span>回到首页</span>
         </Button>
-        <Toggle size="sm" variant="outline" pressed={config.siderVisible === 'material'} onClick={() => setSiderVisible('material')}>
-          <Component />
-          <span>物料</span>
-        </Toggle>
-        <Toggle size="sm" variant="outline" pressed={config.siderVisible === 'layers'} onClick={() => setSiderVisible('layers')}>
-          <Layers />
-          <span>图层</span>
-        </Toggle>
-        <Toggle size="sm" variant="outline" pressed={config.siderVisible === 'variable'} onClick={() => setSiderVisible('variable')}>
-          <Variable />
-          <span>变量</span>
-        </Toggle>
+        {designConfig.map((item) => (
+          <Toggle
+            size="sm"
+            variant="outline"
+            pressed={config.siderVisible === item.id}
+            onClick={() => setSiderVisible(item.id as 'material' | 'layers' | 'variable')}
+            key={item.id}
+            className='data-[state=on]:bg-blue-500 data-[state=on]:text-white'
+          >
+            {item.icon}
+            <span>{item.name}</span>
+          </Toggle>
+        ))}
       </div>
       <div className="header-center flex gap-2 items-center absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
         <Select
