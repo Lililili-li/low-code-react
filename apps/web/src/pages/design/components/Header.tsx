@@ -4,17 +4,9 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { useDesignStore } from '@/store/modules/design';
 import { Button } from '@repo/ui/components/button';
 import { Toggle } from '@repo/ui/components/toggle';
-import {
-  AppWindow,
-  CloudUpload,
-  Component,
-  Home,
-  Layers,
-  Save,
-  StickyNote,
-  Variable,
-} from 'lucide-react';
+import { AppWindow, Component, Home, Layers, PlusCircle, Save, Variable } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import SavePage from './SavePage';
 
 const pageOptions = [
   {
@@ -66,7 +58,7 @@ const Header = () => {
             pressed={config.siderVisible === item.id}
             onClick={() => setSiderVisible(item.id as 'material' | 'layers' | 'variable')}
             key={item.id}
-            className='data-[state=on]:bg-blue-500 data-[state=on]:text-white'
+            className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
           >
             {item.icon}
             <span>{item.name}</span>
@@ -82,10 +74,15 @@ const Header = () => {
           allowClear={false}
           className="w-[240px]"
         />
-        <Button size="sm" variant="outline">
-          <StickyNote />
-          <span>添加页面</span>
-        </Button>
+
+        <SavePage
+          renderTrigger={
+            <Button size="sm" variant="outline">
+              <PlusCircle />
+              <span>添加页面</span>
+            </Button>
+          }
+        ></SavePage>
       </div>
       <div className="header-right flex gap-2">
         <Button size="sm" variant="outline">
@@ -95,10 +92,6 @@ const Header = () => {
         <Button size="sm" variant="outline">
           <AppWindow />
           <span>预览</span>
-        </Button>
-        <Button size="sm" variant="outline">
-          <CloudUpload />
-          <span>发布</span>
         </Button>
         <ThemeToggle />
         <LanguageToggle />

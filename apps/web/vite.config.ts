@@ -11,6 +11,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
+      // '@repo/core': resolve(__dirname, '../../packages/core'),
+      // '@repo/ui': resolve(__dirname, '../../packages/ui'),
     },
   },
   server: {

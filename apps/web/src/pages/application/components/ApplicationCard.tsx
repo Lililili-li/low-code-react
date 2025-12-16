@@ -7,17 +7,20 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import SaveApplication from '../SaveApplication';
 import applicationApi from '@/api/application';
 import { useNavigate } from 'react-router';
+import SavePage from '@/pages/design/components/SavePage';
 
 interface ApplicationCardProps {
   data: Record<string, any>;
-  projectOptions: {label: string, value: string}[]
+  projectOptions: { label: string; value: string }[];
   onPreview: () => void;
   getApplications: () => void;
 }
-const ApplicationCard = ({ data, onPreview, getApplications, projectOptions }: ApplicationCardProps) => {
-
-  const navigate = useNavigate();
-
+const ApplicationCard = ({
+  data,
+  onPreview,
+  getApplications,
+  projectOptions,
+}: ApplicationCardProps) => {
   return (
     <Card
       key={data.id}
@@ -101,8 +104,8 @@ const ApplicationCard = ({ data, onPreview, getApplications, projectOptions }: A
                 description="确定要删除该应用吗？"
                 onConfirm={() => {
                   applicationApi.deleteApplication(data.id).then(() => {
-                    getApplications()
-                  })
+                    getApplications();
+                  });
                 }}
               />
               <TooltipContent>
@@ -115,12 +118,27 @@ const ApplicationCard = ({ data, onPreview, getApplications, projectOptions }: A
               <AppWindow />
               <span>预览</span>
             </Button>
-            <Button variant="default" size="sm" onClick={() => {
-              window.open('/design?id='+data.id, '_blank')
-            }}>
-              <Wrench />
-              <span>开发</span>
-            </Button>
+            {data.has_page ? (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  window.open('/design?id=' + data.id, '_blank');
+                }}
+              >
+                <Wrench />
+                <span>开发</span>
+              </Button>
+            ) : (
+              <SavePage
+                renderTrigger={
+                  <Button variant="default" size="sm">
+                    <Wrench />
+                    <span>开发</span>
+                  </Button>
+                }
+              ></SavePage>
+            )}
           </div>
         </div>
       </CardContent>

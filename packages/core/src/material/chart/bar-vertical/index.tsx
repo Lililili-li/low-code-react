@@ -1,5 +1,5 @@
 
-const BarVertical = () => {
+const BarVertical = ({props}) => {
   return (
     <div>BarVertical</div>
   )

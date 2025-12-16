@@ -36,7 +36,7 @@ const MaterialPanel = () => {
 
   return (
     <div className="material-panel w-full h-full flex">
-      <div className="cmp-first-list w-[70px] h-full py-2 bg-[#f5f5f5] dark:bg-[#252529] flex flex-col gap-2 items-center">
+      <div className="cmp-first-list shrink-0 w-[70px] h-full py-2 bg-[#f5f5f5] dark:bg-[#252529] flex flex-col gap-2 items-center">
         {categories?.map((item) => {
           return (
             <Toggle
@@ -55,7 +55,7 @@ const MaterialPanel = () => {
         })}
       </div>
       {subCategories?.length > 0 && (
-        <div className="cmp-second-list w-[70px] border-r h-full py-2 flex flex-col gap-2 items-center">
+        <div className="cmp-second-list shrink-0 w-[70px] border-r h-full py-2 flex flex-col gap-2 items-center">
           {subCategories?.map((item) => {
             return (
               <Toggle
@@ -101,6 +101,13 @@ const MaterialPanel = () => {
                 <div
                   key={item.id}
                   className="cmp-item cursor-pointer flex flex-col items-center gap-2 px-3 py-2 w-[90%] bg-[#f2f3f5] dark:bg-[#252529] rounded-sm relative"
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({
+                      id: item.id.toString(),
+                      name: item.name
+                    }));
+                  }}
+                  draggable
                 >
                   <img
                     src={item.cover}

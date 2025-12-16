@@ -1,3 +1,6 @@
-import BarHorizontal from "./chart/bar-horizontal";
-import BarVertical from "./chart/bar-vertical";
+import { ChartBarVerticalMeta } from "./chart/bar-vertical/meta";
 
+
+export default {
+  'chart-bar-vertical': ChartBarVerticalMeta,
+}

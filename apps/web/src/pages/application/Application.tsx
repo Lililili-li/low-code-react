@@ -6,14 +6,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@repo/ui/components/input-group';
-import {
-  // Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/ui/components/select';
 import SaveApplication from './SaveApplication';
 import { CircleX, FileInput, FolderPlus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';

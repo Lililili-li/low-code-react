@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig, AxiosError, AxiosProgressEvent } from 'axios';
 // import { Toast } from '@douyinfe/semi-ui';
 import { toast } from 'sonner'
 // 响应数据结构
@@ -99,6 +99,21 @@ export const request = {
 
   delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return instance.delete(url, config);
+  },
+
+  uploadFile<T>(url: string, data?: unknown, config?: AxiosRequestConfig, onProgress?: (progressEvent: AxiosProgressEvent) => void): Promise<T> {
+    return instance.post(url, data, {
+      headers: {
+        ...config?.headers,
+        'Content-Type': 'multipart/form-data',
+      },
+      ...config,
+      ...(onProgress ? {
+        onUploadProgress(progressEvent) {
+          onProgress(progressEvent)
+        },
+      } : {}),
+    });
   },
 };
 

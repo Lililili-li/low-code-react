@@ -5,11 +5,11 @@ import {
 } from '@repo/ui/components/resizable';
 import Header from './components/Header';
 import { useDesignStore } from '@/store/modules/design';
-import MaterialPanel from './components/MaterialPanel';
-import LayerPanel from './components/LayerPanel';
-import VariablePanel from './components/VariablePanel';
-import CanvasPanel from './components/CanvasPanel';
-import PropPanel from './components/PropPanel';
+import MaterialPanel from './material-panel/MaterialPanel';
+import LayerPanel from './layer-panel/LayerPanel';
+import VariablePanel from './variable-panel/VariablePanel';
+import CanvasPanel from './canvas-panel/CanvasPanel';
+import PropPanel from './props-panel/PropPanel';
 import './index.less'
 
 const panelMap = {
@@ -28,9 +28,9 @@ const Design = () => {
       <div className="design-header h-[50px] border-b shrink-0">
         <Header />
       </div>
-      <div className="design-content flex flex-1">
+      <div className="design-content flex flex-1 min-h-0">
         <ResizablePanelGroup direction="horizontal" className="w-full h-full">
-          <ResizablePanel defaultSize={20} maxSize={25} minSize={20}>
+          <ResizablePanel defaultSize={20} maxSize={25}>
             <div className="sidebar w-full h-full">{<PanelComponent />}</div>
           </ResizablePanel>
           <ResizableHandle withHandle/>
@@ -38,7 +38,7 @@ const Design = () => {
             <CanvasPanel />
           </ResizablePanel>
           <ResizableHandle withHandle/>
-          <ResizablePanel defaultSize={20} maxSize={25} minSize={20}>
+          <ResizablePanel defaultSize={20} maxSize={25}>
             <PropPanel />
           </ResizablePanel>
         </ResizablePanelGroup>

@@ -1,7 +1,14 @@
 {
-  "name": "@repo/shared",
+  "name": "@repo/core",
   "version": "0.0.0",
   "license": "MIT",
+  "exports": {
+    "./types": "./src/types/index.ts",
+    "./hot-keys": "./src/hot-keys/index.ts",
+    "./material": "./src/material/index.ts",
+    "./event": "./src/event/index.ts",
+    "./adaptation": "./src/adaptation/index.ts"
+  },
   "scripts": {
     "lint": "eslint \"**/*.ts\""
   },

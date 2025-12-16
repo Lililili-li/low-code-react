@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import React, { useEffect, useState } from 'react';
 import Select from '@/components/Select';
 import { useQuery } from '@/composable/use-query';
+import { Computer, Fullscreen } from 'lucide-react';
 
 const statusOptions = [
   { value: '1', label: '开发中' },
@@ -47,11 +48,16 @@ const CreateApplication = ({
   type?: 'create' | 'update';
   id?: number;
   renderTrigger: React.ReactNode;
-  projectOptions: {label: string, value: string}[];
+  projectOptions: { label: string; value: string }[];
 }) => {
   const query = useQuery();
 
   const [openDialog, setOpenDialog] = useState(false);
+
+  const [applicationSize, setApplicationSize] = useState({
+    width: 1920,
+    height: 1080,
+  });
 
   const createOrUpdate = () => {
     const values = form.getValues();
@@ -83,6 +89,7 @@ const CreateApplication = ({
       message: '项目id不能为空',
     }),
     description: z.string().optional(),
+    screen_size: z.string().optional(),
     status: z.string(),
   });
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -90,6 +97,7 @@ const CreateApplication = ({
     defaultValues: {
       name: '',
       description: '',
+      screen_size: '1', // 1为默认2为自定义
       status: '1',
       project_id: query?.id || undefined,
     },
@@ -183,6 +191,58 @@ const CreateApplication = ({
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name="screen_size"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>屏幕尺寸</FormLabel>
+                    <FormControl>
+                      <div className="screen-list flex gap-2">
+                        <div
+                          onClick={() => field.onChange('1')}
+                          className={`${field.value === '1' ? 'border-primary' : ''} screen-item flex-1 flex flex-col items-center justify-center gap-2 border-2 rounded-xl py-3 cursor-pointer hover:border-primary`}
+                        >
+                          <Computer />
+                          <span>桌面应用（默认）</span>
+                          <span>1920x1080</span>
+                        </div>
+                        <div
+                          onClick={() => field.onChange('2')}
+                          className={`${field.value === '2' ? 'border-primary' : ''} screen-item flex-1 flex flex-col items-center justify-center gap-2 border-2 rounded-xl py-3 cursor-pointer hover:border-primary`}
+                        >
+                          <Fullscreen />
+                          <span>自定义</span>
+                          <div className="flex gap-2 items-center">
+                            {field.value === '2' ? (
+                              <>
+                                <Input
+                                  placeholder="宽度"
+                                  type="number"
+                                  className="w-[100px] h-[32px]"
+                                  value={applicationSize.width}
+                                  onChange={(e) => setApplicationSize({ ...applicationSize, width: Number(e.target.value) })}
+                                />
+                                x
+                                <Input
+                                  placeholder="高度"
+                                  type="number"
+                                  className="w-[100px] h-[32px]"
+                                  value={applicationSize.height}
+                                  onChange={(e) => setApplicationSize({ ...applicationSize, height: Number(e.target.value) })}
+                                />
+                              </>
+                            ) : (
+                              <span>x</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="description"

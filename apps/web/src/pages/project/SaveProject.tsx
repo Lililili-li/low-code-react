@@ -29,7 +29,7 @@ import React, { useEffect, useState } from 'react';
 import Select from '@/components/Select';
 import { useSystemStore } from '@/store/modules/system';
 
-const CreateProject = ({
+const SaveProject = ({
   getProjects,
   renderTrigger,
   type = 'create',
@@ -179,4 +179,4 @@ const CreateProject = ({
   );
 };
 
-export default CreateProject;
+export default SaveProject;

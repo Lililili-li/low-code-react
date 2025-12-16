@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@repo/ui/components/table';
 import Pagination from '@/components/Pagination';
-import CreateProject from './CreateProject';
+import SaveProject from './SaveProject';
 import projectApi from '@/api/project';
 import { useRequest } from 'ahooks';
 import dayjs from 'dayjs';
@@ -108,7 +108,7 @@ const Projects = () => {
                     </InputGroupButton>
                   )}
                 </InputGroup>
-                <CreateProject
+                <SaveProject
                   getProjects={getProjects}
                   renderTrigger={
                     <Button variant="default" size="sm">
@@ -116,7 +116,7 @@ const Projects = () => {
                       创建项目
                     </Button>
                   }
-                ></CreateProject>
+                ></SaveProject>
               </div>
             </CardTitle>
           </Card>
@@ -153,7 +153,7 @@ const Projects = () => {
                           >
                             进入项目
                           </Button>
-                          <CreateProject
+                          <SaveProject
                             getProjects={getProjects}
                             type="update"
                             id={project.id}
@@ -162,7 +162,7 @@ const Projects = () => {
                                 编辑
                               </Button>
                             }
-                          ></CreateProject>
+                          ></SaveProject>
 
                           <ConfirmDialog
                             trigger={
@@ -191,7 +191,7 @@ const Projects = () => {
               <div className="flex items-center justify-center w-full">
                 <Empty
                   renderContent={
-                    <CreateProject
+                    <SaveProject
                       getProjects={getProjects}
                       renderTrigger={
                         <Button variant="default" size="sm">
@@ -199,7 +199,7 @@ const Projects = () => {
                           创建项目
                         </Button>
                       }
-                    ></CreateProject>
+                    ></SaveProject>
                   }
                 />
               </div>
