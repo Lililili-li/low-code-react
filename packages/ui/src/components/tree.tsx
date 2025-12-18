@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronRightIcon, FolderIcon } from 'lucide-react';
+import { ChevronRightIcon, FileIcon, FolderIcon } from 'lucide-react';
 
 import { cn } from '@repo/ui/lib/utils';
 
@@ -156,12 +156,12 @@ function TreeItem({ node, level }: TreeItemProps) {
     }
   };
 
-  const defaultIcon = <FolderIcon className="size-4 shrink-0 text-muted-foreground" />;
-  // const defaultIcon = hasChildren ? (
-  //   <FolderIcon className="size-4 shrink-0 text-muted-foreground" />
-  // ) : (
-  //   <FileIcon className="size-4 shrink-0 text-muted-foreground" />
-  // )
+  // const defaultIcon = <FolderIcon className="size-4 shrink-0 text-muted-foreground" />;
+  const defaultIcon = hasChildren ? (
+    <FolderIcon className="size-4 shrink-0 text-muted-foreground" />
+  ) : (
+    <FileIcon className="size-4 shrink-0 text-muted-foreground" />
+  )
 
   return (
     <div data-slot="tree-item">

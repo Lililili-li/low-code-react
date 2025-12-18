@@ -4,7 +4,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { useDesignStore } from '@/store/modules/design';
 import { Button } from '@repo/ui/components/button';
 import { Toggle } from '@repo/ui/components/toggle';
-import { AppWindow, Component, Home, Layers, PlusCircle, Save, Variable } from 'lucide-react';
+import { AppWindow, Component, Database, Home, Layers, PlusCircle, Save, Variable } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import SavePage from './SavePage';
 
@@ -38,6 +38,11 @@ const designConfig = [
     id: 'variable',
     name: '变量',
     icon: <Variable />,
+  },
+  {
+    id: 'datasource',
+    name: '数据源',
+    icon: <Database/>,
   },
 ];
 

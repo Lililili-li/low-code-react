@@ -3,7 +3,6 @@ import OriginalCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { json } from '@codemirror/lang-json';
 import { css } from '@codemirror/lang-css';
-import { okaidia } from '@uiw/codemirror-theme-okaidia';
 import { noctisLilac } from '@uiw/codemirror-theme-noctis-lilac';
 import { andromeda } from '@uiw/codemirror-theme-andromeda';
 

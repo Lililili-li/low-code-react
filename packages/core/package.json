@@ -13,13 +13,17 @@
     "lint": "eslint \"**/*.ts\""
   },
   "dependencies": {
+    "@repo/ui": "workspace:*",
+    "echarts": "^6.0.0",
+    "echarts-for-react": "^3.0.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "@repo/ui": "workspace:*"
+    "lucide-react": "^0.555.0"
+    
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
     "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "eslint": "^8.57.0",

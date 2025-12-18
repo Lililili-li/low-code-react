@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { Draft } from "immer";
 import { PageSchema, ComponentSchema } from '@repo/core/types'
 
 export interface DesignState {
@@ -11,12 +12,15 @@ export interface DesignState {
     }
   }
   pageSchema: PageSchema
+  currentCmp: ComponentSchema
 }
 
 interface DesignActions {
   setSiderVisible: (siderVisible: DesignState['config']['siderVisible']) => void
   setCanvasPanel: (canvasPanel: Partial<DesignState['config']['canvasPanel']>) => void
   setPageSchema: (pageSchema: Partial<PageSchema>) => void
+  setCurrentCmp: (component: ComponentSchema) => void
+  updateCurrentCmp: (component: Partial<ComponentSchema>) => void
   addComponent: (component: ComponentSchema) => void
   removeComponent: (id: string) => void
 }
@@ -50,6 +54,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       globalCss: '',
       components: [],
     },
+    currentCmp: {} as ComponentSchema,
     setSiderVisible: (siderVisible: DesignState['config']['siderVisible']) => {
       set((state) => {
         state.config.siderVisible = siderVisible
@@ -60,9 +65,24 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         state.pageSchema = { ...state.pageSchema, ...pageSchema }
       })
     },
+
+    setCurrentCmp: (component: ComponentSchema) => {
+      set((state) => {
+        state.currentCmp = component as Draft<ComponentSchema>;
+      })
+    },
+    updateCurrentCmp: (component: Partial<ComponentSchema>) => {
+      set((state) => {
+        state.currentCmp = { ...state.currentCmp, ...component } as Draft<ComponentSchema>;
+        const targetComponent = state.pageSchema.components.find(cmp => cmp.id === state.currentCmp.id);
+        if (targetComponent) {
+          Object.assign(targetComponent, component);
+        }
+      })
+    },
     addComponent: (component: ComponentSchema) => {
       set((state) => {
-        state.pageSchema.components.push(component)
+        state.pageSchema.components.push(component as Draft<ComponentSchema>)
       })
     },
     removeComponent: (id: string) => {
@@ -72,7 +92,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
     },
     updateComponent: (id: string, component: ComponentSchema) => {
       set((state) => {
-        state.pageSchema.components = state.pageSchema.components.map((cmp) => component.id === id ? component : cmp)
+        state.pageSchema.components = state.pageSchema.components.map((cmp) => cmp.id === id ? component as Draft<ComponentSchema> : cmp)
       })
     },
     setCanvasPanel: (canvasPanel: Partial<DesignState['config']['canvasPanel']>) => {

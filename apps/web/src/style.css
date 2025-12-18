@@ -18,3 +18,16 @@ h6 {
   font-size: inherit;
 }
 
+.dark .Spreadsheet__header, .Spreadsheet__cell {
+  background-color: #181818;
+  color: #9ca3af;
+  border-color: #374151;
+}
+.Spreadsheet__cell {
+  background-color: transparent !important;
+  text-align: center !important;
+}
+.dark .Spreadsheet__cell {
+  background-color: #181818 !important;
+  border-color: #374151 !important;
+}

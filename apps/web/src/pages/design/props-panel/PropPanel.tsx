@@ -1,9 +1,9 @@
 import React from 'react'
-import PagePanel from './components/PagePanel'
-import CmpPanel from './components/CmpPanel'
+import PagePanel from './PagePanel'
+import CmpPanel from './CmpPanel'
 
 const PropPanel = () => {
-  const [activePanel, setActivePanel] = React.useState<'page' | 'cmp'>('page')
+  const [activePanel, setActivePanel] = React.useState<'page' | 'cmp'>('cmp')
 
   return (
     <div className='w-full h-full'>

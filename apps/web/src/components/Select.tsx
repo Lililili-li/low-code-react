@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from '@repo/ui/components/select';
 import { cn } from '@repo/ui/lib/utils';
+import Empty from './Empty';
 
 interface SelectProps {
   value: string;
@@ -49,13 +50,13 @@ const Select = ({
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          {options.map((item) => {
+          {options.length > 0 ? options.map((item) => {
             return (
               <SelectItem key={item.value} value={item.value}>
                 {item.label} 
               </SelectItem>
             );
-          })}
+          }) : <Empty />}
         </SelectGroup>
       </SelectContent>
     </ShaSelect>

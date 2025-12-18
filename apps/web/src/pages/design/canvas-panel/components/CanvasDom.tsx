@@ -34,19 +34,10 @@ const CanvasDom = ({
   setCanvasPanel: (canvasPanel: { zoom: number; lockZoom?: boolean }) => void;
   config: DesignState['config'];
 }) => {
-
-  
-
   const { isDragging, delta, handleMouseDown } = useMouseDrag({
-    onDragStart: (e) => {
-      console.log('开始拖拽');
-    },
-    onDragMove: (e, delta) => {
-      console.log('移动中', delta.deltaX, delta.deltaY);
-    },
-    onDragEnd: (e, delta) => {
-      console.log('拖拽结束，总距离:', delta.distance);
-    },
+    onDragStart: (e) => {},
+    onDragMove: (e, delta) => {},
+    onDragEnd: (e, delta) => {},
   });
   const { theme } = useTheme();
 
@@ -262,7 +253,6 @@ const CanvasDom = ({
                     : { backgroundColor: pageSchema.background.color }),
                 }}
               >
-                {isDragging && <p>移动距离: {delta.distance.toFixed(2)}px</p>}
                 {children}
               </div>
             </div>

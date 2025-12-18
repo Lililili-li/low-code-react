@@ -11,11 +11,13 @@ import VariablePanel from './variable-panel/VariablePanel';
 import CanvasPanel from './canvas-panel/CanvasPanel';
 import PropPanel from './props-panel/PropPanel';
 import './index.less'
+import DatasourcePanel from './datasource-panel/DatasourcePanel';
 
 const panelMap = {
   material: MaterialPanel,
   layers: LayerPanel,
   variable: VariablePanel,
+  datasource: DatasourcePanel
 };
 
 const Design = () => {
@@ -34,11 +36,11 @@ const Design = () => {
             <div className="sidebar w-full h-full">{<PanelComponent />}</div>
           </ResizablePanel>
           <ResizableHandle withHandle/>
-          <ResizablePanel defaultSize={60}>
+          <ResizablePanel defaultSize={63}>
             <CanvasPanel />
           </ResizablePanel>
           <ResizableHandle withHandle/>
-          <ResizablePanel defaultSize={20} maxSize={25}>
+          <ResizablePanel defaultSize={17} maxSize={25}>
             <PropPanel />
           </ResizablePanel>
         </ResizablePanelGroup>
