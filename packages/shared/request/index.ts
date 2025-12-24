@@ -1,16 +1,17 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig, AxiosError, AxiosProgressEvent } from 'axios';
 // import { Toast } from '@douyinfe/semi-ui';
 import { toast } from 'sonner'
+
+
 // 响应数据结构
 interface ApiResponse<T = unknown> {
   code: number;
   data: T;
   message: string;
 }
-
 // 创建 axios 实例
 const instance: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

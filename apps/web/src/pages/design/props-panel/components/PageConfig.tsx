@@ -1,8 +1,8 @@
-import CodeMirror from '@/components/CodeMirror';
 import { PageSchema } from '@repo/core/types';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
+import MonacoEditor from '@repo/ui/components/monaco-editor';
 import {
   Sheet,
   SheetContent,
@@ -15,7 +15,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 import { HelpCircle, Settings } from 'lucide-react';
 
-const PageSetting = ({ pageSchema, setPageSchema }: { pageSchema: PageSchema; setPageSchema: any }) => {
+const PageConfig = ({ pageSchema, setPageSchema }: { pageSchema: PageSchema; setPageSchema: any }) => {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -56,7 +56,7 @@ const PageSetting = ({ pageSchema, setPageSchema }: { pageSchema: PageSchema; se
                 </TooltipContent>
               </Tooltip>
             </Label>
-            <CodeMirror value={pageSchema.globalHeaders} onChange={(value) => setPageSchema({ ...pageSchema, globalHeaders: value })} language="javascript" />
+            <MonacoEditor value={pageSchema.globalHeaders} onChange={(value) => setPageSchema({ ...pageSchema, globalHeaders: value })} language="javascript" />
           </div>
           <div className="host">
             <Label className="mb-4">
@@ -71,7 +71,7 @@ const PageSetting = ({ pageSchema, setPageSchema }: { pageSchema: PageSchema; se
                 </TooltipContent>
               </Tooltip>
             </Label>
-            <CodeMirror value={pageSchema.globalCss} onChange={(value) => setPageSchema({ ...pageSchema, globalCss: value })} language="css" />
+            <MonacoEditor value={pageSchema.globalCss} onChange={(value) => setPageSchema({ ...pageSchema, globalCss: value })} language="css" />
           </div>
         </div>
         <SheetFooter>
@@ -84,4 +84,4 @@ const PageSetting = ({ pageSchema, setPageSchema }: { pageSchema: PageSchema; se
   );
 };
 
-export default PageSetting;
+export default PageConfig;

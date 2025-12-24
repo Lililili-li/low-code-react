@@ -2,12 +2,11 @@ import ShadowView from 'react-shadow';
 import Ruler from '@scena/react-ruler';
 import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import hotkeys from 'hotkeys-js';
-import shadowStyles from './ShadowDom.css?inline';
+import shadowStyles from './ShadowDom.less?inline';
 import { PageSchema } from '@repo/core/types';
 import { DesignState } from '@/store/modules/design';
 import { useTheme } from '@/composable/use-theme';
 import CmpHotKeysService from '@repo/core/hot-keys';
-import { useMouseDrag } from '@/composable/use-mouse';
 
 const RULER_SIZE = 20;
 
@@ -34,11 +33,6 @@ const CanvasDom = ({
   setCanvasPanel: (canvasPanel: { zoom: number; lockZoom?: boolean }) => void;
   config: DesignState['config'];
 }) => {
-  const { isDragging, delta, handleMouseDown } = useMouseDrag({
-    onDragStart: (e) => {},
-    onDragMove: (e, delta) => {},
-    onDragEnd: (e, delta) => {},
-  });
   const { theme } = useTheme();
 
   const verticalRulerRef = useRef<Ruler>(null);
@@ -232,7 +226,6 @@ const CanvasDom = ({
             tabIndex={0}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            onMouseDown={handleMouseDown}
           >
             <div
               className="canvas-scroll-container"

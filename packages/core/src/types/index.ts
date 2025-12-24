@@ -1,14 +1,9 @@
-import { EChartsOption } from "echarts";
 import { CSSProperties } from "react";
-
-interface ChartPropsSchema {
-  option?: EChartsOption;
-}
-
 export interface ComponentSchema {
   id: string;                    // 组件唯一标识
   name: string;                  // 组件名称
-  props?: ChartPropsSchema;      // 组件属性
+  // props?: ChartPropsSchema;      // 组件属性
+  props?: {};      // 组件属性
   events?: EventBind[];          // 事件绑定
   style?: CSSProperties;         // 样式
   visible: boolean;              // 是否隐藏

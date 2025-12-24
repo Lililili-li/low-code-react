@@ -1,9 +1,12 @@
-import { useAppStore } from '@/store/modules/app';
 import Editor, { OnMount, OnChange, loader } from '@monaco-editor/react';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
+import * as monaco from 'monaco-editor';
 import type { editor } from 'monaco-editor';
 import { shikiToMonaco } from '@shikijs/monaco';
 import { createHighlighter, type Highlighter } from 'shiki';
+
+// 配置 loader 使用本地安装的 monaco-editor，而不是 CDN
+loader.config({ monaco });
 
 export type MonacoLanguage = 'javascript' | 'typescript' | 'json' | 'css' | 'html';
 
@@ -42,16 +45,11 @@ const MonacoEditor = ({
   wordWrap = 'on',
   className,
 }: MonacoEditorProps) => {
-  const config = useAppStore((state) => state.config);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const init = async () => {
-      const [highlighter, monaco] = await Promise.all([
-        getHighlighter(),
-        loader.init(),
-      ]);
+      const [highlighter, monaco] = await Promise.all([getHighlighter(), loader.init()]);
 
       monaco.languages.register({ id: 'javascript' });
       monaco.languages.register({ id: 'typescript' });
@@ -60,7 +58,6 @@ const MonacoEditor = ({
       monaco.languages.register({ id: 'html' });
 
       shikiToMonaco(highlighter, monaco);
-      setIsReady(true);
     };
 
     init();
@@ -74,21 +71,13 @@ const MonacoEditor = ({
     onChange?.(value || '');
   };
 
-  if (!isReady) {
-    return (
-      <div className={className} style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        Loading...
-      </div>
-    );
-  }
-
   return (
-    <div className={className} style={{borderRadius: '6px', overflow: 'hidden'}}>
+    <div className={className} style={{ borderRadius: '6px', overflow: 'hidden', background: '#24262e' }}>
       <Editor
         height={height}
         language={language}
         value={value}
-        theme='andromeeda'
+        theme="andromeeda"
         onChange={handleChange}
         onMount={handleEditorDidMount}
         options={{
@@ -113,4 +102,3 @@ const MonacoEditor = ({
 };
 
 export default MonacoEditor;
-

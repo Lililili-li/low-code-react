@@ -2,17 +2,19 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from 'node:path'
 import tailwindcss from "@tailwindcss/vite"
+import monacoEditorPluginModule from 'vite-plugin-monaco-editor';
+
+const monacoEditorPlugin = (monacoEditorPluginModule as any).default;
 
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss()
+    tailwindcss(),
+    monacoEditorPlugin({})
   ],
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
-      // '@repo/core': resolve(__dirname, '../../packages/core'),
-      // '@repo/ui': resolve(__dirname, '../../packages/ui'),
     },
   },
   server: {

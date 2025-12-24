@@ -4,8 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/too
 import { HelpCircle, Keyboard, Lock, Redo, Undo, Unlock } from 'lucide-react';
 import { Slider } from '@repo/ui/components/slider';
 import { useDesignStore } from '@/store/modules/design';
-import { useState } from 'react';
-import HotKeyDialog from './HotKeyDialog';
+import HotKeyDialog from '../../components/HotKeyDialog';
 
 const ratioOptions = [
   {
@@ -29,7 +28,6 @@ const ratioOptions = [
 const Toolbar = () => {
   const { config, setCanvasPanel } = useDesignStore();
 
-  const [openHotKeyDialog, setOpenHotKeyDialog] = useState(false);
 
   return (
     <div className="toolbar flex items-center justify-between w-full">
@@ -37,7 +35,7 @@ const Toolbar = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <HotKeyDialog>
-              <Button size="sm" variant="outline" onClick={() => setOpenHotKeyDialog(true)}>
+              <Button size="sm" variant="outline">
                 <Keyboard />
                 <span>快捷键</span>
               </Button>

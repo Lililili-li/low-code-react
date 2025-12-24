@@ -1,4 +1,4 @@
-import MonacoEditor from '@/components/MonacoEditor';
+import MonacoEditor from '@repo/ui/components/monaco-editor';
 import { Button } from '@repo/ui/components/button';
 import {
   Dialog,
@@ -15,7 +15,6 @@ import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/tooltip';
 import { Tree, type TreeNode } from '@repo/ui/components/tree';
-import { PageFit16Filled } from '@ricons/fluent';
 import { Plus, Save, Search, Settings, Trash2, Variable } from 'lucide-react';
 
 const BindVariable = ({ name }: { name: number }) => {

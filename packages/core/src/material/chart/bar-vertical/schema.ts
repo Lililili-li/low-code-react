@@ -4,17 +4,34 @@ import BarVerticalProps from "./Props";
 import type { EChartsOption } from 'echarts';
 import { ComponentSchema } from '@/types';
 
+export const dataset = {
+  dimensions: ['time', 'input', 'output'],
+  source: [
+    { time: '7:00', input: 4.9, output: 2.9 },
+    { time: '8:00', input: 7.3, output: 5.0 },
+    { time: '9:00', input: 9.2, output: 4.4 },
+    { time: '10:00', input: 5.6, output: 2.7 },
+    { time: '11:00', input: 7.7, output: 5.7 },
+    { time: '12:00', input: 5.6, output: 4.6 },
+    { time: '13:00', input: 4.2, output: 1.2 },
+    { time: '14:00', input: 3.6, output: 2.7 },
+    { time: '15:00', input: 6.0, output: 4.8 },
+    { time: '16:00', input: 6.4, output: 6.0 },
+  ]
+}
+
 export const defaultOption: EChartsOption = {
   backgroundColor: '#23243a',
+  dataset,
   tooltip: { //提示框组件
     trigger: 'axis',
-    formatter: '{b}<br />{a0}: {c0}<br />{a1}: {c1}',
     axisPointer: {
       type: 'shadow',
       label: {
-        backgroundColor: '#6a7985'
+        backgroundColor: '#333'
       }
     },
+    backgroundColor: '#333',
     textStyle: {
       color: '#fff',
       fontWeight: 'normal',
@@ -35,12 +52,6 @@ export const defaultOption: EChartsOption = {
     itemGap: 16,
     itemWidth: 18,
     itemHeight: 10,
-    data: [{
-      name: '流入',
-    },
-    {
-      name: '流出',
-    }],
     textStyle: {
       color: '#a8aab0',
       fontWeight: 'normal',
@@ -52,7 +63,6 @@ export const defaultOption: EChartsOption = {
     {
       type: 'category',
       boundaryGap: true,//坐标轴两边留白
-      data: ['7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
       axisLabel: { //坐标轴刻度标签的相关设置。
         interval: 0,//设置为 1，表示『隔一个标签显示一个标签』
         margin: 15,
@@ -105,7 +115,6 @@ export const defaultOption: EChartsOption = {
     {
       name: '流入',
       type: 'bar',
-      data: [4.9, 7.3, 9.2, 5.6, 7.7, 5.6, 4.2, 3.6, 6, 6.4],
       barWidth: 10,
       barGap: 0,//柱间距离
       label: {//图形上的文本标签
@@ -133,7 +142,6 @@ export const defaultOption: EChartsOption = {
     {
       name: '流出',
       type: 'bar',
-      data: [2.9, 5, 4.4, 2.7, 5.7, 4.6, 1.2, 2.7, 4.8, 6.0],
       barWidth: 10,
       barGap: 0.2,//柱间距离
       label: {//图形上的文本标签
@@ -159,6 +167,14 @@ export const defaultOption: EChartsOption = {
   ]
 }
 
+export interface ChartPropsSchema extends ComponentSchema {
+  props: {
+    option?: EChartsOption;
+    dataType?: '1' | '2' | '3'; // 1: 静态数据, 2: 动态数据, 3: 原始数据
+    data?: any[]
+  }
+}
+
 export const ChartBarVerticalMeta = {
   component: BarVertical,
   propsPanel: BarVerticalProps,
@@ -170,7 +186,8 @@ export const ChartBarVerticalMeta = {
     visible: true,
     lock: false,
     props: {
-      option: defaultOption
-    }
-  } as ComponentSchema
+      option: defaultOption,
+      dataType: '3'
+    },
+  } as ChartPropsSchema
 }

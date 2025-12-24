@@ -1,14 +1,14 @@
-import React from 'react'
 import PagePanel from './PagePanel'
 import CmpPanel from './CmpPanel'
+import { useDesignStore } from '@/store/modules/design'
 
 const PropPanel = () => {
-  const [activePanel, setActivePanel] = React.useState<'page' | 'cmp'>('cmp')
-
+  const {currentCmp} = useDesignStore()
+  const isCmpPanel = !!currentCmp.id;
   return (
     <div className='w-full h-full'>
       {
-        activePanel === 'page' ? <PagePanel /> : <CmpPanel />
+        isCmpPanel ? <CmpPanel /> : <PagePanel />
       }
     </div>
   )

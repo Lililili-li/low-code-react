@@ -4,7 +4,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@repo/ui/component
 import Select from '@/components/Select';
 import { Label } from '@repo/ui/components/label';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/components/toggle-group';
-import { Columns2, PlusCircle, StickyNote } from 'lucide-react';
+import { Columns2, Palette, PlusCircle, Settings, StickyNote } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/tooltip';
 import { Cut24Filled, ScaleFill24Regular, ScaleFit24Regular } from '@ricons/fluent';
 import { Button } from '@repo/ui/components/button';
@@ -13,7 +13,7 @@ import { Slider } from '@repo/ui/components/slider';
 import Upload, { UploadFile } from '@/components/Upload';
 import ColorPicker from '@repo/ui/components/color-picker';
 import { Input } from '@repo/ui/components/input';
-import PageSetting from './components/PageSetting';
+import PageConfig from './components/PageConfig';
 import commonApi from '@/api/common';
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
 import { useDesignStore } from '@/store/modules/design';
@@ -131,14 +131,20 @@ const PagePanel = () => {
   console.log();
 
   return (
-    <div className="page-panel-container p-4 min-w-[300px]">
-      <div className="tabs">
-        <Tabs defaultValue="page">
-          <TabsList className="justify-center w-full">
-            <TabsTrigger value="page">配置</TabsTrigger>
-            <TabsTrigger value="theme">主题</TabsTrigger>
-          </TabsList>
-          <TabsContent value="page" className="mt-2">
+    <div className="page-panel-container min-w-[300px]">
+      <Tabs defaultValue="config">
+        <TabsList className="justify-center w-full rounded-none">
+          <TabsTrigger value="config">
+            <Settings className='size-3.5'/>
+            <span>配置</span>
+          </TabsTrigger>
+          <TabsTrigger value="theme">
+            <Palette className='size-3.5'/>
+            <span>主题</span>
+          </TabsTrigger>
+        </TabsList>
+        <div className="p-2 pt-0">
+          <TabsContent value="config" className="mt-2">
             <Label>页面尺寸</Label>
             <div className="rect flex items-center gap-2 mt-3">
               <InputGroup className="h-[32px]">
@@ -348,7 +354,7 @@ const PagePanel = () => {
             </div>
 
             <div className="mt-4">
-              <PageSetting pageSchema={pageSchema} setPageSchema={setPageSchema} />
+              <PageConfig pageSchema={pageSchema} setPageSchema={setPageSchema} />
             </div>
           </TabsContent>
           <TabsContent value="theme">
@@ -461,8 +467,8 @@ const PagePanel = () => {
               )}
             </div>
           </TabsContent>
-        </Tabs>
-      </div>
+        </div>
+      </Tabs>
     </div>
   );
 };

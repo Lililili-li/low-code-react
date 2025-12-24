@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router';
 import AuthGuard from '@/components/AuthGuard';
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import Demo from '@/pages/Demo';
 
 const Login = lazy(() => import('@/pages/Login'));
 const Layout = lazy(() => import('@/layout'));
@@ -93,6 +94,10 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
+  {
+    path: 'demo',
+    element: <Demo />
+  }
 ]);
 
 export default router;
