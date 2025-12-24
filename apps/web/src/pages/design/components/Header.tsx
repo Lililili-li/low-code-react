@@ -48,7 +48,8 @@ const designConfig = [
 
 const Header = () => {
   const navigate = useNavigate();
-  const { config, setSiderVisible } = useDesignStore();
+  const config = useDesignStore(state => state.config);
+  const setSiderVisible = useDesignStore(state => state.setSiderVisible);
   return (
     <div className="flex items-center px-4 h-full justify-between relative">
       <div className="header-left flex gap-2">

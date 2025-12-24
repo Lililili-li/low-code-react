@@ -21,7 +21,7 @@ export const dataset = {
 }
 
 export const defaultOption: EChartsOption = {
-  backgroundColor: '#23243a',
+  backgroundColor: '#333',
   dataset,
   tooltip: { //提示框组件
     trigger: 'axis',
@@ -189,5 +189,5 @@ export const ChartBarVerticalMeta = {
       option: defaultOption,
       dataType: '3'
     },
-  } as ChartPropsSchema
+  } as Pick<ChartPropsSchema, 'style' | 'visible' | 'lock' | 'props'>
 }

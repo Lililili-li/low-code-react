@@ -7,7 +7,8 @@
     "./hot-keys": "./src/hot-keys/index.ts",
     "./material": "./src/material/index.ts",
     "./event": "./src/event/index.ts",
-    "./adaptation": "./src/adaptation/index.ts"
+    "./adaptation": "./src/adaptation/index.ts",
+    "./canvas": "./src/canvas/index.ts"
   },
   "scripts": {
     "lint": "eslint \"**/*.ts\""

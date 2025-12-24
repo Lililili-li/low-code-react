@@ -135,7 +135,6 @@ const Components = () => {
               </Button>
             </CardTitle>
             <CardContent>
-              
             </CardContent>
           </Card>
         </div>

@@ -13,13 +13,14 @@ export interface DesignState {
   }
   pageSchema: PageSchema
   currentCmp: ComponentSchema
+  currentCmpId: string
 }
 
 interface DesignActions {
   setSiderVisible: (siderVisible: DesignState['config']['siderVisible']) => void
   setCanvasPanel: (canvasPanel: Partial<DesignState['config']['canvasPanel']>) => void
   setPageSchema: (pageSchema: Partial<PageSchema>) => void
-  setCurrentCmp: (component: ComponentSchema) => void
+  setCurrentCmpId: (id: string) => void
   updateCurrentCmp: (component: Partial<ComponentSchema>) => void
   addComponent: (component: ComponentSchema) => void
   removeComponent: (id: string) => void
@@ -55,6 +56,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       components: [],
     },
     currentCmp: {} as ComponentSchema,
+    currentCmpId: '',
     setSiderVisible: (siderVisible: DesignState['config']['siderVisible']) => {
       set((state) => {
         state.config.siderVisible = siderVisible
@@ -65,18 +67,16 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         state.pageSchema = { ...state.pageSchema, ...pageSchema }
       })
     },
-
-    setCurrentCmp: (component: ComponentSchema) => {
+    setCurrentCmpId: (id: string) => {
       set((state) => {
-        state.currentCmp = component as Draft<ComponentSchema>;
+        state.currentCmpId = id;
       })
     },
     updateCurrentCmp: (component: Partial<ComponentSchema>) => {
       set((state) => {
-        state.currentCmp = { ...state.currentCmp, ...component } as Draft<ComponentSchema>;
-        const targetComponent = state.pageSchema.components.find(cmp => cmp.id === state.currentCmp.id);
-        if (targetComponent) {
-          Object.assign(targetComponent, component);
+        const index = state.pageSchema.components.findIndex(item => item.id === component.id)
+        if (index !== -1) {
+          state.pageSchema.components[index] = { ...state.pageSchema.components[index], ...component } as Draft<ComponentSchema>
         }
       })
     },

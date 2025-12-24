@@ -9,9 +9,10 @@ import Empty from '@/components/Empty';
 import { Palette, Settings, Wrench } from 'lucide-react';
 
 const CmpPanel = () => {
-  const { currentCmp, updateCurrentCmp } = useDesignStore();
-
-  const PropsCmp = materialCmp[currentCmp.id]?.propsPanel;
+  const currentCmpId = useDesignStore(state => state.currentCmpId);
+  const updateCurrentCmp = useDesignStore(state => state.updateCurrentCmp);
+  const currentCmp = useDesignStore(state => state.pageSchema.components.find(c => c.id === currentCmpId));
+  const PropsCmp = materialCmp[currentCmp!.type]?.propsPanel;
 
   return (
     <div className="cmp-panel-container min-w-[300px] h-full">
@@ -34,7 +35,7 @@ const CmpPanel = () => {
         <div className='p-2'>
           <Input
             placeholder="请输入组件名称"
-            defaultValue={currentCmp.name}
+            defaultValue={currentCmp?.name}
             className="text-center h-[32px]"
             onChange={(e) => updateCurrentCmp({ name: e.target.value })}
           />
