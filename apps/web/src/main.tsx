@@ -6,6 +6,7 @@ import { RouterProvider } from "react-router";
 import '@/locales'
 import { Toaster } from "@repo/ui/components/sonner";
 import { useTheme } from "./composable/use-theme";
+import 'animate.css';
 
 const App = () => {
   const { theme } = useTheme()

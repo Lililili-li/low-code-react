@@ -23,7 +23,7 @@ interface HotKeyDialogProps {
 
 const HotKeyData = [
   {
-    function: '展示 / 隐藏元素',
+    function: '展示 / 隐藏组件',
     macHotKey: (
       <div className="flex items-center">
         <Command size={16} /> + P
@@ -32,12 +32,31 @@ const HotKeyData = [
     windowsHotKey: 'Ctrl + P',
   },
   {
-    function: '删除',
+    function: '移动组件',
+    macHotKey: (
+      <div className="flex items-center gap-2">
+        <span>↑</span>
+        <span>→</span>
+        <span>↓</span>
+        <span>←</span>
+      </div>
+    ),
+    windowsHotKey: (
+      <div className="flex items-center gap-2">
+        <span>↑</span>
+        <span>→</span>
+        <span>↓</span>
+        <span>←</span>
+      </div>
+    ),
+  },
+  {
+    function: '删除组件',
     macHotKey: 'Backspace',
     windowsHotKey: 'Backspace',
   },
   {
-    function: '复制',
+    function: '复制组件',
     macHotKey: (
       <div className="flex items-center">
         <Command size={16} /> + C
@@ -46,7 +65,7 @@ const HotKeyData = [
     windowsHotKey: 'Ctrl + C',
   },
   {
-    function: '粘贴',
+    function: '粘贴组件',
     macHotKey: (
       <div className="flex items-center">
         <Command size={16} /> + V
@@ -55,7 +74,7 @@ const HotKeyData = [
     windowsHotKey: 'Ctrl + V',
   },
   {
-    function: '剪切',
+    function: '剪切组件',
     macHotKey: (
       <div className="flex items-center">
         <Command size={16} /> + X
@@ -64,15 +83,15 @@ const HotKeyData = [
     windowsHotKey: 'Ctrl + X',
   },
   {
-    function: '多选',
+    function: '多选组件',
     macHotKey: (
       <div className="flex items-center">
-        <Command size={16} /> + <img src={LeftMouseIcon} alt="" className="size-6" />
+        Shift + <img src={LeftMouseIcon} alt="" className="size-6" />
       </div>
     ),
     windowsHotKey: (
       <div className="flex items-center">
-        Ctrl + <img src={LeftMouseIcon} alt="" className="size-6" />
+        Shift + <img src={LeftMouseIcon} alt="" className="size-6" />
       </div>
     ),
   },
@@ -84,24 +103,6 @@ const HotKeyData = [
       </div>
     ),
     windowsHotKey: 'Ctrl + G',
-  },
-  {
-    function: '撤销',
-    macHotKey: (
-      <div className="flex items-center">
-        <Command size={16} /> + Z
-      </div>
-    ),
-    windowsHotKey: 'Ctrl + Z',
-  },
-  {
-    function: '恢复',
-    macHotKey: (
-      <div className="flex items-center">
-        <Command size={16} /> + Y
-      </div>
-    ),
-    windowsHotKey: 'Ctrl + Y',
   },
   {
     function: '移动画布',
@@ -133,6 +134,24 @@ const HotKeyData = [
       </div>
     ),
     windowsHotKey: 'Ctrl + L',
+  },
+  {
+    function: '撤销',
+    macHotKey: (
+      <div className="flex items-center">
+        <Command size={16} /> + Z
+      </div>
+    ),
+    windowsHotKey: 'Ctrl + Z',
+  },
+  {
+    function: '恢复',
+    macHotKey: (
+      <div className="flex items-center">
+        <Command size={16} /> + Y
+      </div>
+    ),
+    windowsHotKey: 'Ctrl + Y',
   },
 ];
 

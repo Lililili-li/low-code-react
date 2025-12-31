@@ -4,9 +4,21 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { useDesignStore } from '@/store/modules/design';
 import { Button } from '@repo/ui/components/button';
 import { Toggle } from '@repo/ui/components/toggle';
-import { AppWindow, Component, Database, Home, Layers, PlusCircle, Save, Variable } from 'lucide-react';
+import {
+  AppWindow,
+  Component,
+  Database,
+  Home,
+  Layers,
+  Pencil,
+  PlusCircle,
+  Save,
+  Settings,
+  Variable,
+} from 'lucide-react';
 import { useNavigate } from 'react-router';
 import SavePage from './SavePage';
+import { TextBoxSettings20Regular } from '@ricons/fluent';
 
 const pageOptions = [
   {
@@ -42,14 +54,14 @@ const designConfig = [
   {
     id: 'datasource',
     name: '数据源',
-    icon: <Database/>,
+    icon: <Database />,
   },
 ];
 
 const Header = () => {
   const navigate = useNavigate();
-  const config = useDesignStore(state => state.config);
-  const setSiderVisible = useDesignStore(state => state.setSiderVisible);
+  const config = useDesignStore((state) => state.config);
+  const setSiderVisible = useDesignStore((state) => state.setSiderVisible);
   return (
     <div className="flex items-center px-4 h-full justify-between relative">
       <div className="header-left flex gap-2">
@@ -85,10 +97,17 @@ const Header = () => {
           renderTrigger={
             <Button size="sm" variant="outline">
               <PlusCircle />
-              <span>添加页面</span>
             </Button>
           }
-        ></SavePage>
+        />
+        <SavePage
+          renderTrigger={
+            <Button size="sm" variant="outline">
+              <TextBoxSettings20Regular className='size-5'/>
+            </Button>
+          }
+          type='update'
+        />
       </div>
       <div className="header-right flex gap-2">
         <Button size="sm" variant="outline">

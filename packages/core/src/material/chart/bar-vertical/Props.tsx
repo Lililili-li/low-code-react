@@ -118,8 +118,8 @@ const Props = ({
   const originDataset = cloneDeep(dataset);
 
   return (
-    <div className="props-panel flex flex-col gap-4">
-      <div className="item flex justify-between gap-2 items-center w-full">
+    <div className="props-panel flex flex-col gap-2">
+      <div className="item flex justify-between gap-2 items-center px-2 mt-4">
         <div className="shrink-0 w-[25%]">
           <Label>数据类型</Label>
         </div>
@@ -199,37 +199,7 @@ const Props = ({
           </Dialog>
         )}
       </div>
-      <div className="item flex justify-between gap-2 items-center">
-        <div className="shrink-0 w-[25%]">
-          <Label>是否渲染</Label>
-        </div>
-        <div className="flex-1 items-center flex">
-          <Switch
-            defaultChecked={visible}
-            onCheckedChange={(value) => {
-              if (updateSchema) {
-                updateSchema({ ...schema, visible: value });
-              }
-            }}
-          />
-        </div>
-        {bindVariable?.({ name: 2 })}
-      </div>
-      <div className="item flex justify-between gap-2 items-center">
-        <div className="shrink-0 w-[25%]">
-          <Label>是否锁定</Label>
-        </div>
-        <div className="flex-1 items-center flex">
-          <Switch
-            defaultChecked={lock}
-            onCheckedChange={(value) => {
-              if (updateSchema) {
-                updateSchema({ ...schema, lock: value });
-              }
-            }}
-          />
-        </div>
-      </div>
+      
       <div className="item">
         <Accordion type="multiple" className="w-full">
           <AccordionItem value="series">

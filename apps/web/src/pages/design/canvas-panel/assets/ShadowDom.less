@@ -44,6 +44,7 @@
   position: absolute;
 }
 
+
 .dark .canvas-area {
   scrollbar-color: #414143 transparent;
 }
@@ -106,6 +107,17 @@
   top: 0;
   z-index: 1;
   cursor: move;
+  background-color: transparent;
+  border: none;
+}
+
+.cmp-mask:hover {
+  border: 1px dashed #274be3;
+}
+
+.cmp-mask-active {
+  border: 1px solid #274be3 !important;
+  background-color: rgba(39, 75, 227, 0.1) !important;
 }
 
 .move-corner {
@@ -151,10 +163,10 @@
 
 .move-rect {
   position: absolute;
-  width: 25px;
-  height: 5px;
+  width: 30px;
+  height: 10px;
   background: #fff;
-  border-radius: 4px;
+  border-radius: 8px;
   border: 2px solid #274be3;
 }
 
@@ -178,18 +190,53 @@
   position: absolute;
   left: 0;
   top: 50%;
-  width: 5px;
-  height: 25px;
+  width: 10px;
+  height: 30px;
   transform: translate(-50%, -50%);
   cursor: ew-resize;
+  background: #fff;
+  border-radius: 8px;
+  border: 2px solid #274be3;
 }
 
 .r-move {
   position: absolute;
   right: 0;
   top: 50%;
-  width: 5px;
-  height: 25px;
+  width: 10px;
+  height: 30px;
   transform: translate(50%, -50%);
   cursor: ew-resize;
+  background: #fff;
+  border-radius: 8px;
+  border: 2px solid #274be3;
+}
+
+.helper-container {
+  position: absolute;
+  .helper-text {
+    color: #09f;
+    display: flex;
+    span {
+      display: flex;
+      white-space: nowrap;
+    }
+  }
+
+  .helper-line {
+    border: 1px dashed #09f;
+    position: absolute;
+    transform-origin: left top;
+  }
+
+  .horizontal-line {
+    // height: 2px;
+    
+    transform: rotate(180deg);
+  }
+
+  .vertical-line {
+    // width: 2px;
+    transform: rotate(180deg);
+  }
 }

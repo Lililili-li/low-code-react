@@ -9,10 +9,12 @@ import {
 } from '@repo/ui/components/dialog';
 import { PlusCircle } from 'lucide-react';
 import { useState } from 'react';
-import './SavePage.less'
+import './SavePage.less';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 
 interface SavePageProps {
   renderTrigger: React.ReactNode;
+  type?: 'create' | 'update';
 }
 
 const menuItems = [
@@ -42,12 +44,17 @@ const pages = [
   },
 ];
 
-const SavePage = ({ renderTrigger }: SavePageProps) => {
+const SavePage = ({ renderTrigger, type = 'create' }: SavePageProps) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [currentMenu, setCurrentMenu] = useState('all');
   return (
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-      <DialogTrigger asChild>{renderTrigger}</DialogTrigger>
+      <Tooltip>
+        <DialogTrigger asChild>
+          <TooltipTrigger asChild>{renderTrigger}</TooltipTrigger>
+        </DialogTrigger>
+        <TooltipContent>{type === 'create' ? '添加页面' : '修改信息'}</TooltipContent>
+      </Tooltip>
       <DialogContent className="sm:max-w-[1200px] p-4 h-[calc(100vh-120px)] flex flex-col dark:bg-[#121212] bg-[#f8f9fa]">
         <DialogHeader>
           <DialogTitle>添加页面</DialogTitle>

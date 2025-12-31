@@ -4,7 +4,7 @@ import { initReactI18next } from 'react-i18next';
 
 import zhCN from './zh-CN.json';
 import enUS from './en-US.json';
-import { getLanguage } from '@repo/shared/app/index';
+import { getLanguage } from '@repo/shared/app';
 
 const resources = {
   'zh-CN': { translation: zhCN },

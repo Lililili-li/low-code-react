@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
 import { Input } from '@repo/ui/components/input';
 import ColorPicker from '@repo/ui/components/color-picker';
 import { Textarea } from '@repo/ui/components/textarea';
-import { isString } from '@repo/shared';
+import { isString } from '@repo/shared/index';
 import { EChartsCoreOption } from 'echarts/types/src/echarts.all.js';
 
 interface TooltipProps {

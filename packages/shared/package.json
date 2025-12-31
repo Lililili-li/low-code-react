@@ -7,12 +7,18 @@
   },
   "peerDependencies": {
     "axios": "^1.13.2",
-    "sonner": "^2.0.7"
+    "sonner": "^2.0.7",
+    "mitt": "^3.0.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "eslint": "^8.57.0",
     "typescript": "5.5.4"
+  },
+  "exports": {
+    "./app": "./src/app/index.ts",
+    "./request": "./src/request/index.ts",
+    "./index": "./src/index.ts"
   }
 }

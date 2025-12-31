@@ -14,6 +14,7 @@ export interface DesignState {
   pageSchema: PageSchema
   currentCmp: ComponentSchema
   currentCmpId: string
+  selectedCmpIds: string[]
 }
 
 interface DesignActions {
@@ -24,6 +25,9 @@ interface DesignActions {
   updateCurrentCmp: (component: Partial<ComponentSchema>) => void
   addComponent: (component: ComponentSchema) => void
   removeComponent: (id: string) => void
+  setSelectedCmpIds: (ids: string[]) => void
+  addSelectedCmpIds: (id: string) => void
+  updateSelectCmp: (components: ComponentSchema[]) => void
 }
 
 export const useDesignStore = create<DesignState & DesignActions>()(
@@ -57,6 +61,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
     },
     currentCmp: {} as ComponentSchema,
     currentCmpId: '',
+    selectedCmpIds: [] as string[],
     setSiderVisible: (siderVisible: DesignState['config']['siderVisible']) => {
       set((state) => {
         state.config.siderVisible = siderVisible
@@ -72,6 +77,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         state.currentCmpId = id;
       })
     },
+    // 更新当前选中的组件
     updateCurrentCmp: (component: Partial<ComponentSchema>) => {
       set((state) => {
         const index = state.pageSchema.components.findIndex(item => item.id === component.id)
@@ -90,7 +96,8 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         state.pageSchema.components = state.pageSchema.components.filter((component) => component.id !== id)
       })
     },
-    updateComponent: (id: string, component: ComponentSchema) => {
+    // 更新id为参数id的组件
+    updateComponents: (id: string, component: ComponentSchema) => {
       set((state) => {
         state.pageSchema.components = state.pageSchema.components.map((cmp) => cmp.id === id ? component as Draft<ComponentSchema> : cmp)
       })
@@ -101,6 +108,25 @@ export const useDesignStore = create<DesignState & DesignActions>()(
           ...state.config.canvasPanel,
           ...canvasPanel
         }
+      })
+    },
+    setSelectedCmpIds(ids: string[]) {
+      set((state) => {
+        state.selectedCmpIds = ids;
+      })
+    },
+    addSelectedCmpIds(id: string) {
+      set((state) => {
+        if (state.selectedCmpIds.includes(id)) return;
+        state.selectedCmpIds.push(id);
+      })
+    },
+    updateSelectCmp(components: ComponentSchema[]) {
+      set((state) => {
+        const componentMap = new Map(components.map(item => [item.id, item]));
+        state.pageSchema.components = state.pageSchema.components.map((cmp) => 
+          componentMap.get(cmp.id) || cmp
+        );
       })
     }
   }))

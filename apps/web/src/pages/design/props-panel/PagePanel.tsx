@@ -13,7 +13,7 @@ import { Slider } from '@repo/ui/components/slider';
 import Upload, { UploadFile } from '@/components/Upload';
 import ColorPicker from '@repo/ui/components/color-picker';
 import { Input } from '@repo/ui/components/input';
-import PageConfig from './components/PageConfig';
+import PageConfig from './components/page-config';
 import commonApi from '@/api/common';
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
 import { useDesignStore } from '@/store/modules/design';
@@ -135,11 +135,11 @@ const PagePanel = () => {
       <Tabs defaultValue="config">
         <TabsList className="justify-center w-full rounded-none">
           <TabsTrigger value="config">
-            <Settings className='size-3.5'/>
+            <Settings className="size-3.5" />
             <span>配置</span>
           </TabsTrigger>
           <TabsTrigger value="theme">
-            <Palette className='size-3.5'/>
+            <Palette className="size-3.5" />
             <span>主题</span>
           </TabsTrigger>
         </TabsList>
@@ -285,10 +285,8 @@ const PagePanel = () => {
                 >
                   <Tooltip>
                     <ToggleGroupItem value="1" aria-label="Toggle italic" asChild>
-                      <TooltipTrigger asChild>
-                        <Button size="sm">
-                          <ScaleFill24Regular className="size-5" />
-                        </Button>
+                      <TooltipTrigger>
+                        <ScaleFill24Regular className="size-5" />
                       </TooltipTrigger>
                     </ToggleGroupItem>
                     <TooltipContent>

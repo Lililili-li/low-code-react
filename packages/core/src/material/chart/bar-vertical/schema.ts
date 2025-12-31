@@ -21,7 +21,6 @@ export const dataset = {
 }
 
 export const defaultOption: EChartsOption = {
-  backgroundColor: '#333',
   dataset,
   tooltip: { //提示框组件
     trigger: 'axis',
@@ -181,13 +180,20 @@ export const ChartBarVerticalMeta = {
   schema: {
     style: {
       width: 500,
-      height: 300
+      height: 300,
+      rotateX: 0,
+      rotateY: 0,
+      rotateZ: 0,
+      skewX: 0,
+      skewY: 0,
+      scale: 1,
     },
     visible: true,
     lock: false,
+    animate: false,
     props: {
       option: defaultOption,
       dataType: '3'
     },
-  } as Pick<ChartPropsSchema, 'style' | 'visible' | 'lock' | 'props'>
+  } as Pick<ChartPropsSchema, 'style' | 'visible' | 'lock' | 'props' | 'animate'>
 }

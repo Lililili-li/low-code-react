@@ -10,8 +10,9 @@ import LayerPanel from './layer-panel/LayerPanel';
 import VariablePanel from './variable-panel/VariablePanel';
 import CanvasPanel from './canvas-panel/CanvasPanel';
 import PropPanel from './props-panel/PropPanel';
-import './index.less'
+import './assets/index.less'
 import DatasourcePanel from './datasource-panel/DatasourcePanel';
+import { eventBus } from '@repo/shared/index';
 
 const panelMap = {
   material: MaterialPanel,
@@ -31,11 +32,13 @@ const Design = () => {
         <Header />
       </div>
       <div className="design-content flex flex-1 min-h-0">
-        <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+        <ResizablePanelGroup direction="horizontal" className="w-full h-full" onLayout={() => {
+          eventBus.emit('handleResize')
+        }}>
           <ResizablePanel defaultSize={20} maxSize={25}>
             <div className="sidebar w-full h-full">{<PanelComponent />}</div>
           </ResizablePanel>
-          <ResizableHandle withHandle/>
+          <ResizableHandle withHandle />
           <ResizablePanel defaultSize={63}>
             <CanvasPanel />
           </ResizablePanel>

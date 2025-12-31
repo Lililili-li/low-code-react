@@ -7,3 +7,5 @@ export const getTheme = () => {
   const storage = localStorage.getItem('app-storage')
   return storage ? JSON.parse(storage)?.theme : 'light'
 }
+
+

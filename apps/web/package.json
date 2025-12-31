@@ -25,6 +25,7 @@
     "immer": "^11.0.1",
     "less": "^4.4.2",
     "lucide-react": "^0.555.0",
+    "mitt": "^3.0.1",
     "react": "^19.1.1",
     "react-colorful": "^5.6.1",
     "react-dom": "^19.1.1",
@@ -38,7 +39,8 @@
     "tailwindcss": "^4.1.17",
     "vite-plugin-semi-theme": "^0.6.0",
     "zod": "^3.25.76",
-    "zustand": "^5.0.9"
+    "zustand": "^5.0.9",
+    "animate.css": "^4.1.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

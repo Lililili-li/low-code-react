@@ -3,10 +3,12 @@ import CanvasDom from './components/CanvasDom';
 import Toolbar from './components/Toolbar';
 import { useDesignStore } from '@/store/modules/design';
 import ShadowView from 'react-shadow';
+import AnimationCss from 'animate.css?inline'
 import shadowStyles from './assets/ShadowDom.less?inline';
 import { useTheme } from '@/composable/use-theme';
 import Ruler from '@scena/react-ruler';
 import { useShallow } from 'zustand/react/shallow';
+import { eventBus } from '@repo/shared/index';
 
 const RULER_SIZE = 20;
 
@@ -33,27 +35,12 @@ const CanvasPanel = () => {
   const [scrollX, setScrollX] = useState(0);
   const [scrollY, setScrollY] = useState(0);
 
-  const handleResize = useCallback(() => {
-    verticalRulerRef.current?.resize();
-    horizontalRulerRef.current?.resize();
-  }, []);
-
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    e.preventDefault();
     const target = e.target as HTMLDivElement;
     setScrollX(target.scrollLeft);
     setScrollY(target.scrollTop);
   }, []);
-
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        const delta = e.deltaY > 0 ? -0.01 : 0.01;
-        const prevZoom = config.canvasPanel.zoom;
-        setCanvasPanel({ zoom: Math.min(Math.max((prevZoom ?? 1) + delta, 0.1), 2) });
-      }
-    },
-    [config.canvasPanel.zoom],
-  );
 
   // 实际使用的缩放值（未初始化时使用1）
   const effectiveZoom = config.canvasPanel.zoom ?? 1;
@@ -69,6 +56,8 @@ const CanvasPanel = () => {
   }, [effectiveZoom]);
 
   const canvasRef = useRef<HTMLDivElement>(null);
+  const isInitialMountRef = useRef(true);
+
   const computedUnit = useMemo(() => {
     if (effectiveZoom > 1.5) return 25;
     else if (effectiveZoom > 0.75 && effectiveZoom <= 1.5) return 50;
@@ -77,58 +66,99 @@ const CanvasPanel = () => {
     else return 400;
   }, [effectiveZoom]);
 
-  const autoCenter = useCallback(() => {
-    if (!canvasRef.current) return;
-    const { width } = canvasRef.current.getBoundingClientRect();
-    const scale = (width - 40) / pageSchemaSubset.width;
-    setCanvasPanel({ zoom: Number(Number(scale)) });
-  }, [canvasRef.current]);
+  // 使用 callback ref 监听 DOM 挂载
+  const setCanvasRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (node) {
+        // 保存到 ref 中供其他地方使用
+        (canvasRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
 
-  useEffect(() => {
-    autoCenter();
-  }, [autoCenter]);
-
-  // 计算使画布居中所需的滚动位置
-  const getCenterScrollPosition = useCallback(() => {
-    if (!canvasRef.current) return { scrollLeft: 0, scrollTop: 0 };
-    const container = canvasRef.current;
-    const scaledWidth = pageSchemaSubset.width * effectiveZoom;
-    const scaledHeight = pageSchemaSubset.height * effectiveZoom;
-
-    // 画布中心在容器中的位置
-    const canvasCenterX = CANVAS_OFFSET.x + scaledWidth / 2;
-    const canvasCenterY = CANVAS_OFFSET.y + scaledHeight / 2;
-
-    // 滚动到使画布居中的位置
-    const scrollLeft = canvasCenterX - container.clientWidth / 2;
-    const scrollTop = canvasCenterY - container.clientHeight / 2;
-
-    return { scrollLeft, scrollTop };
-  }, [CANVAS_OFFSET]);
-
-  useEffect(() => {
-    // 延迟调用 resize，确保 Shadow DOM 完全渲染
-    const timer = setTimeout(() => {
-      handleResize();
-      // 滚动到中心位置
-      if (canvasRef.current) {
-        const { scrollLeft, scrollTop } = getCenterScrollPosition();
-        canvasRef.current.scrollLeft = scrollLeft;
-        canvasRef.current.scrollTop = scrollTop;
+        // 只在初始挂载时计算 zoom
+        if (isInitialMountRef.current) {
+          const { width } = node.getBoundingClientRect();
+          const scale = (width - 40) / pageSchemaSubset.width;
+          setCanvasPanel({ zoom: Number(scale) });
+          isInitialMountRef.current = false;
+        }
       }
-    }, 100);
-    window.addEventListener('resize', handleResize);
+    },
+    [pageSchemaSubset.width, setCanvasPanel],
+  );
 
+  // 初始挂载后自动居中
+  useEffect(() => {
+    if (isInitialMountRef.current || !canvasRef.current) return;
+
+    const timer = setTimeout(() => {
+      if (!canvasRef.current) return;
+      const currentZoom = config.canvasPanel.zoom ?? 1;
+      const scaledWidth = pageSchemaSubset.width * currentZoom;
+      const scaledHeight = pageSchemaSubset.height * currentZoom;
+      // 重新计算 CANVAS_OFFSET
+      const offsetX = (CONTAINER_SIZE.width - scaledWidth) / 2;
+      const offsetY = (CONTAINER_SIZE.height - scaledHeight) / 2;
+      const canvasCenterX = offsetX + scaledWidth / 2;
+      const canvasCenterY = offsetY + scaledHeight / 2;
+      const scrollLeft = canvasCenterX - canvasRef.current.clientWidth / 2;
+      const scrollTop = canvasCenterY - canvasRef.current.clientHeight / 2;
+      canvasRef.current.scrollLeft = scrollLeft;
+      canvasRef.current.scrollTop = scrollTop;
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [effectiveZoom, pageSchemaSubset.width, pageSchemaSubset.height, config.canvasPanel.zoom]);
+
+  const autoCenter = () => {
+    if (canvasRef.current) {
+      const { width } = canvasRef.current.getBoundingClientRect();
+      const scale = (width - 40) / pageSchemaSubset.width;
+      setCanvasPanel({ zoom: Number(scale) });
+    }
+    verticalRulerRef.current?.resize();
+    horizontalRulerRef.current?.resize();
+  };
+
+  // 独立管理滚轮事件监听器
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        const delta = e.deltaY > 0 ? -0.01 : 0.01;
+        const prevZoom = config.canvasPanel.zoom;
+        setCanvasPanel({ zoom: Math.min(Math.max((prevZoom ?? 1) + delta, 0.1), 2) });
+      }
+    };
+
+    canvasElement.addEventListener('wheel', handleWheel, { passive: false });
     return () => {
-      clearTimeout(timer);
+      canvasElement.removeEventListener('wheel', handleWheel);
+    };
+  }, [config.canvasPanel.zoom, setCanvasPanel]);
+
+  // 窗口 resize 时重新计算
+  const handleResize = useCallback(() => autoCenter(), [pageSchemaSubset.width, setCanvasPanel]);
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [handleResize, getCenterScrollPosition]);
+  }, [handleResize]);
+
+  useEffect(() => {
+    eventBus.on('handleResize', () => autoCenter());
+    return () => eventBus.off('handleResize');
+  }, []);
 
   return (
     <div className="canvas-panel w-full flex flex-col h-[calc(100vh-50px)]">
       <div className="canvas-container h-[calc(100%-50px)]">
-        <ShadowView.div className={`ruler-container h-full`}>
+        <ShadowView.div className={`ruler-container h-full`} id="shadow-host">
+          <style>{AnimationCss}</style>
           <style>{shadowStyles}</style>
           <div className={`${theme === 'dark' ? 'dark ruler-wrapper' : 'ruler-wrapper'} `}>
             <div className="ruler-top-row" style={{ height: RULER_SIZE }}>
@@ -155,7 +185,6 @@ const CanvasPanel = () => {
                 />
               </div>
             </div>
-
             <div className="ruler-content-row">
               <div className="ruler-vertical-wrapper" style={{ width: RULER_SIZE }}>
                 <Ruler
@@ -174,11 +203,12 @@ const CanvasPanel = () => {
 
               {/* 画布区域 */}
               <CanvasDom
-                canvasRef={canvasRef}
+                canvasRef={setCanvasRef}
                 effectiveZoom={effectiveZoom}
                 CANVAS_OFFSET={CANVAS_OFFSET}
                 onScroll={handleScroll}
-                onWheel={handleWheel}
+                setScrollX={setScrollX}
+                setScrollY={setScrollY}
               />
             </div>
           </div>
