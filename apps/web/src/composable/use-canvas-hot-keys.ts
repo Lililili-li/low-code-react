@@ -1,18 +1,20 @@
 import { useDesignStore } from "@/store/modules/design";
-import { useCanvasEvent } from "./use-canvas-event";
+import { useComponentOperations } from "./use-component-operations";
 import { useEffect, useState, useRef } from "react";
 import CmpHotKeysService from "@repo/core/hot-keys";
 import hotkeys from 'hotkeys-js';
 import { ComponentSchema } from '@repo/core/types';
+import { useHistoryStore } from "@/store/modules/history";
 
 const cmpHotKeysService = new CmpHotKeysService()
 
-export function useCanvasHotKeys() {
+export function useCanvasHotKeys(onDelete: () => void = () => {}) {
   const currentCmpId = useDesignStore((state) => state.currentCmpId);
   const zoom = useDesignStore((state) => state.config.canvasPanel.zoom);
   const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
   const pageComponents = useDesignStore((state) => state.pageSchema.components);
-  const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
+
+  const { undo, redo, canRedo, canUndo } = useHistoryStore()
 
   const {
     deleteComponent,
@@ -24,7 +26,7 @@ export function useCanvasHotKeys() {
     splitComponent,
     combinationComponent,
     moveComponent
-  } = useCanvasEvent(updateCurrentCmp);
+  } = useComponentOperations();
 
   const [spacePressed, setSpacePressed] = useState(false);
 
@@ -38,7 +40,7 @@ export function useCanvasHotKeys() {
   // 同步最新值到 ref（这个 useEffect 可以频繁执行，不影响快捷键注册）
   useEffect(() => {
     contextRef.current = {
-      currentCmp: pageComponents.find((item) => item.id === currentCmpId),
+      currentCmp: pageComponents.find(item => item.id === currentCmpId),
       zoom,
       selectedCmpIds,
       pageComponents,
@@ -53,8 +55,8 @@ export function useCanvasHotKeys() {
         if (currentCmp) copyComponent(currentCmp);
       },
       cut: () => {
-        const { currentCmp } = contextRef.current;
-        if (currentCmp) cutComponent(currentCmp);
+        const { currentCmp, selectedCmpIds, pageComponents } = contextRef.current;
+        if (currentCmp || selectedCmpIds.length > 0) cutComponent(currentCmp, selectedCmpIds, pageComponents);
       },
       paste: () => {
         const { zoom } = contextRef.current;
@@ -69,8 +71,7 @@ export function useCanvasHotKeys() {
         if (currentCmp) lockComponent(currentCmp);
       },
       delete: () => {
-        const { currentCmp } = contextRef.current;
-        if (currentCmp) deleteComponent(currentCmp);
+        onDelete()
       },
       group: () => {
         const { currentCmp, selectedCmpIds, pageComponents } = contextRef.current;
@@ -81,20 +82,28 @@ export function useCanvasHotKeys() {
         }
       },
       moveUp: () => {
-        const { currentCmp } = contextRef.current;
-        if (currentCmp) moveComponent('moveUp', currentCmp)
+        const { currentCmp, selectedCmpIds, pageComponents } = contextRef.current;
+        if (currentCmp || selectedCmpIds.length) moveComponent('moveUp', currentCmp, selectedCmpIds, pageComponents)
       },
       moveDown: () => {
-        const { currentCmp } = contextRef.current;
-        if (currentCmp) moveComponent('moveDown', currentCmp)
+        const { currentCmp, selectedCmpIds, pageComponents } = contextRef.current;
+        if (currentCmp || selectedCmpIds.length) moveComponent('moveDown', currentCmp, selectedCmpIds, pageComponents)
       },
       moveLeft: () => {
-        const { currentCmp } = contextRef.current;
-        if (currentCmp) moveComponent('moveLeft', currentCmp)
+        const { currentCmp, selectedCmpIds, pageComponents } = contextRef.current;
+        if (currentCmp || selectedCmpIds.length) moveComponent('moveLeft', currentCmp, selectedCmpIds, pageComponents)
       },
       moveRight: () => {
-        const { currentCmp } = contextRef.current;
-        if (currentCmp) moveComponent('moveRight', currentCmp)
+        const { currentCmp, selectedCmpIds, pageComponents } = contextRef.current;
+        if (currentCmp || selectedCmpIds.length) moveComponent('moveRight', currentCmp, selectedCmpIds, pageComponents)
+      },
+      undo: () => {
+        if (!canUndo()) return 
+        undo()
+      },
+      redo: () => {
+        if (!canRedo()) return 
+        redo()
       }
     };
 
@@ -115,14 +124,14 @@ export function useCanvasHotKeys() {
       setSpacePressed(e.type === 'keydown');
     });
 
-    hotkeys('*', { keydown: true, scope: 'canvas' }, (e) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-        const id = cmpHotKeysMap.find(item => item.key === e.key)?.id
-        const handler = handlers[id as keyof typeof handlers];
-        handler()
-      }
-    });
+    // hotkeys('*', { keydown: true, scope: 'canvas' }, (e) => {
+    //   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    //     e.preventDefault();
+    //     const id = cmpHotKeysMap.find(item => item.key === e.key)?.id
+    //     const handler = handlers[id as keyof typeof handlers];
+    //     handler()
+    //   }
+    // });
 
     return () => {
       cmpHotKeysMap.forEach((item) => {
@@ -140,5 +149,5 @@ export function useCanvasHotKeys() {
     hotkeys.setScope('all');
   };
 
-  return { spacePressed, setScope, clearScope };
+  return { spacePressed, setScope, clearScope, deleteComponent };
 }

@@ -26,7 +26,7 @@ import { Switch } from '@repo/ui/components/switch';
 import { useState } from 'react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/tooltip';
 import { Button } from '@repo/ui/components/button';
-import { useCanvasEvent } from '@/composable/use-canvas-event';
+import { useComponentOperations } from '@/composable/use-component-operations';
 import AnimateConfig from './components/animate-config';
 import { ComponentSchema } from '@repo/core/types';
 
@@ -38,14 +38,13 @@ export interface ConfigProps {
 const CmpPanel = () => {
   const currentCmpId = useDesignStore((state) => state.currentCmpId);
   const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
-  const components = useDesignStore((state) => state.pageSchema.components);
-  const currentCmp = components.find((item) => item.id === currentCmpId);
+  const currentCmp = useDesignStore((state) => state.pageSchema.components.find(item => item.id === currentCmpId));
   const PropsCmp = materialCmp[currentCmp!.type as MaterialType]?.propsPanel;
 
   const visible = currentCmp?.visible;
   const lock = currentCmp?.lock;
 
-  const { updatePosition, transformComponent } = useCanvasEvent(updateCurrentCmp);
+  const { updatePosition, transformComponent } = useComponentOperations(updateCurrentCmp);
 
   const [activeTab, setActiveTab] = useState('props');
   return (

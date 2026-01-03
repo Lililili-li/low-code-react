@@ -6,6 +6,8 @@ const RenderCmp = () => {
   const pageSchema = useDesignStore((state) => state.pageSchema);
   const currentCmpId = useDesignStore((state) => state.currentCmpId);
   const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
+  const hoverId = useDesignStore((state) => state.hoverId);
+  const setHoverId = useDesignStore((state) => state.setHoverId);
 
   return pageSchema.components.map((item) => {
     if (item.group) {
@@ -18,6 +20,12 @@ const RenderCmp = () => {
             style={{
               ...item.style,
             }}
+            onMouseEnter={() => {
+              setHoverId(item.id);
+            }}
+            onMouseLeave={() => {
+              setHoverId('');
+            }}
           >
             {item.children && (
               <>
@@ -26,7 +34,11 @@ const RenderCmp = () => {
                   const animationClass = handleAnimationClass(child.animation);
                   return (
                     <div
-                      style={{ ...child.style, position: 'absolute', ...handleAnimationStyle(child.animation) }}
+                      style={{
+                        ...child.style,
+                        position: 'absolute',
+                        ...handleAnimationStyle(child.animation),
+                      }}
                       className={animationClass}
                       key={child.id}
                     >
@@ -37,7 +49,7 @@ const RenderCmp = () => {
               </>
             )}
             <div
-              className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''}`}
+              className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''} ${hoverId === item.id ? 'cmp-mask-hover' : ''}`}
               id={`cmp-mask-id-${item.id}`}
               data-lock={item.lock}
               style={{
@@ -64,10 +76,16 @@ const RenderCmp = () => {
             ...item.style,
             ...handleAnimationStyle(item.animation),
           }}
+          onMouseEnter={() => {
+            setHoverId(item.id);
+          }}
+          onMouseLeave={() => {
+            setHoverId('');
+          }}
         >
           <Component {...(item as any)} />
           <div
-            className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''}`}
+            className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''} ${hoverId === item.id ? 'cmp-mask-hover' : ''}`}
             id={`cmp-mask-id-${item.id}`}
             data-lock={item.lock}
             style={{

@@ -61,7 +61,8 @@ const designConfig = [
 const Header = () => {
   const navigate = useNavigate();
   const config = useDesignStore((state) => state.config);
-  const setSiderVisible = useDesignStore((state) => state.setSiderVisible);
+  const setSiderBarModel = useDesignStore((state) => state.setSiderBarModel);
+
   return (
     <div className="flex items-center px-4 h-full justify-between relative">
       <div className="header-left flex gap-2">
@@ -73,8 +74,8 @@ const Header = () => {
           <Toggle
             size="sm"
             variant="outline"
-            pressed={config.siderVisible === item.id}
-            onClick={() => setSiderVisible(item.id as 'material' | 'layers' | 'variable')}
+            pressed={config.siderBarModel === item.id}
+            onClick={() => setSiderBarModel(item.id as 'material' | 'layers' | 'variable')}
             key={item.id}
             className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
           >

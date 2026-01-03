@@ -13,14 +13,33 @@
   position: relative;
   overflow: hidden;
 }
+
 .react-colorful__saturation-pointer {
-  width: 12px !important ;
+  width: 12px !important;
   height: 12px !important;
 }
+
 .react-colorful__hue-pointer {
   width: 24px !important;
   height: 24px !important;
 }
+
 .react-colorful__pointer {
   cursor: pointer;
+}
+
+.contexify_theme-dark {
+  background-color: #1b1b23 !important;
+  .contexify_submenu {
+    background-color: #1b1b23 !important;
+  }
+}
+.contexify_item:not(.contexify_item-disabled):hover>.contexify_itemContent {
+  background-color: #f4f4f5 !important;
+  color: var(--contexify-item-color);
+}
+.dark {
+  .contexify_item:not(.contexify_item-disabled):hover>.contexify_itemContent {
+    background-color: #27272a !important;
+  }
 }

@@ -1,393 +1,489 @@
-import CanvasEvent from '@repo/core/canvas-event'
-import { ComponentSchema } from '@repo/core/types'
-import useClipboard from './use-clipboard'
-import { useDesignStore } from '@/store/modules/design'
-import { useEffect, useRef } from 'react'
-import { isNumber } from '@repo/shared/index'
+import { useDesignStore } from "@/store/modules/design";
+import materialCmp, { MaterialType } from "@repo/core/material";
+import { ComponentSchema } from "@repo/core/types";
+import { RefObject, useCallback, useRef } from "react";
+import { eventBus } from '@repo/shared/index';
+import { createHistoryRecord, useHistoryStore } from "@/store/modules/history";
 
-let isCopy = false
-
-interface LayerLevelProps {
-  type: 'top' | 'bottom' | 'up' | 'down',
-  component: ComponentSchema
+interface CanvasEventProps {
+  setScope: (key: string) => void
+  clearScope: () => void
+  internalCanvasRef: RefObject<HTMLDivElement | null>
+  spacePressed: boolean
+  setScrollY: (scrollY: number) => void;
+  setScrollX: (scrollX: number) => void;
 }
 
-export function useCanvasEvent(updateCurrentCmp: (cmp: ComponentSchema) => void) {
+export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setScrollY, setScrollX, clearScope }: CanvasEventProps) {
+  const pageComponents = useDesignStore((state) => state.pageSchema.components);
+  const zoom = useDesignStore((state) => state.config.canvasPanel.zoom);
+  const addComponent = useDesignStore((state) => state.addComponent);
+  const setCurrentCmpId = useDesignStore((state) => state.setCurrentCmpId);
+  const currentCmpId = useDesignStore((state) => state.currentCmpId);
+  const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
+  const updateSelectCmp = useDesignStore((state) => state.updateSelectCmp);
+  const setSelectedCmpIds = useDesignStore((state) => state.setSelectedCmpIds);
+  const addSelectedCmpIds = useDesignStore((state) => state.addSelectedCmpIds);
+  const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
 
-  const shadowHost = document.getElementById('shadow-host');
 
-  const mouseState = useRef({
-    x: 0,
-    y: 0
-  })
+  // 画布拖拽状态
+  const canvasDragState = useRef({
+    canMove: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+  });
+  // 组件拖拽状态
+  const dragStateRef = useRef({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+    dom: {
+      left: 0,
+      top: 0,
+      width: 0,
+      height: 0,
+    },
+    scale: {
+      isScaling: false,
+      direction: '',
+    },
+    draggedCmp: null as ComponentSchema | null,
+    rafId: null as number | null,
+    // 存储多选组件的初始位置
+    multiDragInitialPositions: [] as Array<{ id: string; left: number; top: number }>,
+  });
 
-  const canvasEvent = new CanvasEvent(updateCurrentCmp)
-  const { copy } = useClipboard()
-  const selectCmpIds = useDesignStore((state) => state.selectedCmpIds)
-  const setSelectedCmpIds = useDesignStore(state => state.setSelectedCmpIds)
-  const removeComponent = useDesignStore((state) => state.removeComponent)
-  const addComponent = useDesignStore((state) => state.addComponent)
-  const setCurrentCmpId = useDesignStore((state) => state.setCurrentCmpId)
-  const zoom = useDesignStore((state) => state.config.canvasPanel.zoom)
-  const pageComponents = useDesignStore((state) => state.pageSchema.components)
-  const pageSchema = useDesignStore((state) => state.pageSchema)
 
-  // 复制组件
-  const copyComponent = (component: ComponentSchema) => {
-    const isSelect = selectCmpIds.length > 1
-    if (isSelect) {
-      let components = [] as ComponentSchema[]
-      selectCmpIds.forEach((id, index) => {
-        const selectCmp = pageComponents.find(item => item.id === id)
-        if (!selectCmp) return
-        const copyCmp = { ...selectCmp }
-        copyCmp.id = (new Date().getTime() + index).toString()
-        copyCmp.name = selectCmp.name + '副本-' + (index + 1)
-        components.push(copyCmp)
-      })
-      copy(JSON.stringify(components))
-      components = []
+  // 组件从左侧菜单拉到画布的drop事件
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const canvasContent = (e.currentTarget as HTMLElement).querySelector(
+        '.canvas-content',
+      ) as HTMLElement;
+      if (!canvasContent) return;
+      const rect = canvasContent.getBoundingClientRect();
+      const cmpData = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const cmpType = cmpData.id as MaterialType;
+      const schemaMeta = materialCmp[cmpType].schema;
+      const style = (schemaMeta.style || {}) as any;
+      const cmpWidth = style.width as number | undefined;
+      const cmpHeight = style.height as number | undefined;
+      const x = (e.clientX - rect.left - ((cmpWidth || 0) * zoom) / 2) / zoom;
+      const y = (e.clientY - rect.top - ((cmpHeight || 0) * zoom) / 2) / zoom;
+
+      const component: ComponentSchema = {
+        id: new Date().getTime().toString(),
+        type: cmpType,
+        name: cmpData.name,
+        style: {
+          ...(schemaMeta.style as any),
+          left: Number(x.toFixed(0)),
+          top: Number(y.toFixed(0)),
+        },
+        visible: (schemaMeta.visible ?? false) as boolean,
+        lock: (schemaMeta.lock ?? false) as boolean,
+        animation: {
+          enable: false, // 是否开启动画
+          name: '', // 动画名称
+          duration: 1, // 动画时长
+          delay: 0, // 动画延迟
+          iterationCount: 1, // 动画重复次数
+          direction: 'normal', // 动画方向
+          speed: 'linear', // 动画缓动函数
+        },
+        props: schemaMeta.props || {},
+      };
+      dragStateRef.current.draggedCmp = component;
+      dragStateRef.current.dom = {
+        left: component.style?.left as number,
+        top: component.style?.top as number,
+        width: component.style?.width as number,
+        height: component.style?.height as number,
+      };
+      addComponent(component, true);
+      setCurrentCmpId(component.id);
+      setSelectedCmpIds([component.id]); // 默认放到多选数组中
+      setScope('canvas');
+    },
+    [zoom, addComponent, setCurrentCmpId],
+  );
+
+  // 处理多选
+  const handleMultiSelect = (cmpId: string) => {
+    if (selectedCmpIds.length === 0) {
+      // 如果只选择了第一个，那么当前选中组件
+      setCurrentCmpId(cmpId);
     } else {
-      if (!component) return
-      copy(JSON.stringify(component))
-    }
-    isCopy = true
-  }
-
-  // 剪切组件
-  const cutComponent = (component: ComponentSchema) => {
-    const isSelect = selectCmpIds.length > 1
-    if (isSelect) {
-      let components = [] as ComponentSchema[]
-      selectCmpIds.forEach(id => {
-        const selectCmp = pageComponents.find(item => item.id === id)
-        if (!selectCmp) return
-        removeComponent(id);
-        components.push(selectCmp)
-      })
-      copy(JSON.stringify(components))
-      setSelectedCmpIds([])
-      components = []
-    } else {
-      if (!component?.id) return
-      removeComponent(component?.id)
-      setCurrentCmpId('')
-      copy(JSON.stringify(component))
-    }
-    isCopy = false
-  }
-
-  // 粘贴组件
-  const pasteComponent = async (currentZoom?: number) => {
-    const cmpJson = await navigator.clipboard.readText()
-    if (!cmpJson) return
-    const canvasContent = shadowHost?.shadowRoot?.querySelector(
-      '#canvas-content',
-    ) as HTMLElement;
-
-    if (!canvasContent) return;
-    const rect = canvasContent.getBoundingClientRect();
-    const parsedData = JSON.parse(cmpJson) as ComponentSchema | ComponentSchema[]
-    if (Array.isArray(parsedData)) { // 多选时，粘贴到当前选中组件的后面
-      const components = parsedData
-      components.forEach((component, index) => {
-        paste(rect, component, index, currentZoom, true)
-      })
-      setSelectedCmpIds(components.map(item => item.id))
-    } else {
-      const cmp = parsedData
-      paste(rect, cmp, 0, currentZoom)
-      setCurrentCmpId(cmp.id)
-      setSelectedCmpIds([cmp.id])
-    }
-  }
-
-  // 粘贴组件方法
-  const paste = (rect: DOMRect, component: ComponentSchema, index: number, currentZoom?: number, multiple?: boolean) => {
-    const calcZoom = isNumber(currentZoom) ? currentZoom : zoom
-    const x = (mouseState.current.x - rect.left - (((component.style?.width as number) || 0) * calcZoom) / 2) / calcZoom;
-    const y = (mouseState.current.y - rect.top - (((component.style?.height as number) || 0) * calcZoom) / 2) / calcZoom;
-    if (isCopy && !multiple) {
-      component.id = new Date().getTime().toString()
-      component.name = component.name + ' (副本)'
-    }
-    const newComponent = {
-      ...component,
-      style: { ...component.style, left: index > 0 ? x + index * 10 : x, top: index > 0 ? y + index * 10 : y }
-    }
-    addComponent(newComponent)
-  }
-
-  // 删除组件
-  const deleteComponent = (component: ComponentSchema) => {
-    const isSelect = selectCmpIds.length > 1
-    if (isSelect) {
-      selectCmpIds.forEach(id => {
-        const selectCmp = pageComponents.find(item => item.id === id)
-        if (!selectCmp) return
-        removeComponent(id);
-      })
-      setSelectedCmpIds([])
-    } else {
-      if (!component?.id) return;
-      removeComponent(component?.id);
       setCurrentCmpId('');
     }
-  }
+    addSelectedCmpIds(cmpId);
+  };
+  // 处理多选
+  const handleSingleSelect = (cmpId: string, e: React.MouseEvent) => {
+    if (cmpId !== currentCmpId) setCurrentCmpId(cmpId);
+    const currentCmp = pageComponents.find((c) => c.id === cmpId);
+    if (!currentCmp) return;
+    // 只更新 ref，不触发重渲染
+    dragStateRef.current = {
+      isDragging: true,
+      scale: {
+        isScaling: false,
+        direction: '',
+      },
+      startX: e.clientX,
+      startY: e.clientY,
+      currentX: e.clientX,
+      currentY: e.clientY,
+      dom: {
+        left: (currentCmp?.style?.left as number) || 0,
+        top: (currentCmp?.style?.top as number) || 0,
+        width: (currentCmp?.style?.width as number) || 0,
+        height: (currentCmp?.style?.height as number) || 0,
+      },
+      draggedCmp: currentCmp,
+      rafId: null,
+      multiDragInitialPositions: [],
+    };
+    setSelectedCmpIds([cmpId]);
+  };
+  // 处理拖拽缩放
+  const handleScaleSelect = (e: React.MouseEvent, target: HTMLDivElement) => {
+    const currentCmp = pageComponents.find((c) => c.id === currentCmpId);
+    if (!currentCmp) return;
+    // 点击缩放角
+    dragStateRef.current.isDragging = false;
+    dragStateRef.current.scale.isScaling = true;
+    dragStateRef.current.scale.direction = target.id;
+    dragStateRef.current.startX = e.clientX;
+    dragStateRef.current.startY = e.clientY;
+    dragStateRef.current.dom = {
+      left: (currentCmp?.style?.left as number) || 0,
+      top: (currentCmp?.style?.top as number) || 0,
+      width: (currentCmp?.style?.width as number) || 0,
+      height: (currentCmp?.style?.height as number) || 0,
+    };
+    dragStateRef.current.draggedCmp = currentCmp;
+  };
 
-  // 更新组件层级
-  const setLayerLevel = ({ type, component }: LayerLevelProps) => {
-    const isSelect = selectCmpIds.length > 1
-    const updateLevel = (component: ComponentSchema) => {
-      if (type === 'top') {
-        updateCurrentCmp({ ...component!, style: { ...component?.style, zIndex: 99999 } })
-      } else if (type === 'bottom') {
-        updateCurrentCmp({ ...component!, style: { ...component?.style, zIndex: -99999 } })
-      } else if (type === 'up') {
-        const currentZIndex = Number(component?.style?.zIndex) || 0;
-        updateCurrentCmp({ ...component!, style: { ...component?.style, zIndex: currentZIndex + 1 } })
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      // 手动让画布区域获得焦点，因为 preventDefault 阻止了默认的焦点行为
+      internalCanvasRef.current?.focus();
+
+      if (spacePressed) {
+        canvasDragState.current = {
+          canMove: true,
+          startX: e.clientX,
+          startY: e.clientY,
+          currentX: e.clientX,
+          currentY: e.clientY,
+        };
+        return;
+      }
+      const target = e.target as HTMLDivElement;
+      if (target.id.startsWith('cmp-mask-id-')) {
+        // 点击组件
+        const cmpId = target.id.replace('cmp-mask-id-', '');
+        // 如果按了shift键就是多选
+        if (e.shiftKey) {
+          if (target.dataset.lock === 'true') return; // 如果是锁定的元素直接不能选中
+          handleMultiSelect(cmpId);
+        } else if (selectedCmpIds.length > 1) {
+          dragStateRef.current.multiDragInitialPositions = pageComponents
+            .filter((cmp) => selectedCmpIds.includes(cmp.id))
+            .map((cmp) => ({
+              id: cmp.id,
+              left: (cmp.style?.left as number) || 0,
+              top: (cmp.style?.top as number) || 0,
+            }));
+          dragStateRef.current.isDragging = true;
+          dragStateRef.current.startX = e.clientX;
+          dragStateRef.current.startY = e.clientY;
+          dragStateRef.current.currentX = e.clientX;
+          dragStateRef.current.currentY = e.clientY;
+          setCurrentCmpId('');
+        } else {
+          // 单选
+          handleSingleSelect(cmpId, e);
+        }
+      } else if (target.className.endsWith('scale')) {
+        handleScaleSelect(e, target);
       } else {
-        const currentZIndex = Number(component?.style?.zIndex) || 0;
-        updateCurrentCmp({ ...component!, style: { ...component?.style, zIndex: currentZIndex - 1 } })
+        setCurrentCmpId('');
+        setSelectedCmpIds([]);
       }
-    }
-    if (isSelect) {
-      selectCmpIds.forEach(id => {
-        const selectCmp = pageComponents.find(item => item.id === id)
-        if (!selectCmp) return
-        updateLevel(selectCmp)
-      })
-    } else {
-      if (!component?.id) return;
-      updateLevel(component)
-    }
+    },
+    [currentCmpId, pageComponents, setCurrentCmpId, spacePressed, selectedCmpIds],
+  );
 
-  }
-
-  // 锁定组件
-  const lockComponent = (currentCmp: ComponentSchema) => {
-    const isSelect = selectCmpIds.length > 1
-    if (isSelect) {
-      selectCmpIds.forEach(id => {
-        const selectCmp = pageComponents.find(item => item.id === id)
-        if (!selectCmp) return
-        updateCurrentCmp({ ...selectCmp, lock: !selectCmp?.lock })
-      })
-    } else {
-      updateCurrentCmp({ ...currentCmp, lock: !currentCmp?.lock })
-    }
-
-  }
-
-  // 隐藏显示组件
-  const visibleComponent = (currentCmp: ComponentSchema) => {
-    updateCurrentCmp({ ...currentCmp, visible: !currentCmp.visible })
-  }
-
-  // 拆分组件
-  const splitComponent = (component: ComponentSchema, _?: any) => {
-    if (!component.group) return
-    const selectIds: string[] = []
-    component.children?.forEach(cmp => {
-      const newStyle = { ...cmp.style }
-      if (cmp.style?.left === 0) {
-        newStyle.left = component.style?.left
-      }
-      if (cmp.style?.top === 0) {
-        newStyle.top = component.style?.top
-      }
-      if (cmp.style?.left !== component.style?.left || cmp.style?.top !== component.style?.top) {
-        newStyle.left = newStyle.left !== 0 ? Number((cmp.style?.left as number) + (component.style?.left as number)) : newStyle.left;
-        newStyle.top = newStyle.top !== 0 ? Number((cmp.style?.top as number) + (component.style?.top as number)) : newStyle.top;
-      }
-      console.log(newStyle);
-
-      selectIds.push(cmp.id);
-      addComponent({ ...cmp, style: newStyle })
-    })
-    setCurrentCmpId(component.children?.[0]?.id ?? '')
-    setSelectedCmpIds(selectIds)
-    removeComponent(component.id);
-  }
-
-  // 组合组件
-  const combinationComponent = (selectCmpIdsParams: string[] = selectCmpIds, pageComponentsParams: ComponentSchema[] = pageComponents) => {
-    const component = {
-      group: true,
-      id: new Date().getTime().toString(),
-      name: '组合组件_' + Date.now(),
-      visible: true,
-      lock: false,
-      children: [] as ComponentSchema[],
-      style: {
-        width: 0,
-        height: 0,
-        left: Infinity,
-        top: Infinity,
-        scale: 1,
-        skewX: 0,
-        skewY: 0,
-        rotateX: 0,
-        rotateY: 0,
-        rotateZ: 0
-      }
-    } as ComponentSchema;
-    let maxWidth = 0;
-    let maxHeight = 0;
-    selectCmpIdsParams.forEach(id => {
-      const selectCmp = pageComponentsParams.find(item => item.id === id)
-      if (!selectCmp) return
-      component.style!.top = Math.min((component.style!.top as number), (selectCmp.style?.top as number))
-      component.style!.left = Math.min((component.style!.left as number), (selectCmp.style?.left as number))
-      const right = (selectCmp.style?.left as number) + (selectCmp.style?.width as number);
-      const bottom = (selectCmp.style?.top as number) + (selectCmp.style?.height as number);
-      maxWidth = Math.max(maxWidth, right);
-      maxHeight = Math.max(maxHeight, bottom);
-      component.children?.push(selectCmp); // 将组件添加到分组组件中
-      removeComponent(id) // 从画布中删除
-    })
-    const newChildren = component.children?.map(child => {
-      const newStyle = { ...child.style };
-      if (child.style?.left === component.style?.left) {
-        newStyle.left = 0;
-      }
-      if (child.style?.top === component.style?.top) {
-        newStyle.top = 0;
-      }
-      if (child.style?.left !== component.style?.left || child.style?.top !== component.style?.top) {
-        newStyle.left = newStyle.left !== 0 ? Number((child.style?.left as number) - (component.style?.left as number)) : newStyle.left;
-        newStyle.top = newStyle.top !== 0 ? Number((child.style?.top as number) - (component.style?.top as number)) : newStyle.top;
-      }
-      return { ...child, style: newStyle };
-    })
-    component.style!.width = maxWidth - (component.style!.left as number);
-    component.style!.height = maxHeight - (component.style!.top as number);
-    addComponent({ ...component, children: newChildren })
-    setCurrentCmpId(component.id)
-    setSelectedCmpIds([component.id])
-  }
-
-  // 更新组件位置 // 水平方向以及垂直方向
-  const updatePosition = (dir: 'horizontal' | 'vertical', align: 'start' | 'center' | 'end', component: ComponentSchema) => {
-    const isGroup = component?.group;
-    const isHorizontal = dir === 'horizontal';
-    const prop = isHorizontal ? 'left' : 'top';
-    const dimension = isHorizontal ? 'width' : 'height';
-    const pageSize = isHorizontal ? pageSchema.width : pageSchema.height;
-
-    const calculatePosition = (align: 'start' | 'center' | 'end'): number => {
-      const componentSize = (component.style?.[dimension] as number) || 0;
-      switch (align) {
-        case 'start':
-          return 0;
-        case 'center':
-          return (pageSize - componentSize) / 2;
-        case 'end':
-          return pageSize - componentSize;
-      }
-    };
-
-    const newPosition = calculatePosition(align);
-    const distance = (component.style?.[prop] as number) - newPosition;
-
-    if (isGroup) {
-      const updatedChildren = component.children?.map(child => ({
-        ...child,
+  // 拖拽单个组件移动
+  const handleDrag = useCallback(
+    (
+      moveX: number,
+      moveY: number,
+      draggedCmp: ComponentSchema,
+      dom: typeof dragStateRef.current.dom,
+    ) => {
+      moveY = Number(Number(moveY).toFixed(0));
+      moveX = Number(Number(moveX).toFixed(0));
+      updateCurrentCmp({
+        ...draggedCmp,
         style: {
-          ...child.style,
-          [prop]: (child.style?.[prop] as number) - distance
+          ...draggedCmp.style,
+          left: dom.left + moveX,
+          top: dom.top + moveY,
+        },
+      });
+    },
+    [updateCurrentCmp],
+  );
+
+  // 拖拽多个组件移动
+  const handleMultiDrag = useCallback(
+    (moveX: number, moveY: number) => {
+      const initialPositions = dragStateRef.current.multiDragInitialPositions;
+      if (initialPositions.length === 0) return;
+
+      const updatedComponents = initialPositions
+        .map((initial) => {
+          const component = pageComponents.find((cmp) => cmp.id === initial.id);
+          if (!component) return null;
+          return {
+            ...component,
+            style: {
+              ...component.style,
+              left: initial.left + moveX,
+              top: initial.top + moveY,
+            },
+          };
+        })
+        .filter(Boolean) as ComponentSchema[];
+      updateSelectCmp(updatedComponents);
+    },
+    [pageComponents, updateSelectCmp],
+  );
+
+  // 拖拽缩放
+  const handleScale = useCallback(
+    (
+      direction: string,
+      moveX: number,
+      moveY: number,
+      draggedCmp: ComponentSchema,
+      dom: typeof dragStateRef.current.dom,
+    ) => {
+      moveY = Number(Number(moveY).toFixed(0));
+      moveX = Number(Number(moveX).toFixed(0));
+      const scaleHandlers: Record<string, () => void> = {
+        'bottom-rect': () =>
+          updateCurrentCmp({
+            ...draggedCmp,
+            style: {
+              ...draggedCmp.style,
+              height: dom.height + moveY,
+            },
+          }),
+        'top-rect': () =>
+          updateCurrentCmp({
+            ...draggedCmp,
+            style: {
+              ...draggedCmp.style,
+              top: dom.top + moveY,
+              height: dom.height - moveY,
+            },
+          }),
+        'left-rect': () =>
+          updateCurrentCmp({
+            ...draggedCmp,
+            style: {
+              ...draggedCmp.style,
+              left: dom.left + moveX,
+              width: dom.width - moveX,
+            },
+          }),
+        'right-rect': () =>
+          updateCurrentCmp({
+            ...draggedCmp,
+            style: {
+              ...draggedCmp.style,
+              width: dom.width + moveX,
+            },
+          }),
+        'left-top-corner': () =>
+          updateCurrentCmp({
+            ...draggedCmp,
+            style: {
+              ...draggedCmp.style,
+              left: dom.left + moveX,
+              width: dom.width - moveX,
+              top: dom.top + moveY,
+              height: dom.height - moveY,
+            },
+          }),
+        'left-bottom-corner': () =>
+          updateCurrentCmp({
+            ...draggedCmp,
+            style: {
+              ...draggedCmp.style,
+              left: dom.left + moveX,
+              width: dom.width - moveX,
+              height: dom.height + moveY,
+            },
+          }),
+        'right-bottom-corner': () =>
+          updateCurrentCmp({
+            ...draggedCmp,
+            style: {
+              ...draggedCmp.style,
+              width: dom.width + moveX,
+              height: dom.height + moveY,
+            },
+          }),
+        'right-top-corner': () =>
+          updateCurrentCmp({
+            ...draggedCmp,
+            style: {
+              ...draggedCmp.style,
+              width: dom.width + moveX,
+              top: dom.top + moveY,
+              height: dom.height - moveY,
+            },
+          }),
+      };
+
+      scaleHandlers[direction]?.();
+    },
+    [updateCurrentCmp],
+  );
+
+  // 拖拽移动画板
+  const handleDragCanvas = useCallback(
+    (deltaX: number, deltaY: number) => {
+      // 这里可以实现画板拖拽逻辑
+      if (!internalCanvasRef.current) return;
+      internalCanvasRef.current.scrollLeft -= deltaX;
+      internalCanvasRef.current.scrollTop -= deltaY;
+      setScrollX(internalCanvasRef.current.scrollLeft);
+      setScrollY(internalCanvasRef.current.scrollTop);
+      eventBus.emit('handleHelperLine');
+    },
+    [setScrollX, setScrollY],
+  );
+
+  // 鼠标移动综合处理
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      const dragState = dragStateRef.current;
+      // 如果是画布移动的话直接移动画布其他操作不做处理
+      if (canvasDragState.current.canMove) {
+        const moveX = e.clientX - canvasDragState.current.currentX;
+        const moveY = e.clientY - canvasDragState.current.currentY;
+        canvasDragState.current.currentX = e.clientX;
+        canvasDragState.current.currentY = e.clientY;
+        handleDragCanvas(moveX, moveY);
+        return;
+      }
+      if ((!dragState.isDragging && !dragState.scale.isScaling) || !dragState.draggedCmp) return;
+      dragState.currentX = e.clientX;
+      dragState.currentY = e.clientY;
+
+      const moveX = (dragState.currentX - dragState.startX) / zoom;
+      const moveY = (dragState.currentY - dragState.startY) / zoom;
+      if (dragState.isDragging) {
+        if (selectedCmpIds.length > 1) {
+          handleMultiDrag(moveX, moveY);
+        } else {
+          if (dragState.draggedCmp.lock) return;
+          handleDrag(moveX, moveY, dragState.draggedCmp!, dragState.dom);
         }
-      }));
-      updateCurrentCmp({
-        ...component,
-        children: updatedChildren,
-        style: { ...component.style, [prop]: newPosition }
-      });
-    } else {
-      updateCurrentCmp({
-        ...component,
-        style: { ...component.style, [prop]: newPosition }
-      });
-    }
-  };
+      } else if (dragState.scale.isScaling) {
+        handleScale(dragState.scale.direction, moveX, moveY, dragState.draggedCmp!, dragState.dom);
+      }
+      eventBus.emit('handleHelperLine');
+    },
+    [zoom, handleDrag, handleScale, selectedCmpIds],
+  );
 
-  // 组件翻转 // 水平方向以及垂直方向
-  const transformComponent = (dir: 'horizontal' | 'vertical', component: ComponentSchema) => {
-    const isGroup = component?.group;
-    const rotateAxis = dir === 'horizontal' ? 'rotateY' : 'rotateX';
-    const currentRotation = component.style?.[rotateAxis] || 0;
-    const newRotation = currentRotation === 180 ? 0 : 180;
-
-    const updatedStyle = {
-      ...component.style,
-      [rotateAxis]: newRotation
-    };
-
-    if (isGroup) {
-      const updatedChildren = component.children?.map(child => ({
-        ...child,
-        style: {
-          ...child.style,
-          [rotateAxis]: newRotation
-        }
-      }));
-
-      updateCurrentCmp({
-        ...component,
-        children: updatedChildren,
-        style: updatedStyle
-      });
-    } else {
-      updateCurrentCmp({
-        ...component,
-        style: updatedStyle
-      });
-    }
-  };
-
-  // 快捷键移动组件
-  const moveComponent = (dir: 'moveUp' | 'moveDown' | 'moveLeft' | 'moveRight', component: ComponentSchema) => {
-    switch (dir) {
-      case 'moveUp':
-        updateCurrentCmp({ ...component, style: { ...component.style, top: (component.style?.top as number) - 1 } })
-        break;
-      case 'moveDown':
-        updateCurrentCmp({ ...component, style: { ...component.style, top: (component.style?.top as number) + 1 } })
-        break;
-      case 'moveLeft':
-        updateCurrentCmp({ ...component, style: { ...component.style, left: (component.style?.left as number) - 1 } })
-        break;
-      case 'moveRight':
-        updateCurrentCmp({ ...component, style: { ...component.style, left: (component.style?.left as number) + 1 } })
-        break;
-    }
+  const isComponentMoved = (dragState: typeof dragStateRef.current) => {
+    return dragState.currentX !== dragState.startX && dragState.currentY !== dragState.startY
   }
 
-  // 注册鼠标事件
-  useEffect(() => {
-    const mouseMoveHandler = (e: MouseEvent) => {
-      mouseState.current.x = e.clientX
-      mouseState.current.y = e.clientY
+  const handleMouseUp = useCallback(() => {
+    const dragState = dragStateRef.current;
+    if (dragState.rafId !== null) {
+      cancelAnimationFrame(dragState.rafId);
     }
-    document.addEventListener('mousemove', mouseMoveHandler)
-    return () => {
-      document.removeEventListener('mousemove', mouseMoveHandler)
+    const isMultipleSelect = selectedCmpIds.length > 1;
+    if (dragState.isDragging) {
+      const pushHistory = useHistoryStore.getState().push;
+      if (isMultipleSelect && isComponentMoved(dragState)) {
+        const selectComponents = pageComponents.filter((item) => selectedCmpIds.includes(item.id));
+        pushHistory(
+          createHistoryRecord.moveMultiple(
+            selectComponents!,
+            dragState.multiDragInitialPositions,
+            selectComponents.map((item) => ({
+              id: item.id,
+              left: item.style?.left as number,
+              top: item.style?.top as number,
+            })),
+          ),
+        );
+      } else {
+        if (isComponentMoved(dragState)) {
+          const currentCmp = pageComponents.find((item) => item.id === dragState.draggedCmp?.id);
+          pushHistory(
+            createHistoryRecord.move(
+              currentCmp!,
+              {
+                left: dragState.draggedCmp?.style?.left as number,
+                top: dragState.draggedCmp?.style?.top as number,
+              },
+              {
+                left: currentCmp?.style?.left as number,
+                top: currentCmp?.style?.top as number,
+              },
+            ),
+          );
+        }
+      }
     }
-  }, [])
+    dragStateRef.current.isDragging = false;
+    dragStateRef.current.scale.isScaling = false;
+    canvasDragState.current.canMove = false;
+    dragStateRef.current.rafId = null;
+  }, [selectedCmpIds, pageComponents]);
+
+  const handleMouseLeave = useCallback(() => {
+    handleMouseUp();
+  }, [handleMouseUp]);
+
+
+  // 画布聚焦/失焦时切换 hotkeys 作用域
+  const handleFocus = useCallback(() => {
+    setScope('canvas');
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    clearScope();
+  }, []);
 
   return {
-    canvasEvent,
-    copyComponent,
-    cutComponent,
-    pasteComponent,
-    deleteComponent,
-    setLayerLevel,
-    lockComponent,
-    splitComponent,
-    combinationComponent,
-    updatePosition,
-    transformComponent,
-    visibleComponent,
-    moveComponent
+    handleDrop,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleMouseLeave,
+    handleFocus,
+    handleBlur
   }
 }

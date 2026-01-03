@@ -23,8 +23,8 @@ const panelMap = {
 
 const Design = () => {
   const config = useDesignStore((state) => state.config);
-  const siderVisible = config.siderVisible;
-  const PanelComponent = panelMap[siderVisible];
+  const siderBarModel = config.siderBarModel;
+  const PanelComponent = panelMap[siderBarModel];
 
   return (
     <div className="design-container h-full flex flex-col dark:bg-[#18181b]">

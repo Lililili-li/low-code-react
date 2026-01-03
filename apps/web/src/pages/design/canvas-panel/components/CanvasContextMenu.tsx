@@ -1,18 +1,11 @@
 import {
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuShortcut,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
-} from '@repo/ui/components/context-menu';
-import {
   ArrowDown,
   ArrowDownFromLine,
   ArrowUp,
   ArrowUpFromLine,
   Box,
   Clipboard,
+  ClipboardX,
   Copy,
   EyeClosed,
   Layers,
@@ -24,19 +17,9 @@ import {
 import { Cut20Filled } from '@ricons/fluent';
 import { useDesignStore } from '@/store/modules/design';
 import { ComponentSchema } from '@repo/core/types';
-import { useCanvasEvent } from '@/composable/use-canvas-event';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@repo/ui/components/alert-dialog';
+import { useComponentOperations } from '@/composable/use-component-operations';
 import { toast } from 'sonner';
+import { Item, Separator, Submenu, contextMenu } from 'react-contexify';
 
 const CanvasMenu = ({
   updateCurrentCmp,
@@ -45,15 +28,41 @@ const CanvasMenu = ({
   selectedCmpIds: string[];
   updateCurrentCmp: (cmp: ComponentSchema) => void;
 }) => {
-  const { pasteComponent } = useCanvasEvent(updateCurrentCmp);
+  const { pasteComponent } = useComponentOperations(updateCurrentCmp);
+
+  const clearClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText('');
+      toast.success('剪切板已清空');
+    } catch (error) {
+      toast.error('清空剪切板失败');
+    }
+  };
+
+  const handlePaste = async () => {
+    contextMenu.hideAll();
+    try {
+      await pasteComponent();
+    } catch (error) {
+      console.error('粘贴组件失败:', error);
+    }
+  };
+
   return (
     <>
-      <ContextMenuItem onClick={() => pasteComponent()}>
-        <ContextMenuShortcut>
-          <Clipboard />
-        </ContextMenuShortcut>
+      <Item onClick={handlePaste}>
+        <Clipboard style={{ width: '16px', marginRight: '6px' }} />
         粘贴
-      </ContextMenuItem>
+      </Item>
+      <Item
+        onClick={() => {
+          contextMenu.hideAll();
+          clearClipboard();
+        }}
+      >
+        <ClipboardX style={{ width: '16px', marginRight: '6px' }} />
+        清空剪切板
+      </Item>
     </>
   );
 };
@@ -62,166 +71,127 @@ const ComponentMenu = ({
   currentCmp,
   updateCurrentCmp,
   selectedCmpIds,
+  onDeleteClick,
 }: {
   currentCmp: ComponentSchema;
   updateCurrentCmp: (cmp: ComponentSchema) => void;
   selectedCmpIds: string[];
+  onDeleteClick: () => void;
 }) => {
   const {
     copyComponent,
     cutComponent,
-    deleteComponent,
     setLayerLevel,
     lockComponent,
     splitComponent,
     combinationComponent,
-    visibleComponent
-  } = useCanvasEvent(updateCurrentCmp);
+    visibleComponent,
+  } = useComponentOperations(updateCurrentCmp);
 
   const isLock = selectedCmpIds.length > 1 ? false : currentCmp?.id ? currentCmp?.lock : false;
+
   return (
     <>
-      <ContextMenuItem onClick={() => lockComponent(currentCmp)}>
-        <ContextMenuShortcut>{isLock ? <Unlock /> : <Lock />}</ContextMenuShortcut>
+      <Item onClick={() => lockComponent(currentCmp)}>
+        {isLock ? (
+          <Unlock style={{ width: '16px', marginRight: '6px' }} />
+        ) : (
+          <Lock style={{ width: '16px', marginRight: '6px' }} />
+        )}
         {isLock ? '解锁' : '锁定'}
-      </ContextMenuItem>
-      <ContextMenuItem
-        onClick={() => visibleComponent(currentCmp)}
-      >
-        <ContextMenuShortcut>
-          <EyeClosed />
-        </ContextMenuShortcut>
+      </Item>
+      <Item onClick={() => visibleComponent(currentCmp)}>
+        <EyeClosed style={{ width: '16px', marginRight: '6px' }} />
         隐藏
-      </ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuItem onClick={() => toast.warning('功能正在开发中～')}>
-        <ContextMenuShortcut>
-          <Star />
-        </ContextMenuShortcut>
+      </Item>
+      <Separator />
+      <Item onClick={() => toast.warning('功能正在开发中～')}>
+        <Star style={{ width: '16px', marginRight: '6px' }} />
         收藏组件
-      </ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuSub>
-        <ContextMenuSubTrigger>
-          <ContextMenuShortcut>
-            <Copy />
-          </ContextMenuShortcut>
-          交互
-        </ContextMenuSubTrigger>
-        <ContextMenuSubContent>
-          <ContextMenuItem onClick={() => copyComponent(currentCmp)}>
-            <ContextMenuShortcut>
-              <Copy />
-            </ContextMenuShortcut>
-            复制
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => cutComponent(currentCmp)}>
-            <ContextMenuShortcut>
-              <Cut20Filled />
-            </ContextMenuShortcut>
-            剪切
-          </ContextMenuItem>
-          {selectedCmpIds.length > 1 && !currentCmp?.group && (
-            <ContextMenuItem onClick={() => combinationComponent()}>
-              <ContextMenuShortcut>
-                <Box />
-              </ContextMenuShortcut>
-              组合
-            </ContextMenuItem>
-          )}
-          {
-            currentCmp?.group && (
-              <ContextMenuItem onClick={() => splitComponent(currentCmp)}>
-                <ContextMenuShortcut>
-                  <Box />
-                </ContextMenuShortcut>
-                拆分
-              </ContextMenuItem>
-            )
-          }
-        </ContextMenuSubContent>
-      </ContextMenuSub>
-      <ContextMenuSub>
-        <ContextMenuSubTrigger>
-          <ContextMenuShortcut>
-            <Layers />
-          </ContextMenuShortcut>
-          图层
-        </ContextMenuSubTrigger>
-        <ContextMenuSubContent className="w-38">
-          <ContextMenuItem onClick={() => setLayerLevel({ type: 'top', component: currentCmp })}>
-            <ContextMenuShortcut>
-              <ArrowUpFromLine />
-            </ContextMenuShortcut>
-            置顶
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => setLayerLevel({ type: 'bottom', component: currentCmp })}>
-            <ContextMenuShortcut>
-              <ArrowDownFromLine />
-            </ContextMenuShortcut>
-            置底
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => setLayerLevel({ type: 'up', component: currentCmp })}>
-            <ContextMenuShortcut>
-              <ArrowUp />
-            </ContextMenuShortcut>
-            上移
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => setLayerLevel({ type: 'down', component: currentCmp })}>
-            <ContextMenuShortcut>
-              <ArrowDown />
-            </ContextMenuShortcut>
-            下移
-          </ContextMenuItem>
-        </ContextMenuSubContent>
-      </ContextMenuSub>
-
-      <ContextMenuSeparator />
-
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <ContextMenuItem
-            variant="destructive"
-            onSelect={(e) => {
-              e.preventDefault();
+      </Item>
+      <Separator />
+      <Submenu
+        label={
+          <>
+            <Copy style={{ width: '16px', marginRight: '6px' }} />
+            交互
+          </>
+        }
+      >
+        <Item onClick={() => copyComponent(currentCmp)}>
+          <Copy style={{ width: '16px', marginRight: '6px' }} />
+          复制
+        </Item>
+        <Item onClick={() => cutComponent(currentCmp)}>
+          <Cut20Filled style={{ width: '16px', marginRight: '6px' }} />
+          剪切
+        </Item>
+        {selectedCmpIds.length > 1 && !currentCmp?.group && (
+          <Item
+            onClick={() => {
+              combinationComponent();
+              contextMenu.hideAll();
             }}
           >
-            <Trash2 />
-            删除
-          </ContextMenuItem>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>删除组件</AlertDialogTitle>
-            <AlertDialogDescription>确定要删除选中的组件吗？</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                deleteComponent(currentCmp);
-                requestAnimationFrame(() => {
-                  document.dispatchEvent(
-                    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
-                  );
-                });
-              }}
-            >
-              确定
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <Box style={{ width: '16px', marginRight: '6px' }} />
+            组合
+          </Item>
+        )}
+        {currentCmp?.group && (
+          <Item
+            onClick={() => {
+              splitComponent(currentCmp);
+              contextMenu.hideAll();
+            }}
+          >
+            <Box style={{ width: '16px', marginRight: '6px' }} />
+            拆分
+          </Item>
+        )}
+      </Submenu>
+      <Submenu
+        label={
+          <>
+            <Layers style={{ width: '16px', marginRight: '6px' }} />
+            图层
+          </>
+        }
+      >
+        <Item onClick={() => setLayerLevel({ type: 'top', component: currentCmp })}>
+          <ArrowUpFromLine style={{ width: '16px', marginRight: '6px' }} />
+          置顶
+        </Item>
+        <Item onClick={() => setLayerLevel({ type: 'bottom', component: currentCmp })}>
+          <ArrowDownFromLine style={{ width: '16px', marginRight: '6px' }} />
+          置底
+        </Item>
+        <Item onClick={() => setLayerLevel({ type: 'up', component: currentCmp })}>
+          <ArrowUp style={{ width: '16px', marginRight: '6px' }} />
+          上移
+        </Item>
+        <Item onClick={() => setLayerLevel({ type: 'down', component: currentCmp })}>
+          <ArrowDown style={{ width: '16px', marginRight: '6px' }} />
+          下移
+        </Item>
+      </Submenu>
+
+      <Separator />
+
+      <Item onClick={onDeleteClick}>
+        <Trash2 style={{ width: '16px', marginRight: '6px' }} />
+        删除
+      </Item>
     </>
   );
 };
 
-const CanvasContextMenu = () => {
+const CanvasContextMenu = ({ onDeleteClick }: { onDeleteClick: () => void }) => {
   const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
   const currentCmpId = useDesignStore((state) => state.currentCmpId);
   const pageComponents = useDesignStore((state) => state.pageSchema.components);
   const currentCmp = pageComponents.find((c) => c.id === currentCmpId);
   const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
+
   return (
     <>
       {currentCmpId || selectedCmpIds.length > 0 ? (
@@ -229,6 +199,7 @@ const CanvasContextMenu = () => {
           currentCmp={currentCmp!}
           updateCurrentCmp={updateCurrentCmp}
           selectedCmpIds={selectedCmpIds}
+          onDeleteClick={onDeleteClick}
         />
       ) : (
         <CanvasMenu

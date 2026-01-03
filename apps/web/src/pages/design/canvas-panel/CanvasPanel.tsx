@@ -4,11 +4,13 @@ import Toolbar from './components/Toolbar';
 import { useDesignStore } from '@/store/modules/design';
 import ShadowView from 'react-shadow';
 import AnimationCss from 'animate.css?inline'
+import ReactContexifyCss from 'react-contexify/ReactContexify.css?inline';
 import shadowStyles from './assets/ShadowDom.less?inline';
 import { useTheme } from '@/composable/use-theme';
 import Ruler from '@scena/react-ruler';
 import { useShallow } from 'zustand/react/shallow';
 import { eventBus } from '@repo/shared/index';
+
 
 const RULER_SIZE = 20;
 
@@ -160,6 +162,7 @@ const CanvasPanel = () => {
         <ShadowView.div className={`ruler-container h-full`} id="shadow-host">
           <style>{AnimationCss}</style>
           <style>{shadowStyles}</style>
+          <style>{ReactContexifyCss}</style>
           <div className={`${theme === 'dark' ? 'dark ruler-wrapper' : 'ruler-wrapper'} `}>
             <div className="ruler-top-row" style={{ height: RULER_SIZE }}>
               <div

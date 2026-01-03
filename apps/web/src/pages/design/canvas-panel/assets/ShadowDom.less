@@ -111,7 +111,7 @@
   border: none;
 }
 
-.cmp-mask:hover {
+.cmp-mask-hover {
   border: 1px dashed #274be3;
 }
 
@@ -214,9 +214,11 @@
 
 .helper-container {
   position: absolute;
+
   .helper-text {
     color: #09f;
     display: flex;
+
     span {
       display: flex;
       white-space: nowrap;
@@ -231,7 +233,7 @@
 
   .horizontal-line {
     // height: 2px;
-    
+
     transform: rotate(180deg);
   }
 
@@ -239,4 +241,38 @@
     // width: 2px;
     transform: rotate(180deg);
   }
+}
+
+.contexify_theme-dark {
+  background-color: #1b1b23 !important;
+
+  .contexify_submenu {
+    background-color: #1b1b23 !important;
+  }
+
+  .delete-btn {
+    .contexify_itemContent {
+      color: rgb(246, 58, 58) !important;
+    }
+  }
+}
+
+.contexify_item:not(.contexify_item-disabled):hover>.contexify_itemContent {
+  background-color: #f4f4f5 !important;
+  color: var(--contexify-item-color) !important;
+
+  .contexify_rightSlot {
+    color: var(--contexify-item-color) !important;
+  }
+}
+
+.dark {
+  .contexify_item:not(.contexify_item-disabled):hover>.contexify_itemContent {
+    background-color: #27272a !important;
+  }
+
+}
+
+.contexify_item {
+  font-size: 0.875rem;
 }

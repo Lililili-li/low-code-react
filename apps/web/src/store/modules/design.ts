@@ -2,10 +2,11 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { Draft } from "immer";
 import { PageSchema, ComponentSchema } from '@repo/core/types'
+import { useHistoryStore, createHistoryRecord, HistoryActionType } from './history'
 
 export interface DesignState {
   config: {
-    siderVisible: 'material' | 'layers' | 'variable' // 侧边栏当前打开的组件
+    siderBarModel: 'material' | 'layers' | 'variable' | 'datasource' // 侧边栏当前打开的组件
     canvasPanel: {
       zoom: number
       lockZoom: boolean
@@ -15,25 +16,30 @@ export interface DesignState {
   currentCmp: ComponentSchema
   currentCmpId: string
   selectedCmpIds: string[]
+  hoverId: string
+  componentsMap: Map<string, ComponentSchema> // TODO 涉及到架构层次
 }
 
 interface DesignActions {
-  setSiderVisible: (siderVisible: DesignState['config']['siderVisible']) => void
+  setSiderBarModel: (siderBarModel: DesignState['config']['siderBarModel']) => void
   setCanvasPanel: (canvasPanel: Partial<DesignState['config']['canvasPanel']>) => void
   setPageSchema: (pageSchema: Partial<PageSchema>) => void
   setCurrentCmpId: (id: string) => void
-  updateCurrentCmp: (component: Partial<ComponentSchema>) => void
-  addComponent: (component: ComponentSchema) => void
-  removeComponent: (id: string) => void
+  updateCurrentCmp: (component: Partial<ComponentSchema>, recordHistory?: boolean) => void
+  addComponent: (component: ComponentSchema, recordHistory?: boolean) => void
+  addSelectComponent: (components: ComponentSchema[], recordHistory?: boolean) => void
+  removeComponent: (id: string, recordHistory?: boolean) => void
+  removeSelectComponents: (id: string[], recordHistory?: boolean) => void
   setSelectedCmpIds: (ids: string[]) => void
   addSelectedCmpIds: (id: string) => void
   updateSelectCmp: (components: ComponentSchema[]) => void
+  setHoverId: (id: string) => void
 }
 
 export const useDesignStore = create<DesignState & DesignActions>()(
-  immer((set) => ({
+  immer((set, get) => ({
     config: {
-      siderVisible: 'material',
+      siderBarModel: sessionStorage.getItem('siderBarModel') as any || 'material',
       canvasPanel: {
         zoom: 1,
         lockZoom: false
@@ -62,9 +68,17 @@ export const useDesignStore = create<DesignState & DesignActions>()(
     currentCmp: {} as ComponentSchema,
     currentCmpId: '',
     selectedCmpIds: [] as string[],
-    setSiderVisible: (siderVisible: DesignState['config']['siderVisible']) => {
+    hoverId: '',
+    componentsMap: new Map(),
+    setHoverId: (id: string) => {
       set((state) => {
-        state.config.siderVisible = siderVisible
+        state.hoverId = id
+      })
+    },
+    setSiderBarModel: (siderBarModel: DesignState['config']['siderBarModel']) => {
+      set((state) => {
+        state.config.siderBarModel = siderBarModel
+        sessionStorage.setItem('siderBarModel', siderBarModel)
       })
     },
     setPageSchema: (pageSchema: Partial<PageSchema>) => {
@@ -86,18 +100,62 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         }
       })
     },
-    addComponent: (component: ComponentSchema) => {
+    addComponent: (component: ComponentSchema, recordHistory = false) => {
       set((state) => {
         state.pageSchema.components.push(component as Draft<ComponentSchema>)
+        state.componentsMap.set(component.id, component as Draft<ComponentSchema>)
       })
+
+      // 记录历史
+      if (recordHistory) {
+        const pushHistory = useHistoryStore.getState().push
+        pushHistory(createHistoryRecord.add(component))
+      }
     },
-    removeComponent: (id: string) => {
+    addSelectComponent: (components: ComponentSchema[], recordHistory = false) => {
       set((state) => {
-        state.pageSchema.components = state.pageSchema.components.filter((component) => component.id !== id)
+        components.forEach(item => {
+          state.pageSchema.components.push(item as Draft<ComponentSchema>)
+          state.componentsMap.set(item.id, item as Draft<ComponentSchema>)
+        })
       })
+
+      // 记录历史
+      if (recordHistory) {
+        const pushHistory = useHistoryStore.getState().push
+        pushHistory(createHistoryRecord.addMultiple(components))
+      }
     },
+    removeComponent: (id: string, recordHistory = false) => {
+      const component = useDesignStore.getState().pageSchema.components.find(c => c.id === id)
+      set((state) => {
+        state.pageSchema.components = state.pageSchema.components.filter((c) => c.id !== id)
+      })
+
+      // 记录历史
+      if (recordHistory && component) {
+        const pushHistory = useHistoryStore.getState().push
+        pushHistory(createHistoryRecord.delete(component))
+      }
+    },
+
+    // 删除多选组件的方法
+    removeSelectComponents(ids: string[], recordHistory = false) {
+      const state = get()
+      const selectComponents = state.pageSchema.components.filter((c) => ids.includes(c.id))
+      set((state) => {
+        state.pageSchema.components = state.pageSchema.components.filter((c) => !ids.includes(c.id))
+      })
+
+      // 记录历史
+      if (recordHistory) {
+        const pushHistory = useHistoryStore.getState().push
+        pushHistory(createHistoryRecord.deleteMultiple(selectComponents))
+      }
+    },
+
     // 更新id为参数id的组件
-    updateComponents: (id: string, component: ComponentSchema) => {
+    updateComponent: (id: string, component: ComponentSchema) => {
       set((state) => {
         state.pageSchema.components = state.pageSchema.components.map((cmp) => cmp.id === id ? component as Draft<ComponentSchema> : cmp)
       })
@@ -124,7 +182,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
     updateSelectCmp(components: ComponentSchema[]) {
       set((state) => {
         const componentMap = new Map(components.map(item => [item.id, item]));
-        state.pageSchema.components = state.pageSchema.components.map((cmp) => 
+        state.pageSchema.components = state.pageSchema.components.map((cmp) =>
           componentMap.get(cmp.id) || cmp
         );
       })
