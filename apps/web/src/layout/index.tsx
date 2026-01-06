@@ -21,8 +21,8 @@ const Layout = () => {
       <AppSidebar />
       <main className="flex flex-col flex-1 h-full relative">
         <AppHeader />
-        <div className="h-[calc(100vh-50px)] overflow-auto bg-[#f1f2f5] dark:bg-[#09090b] p-6">
-          <section>
+        <div className="h-[calc(100vh-50px)] overflow-auto bg-[#f1f2f5] dark:bg-[#09090b]">
+          <section className='h-full'>
             <Outlet />
           </section>
         </div>

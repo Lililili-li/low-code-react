@@ -9,9 +9,14 @@ import { Label } from '@repo/ui/components/label';
 import RotateConfig from './RotateConfig';
 import FilterConfig from './FilterConfig';
 import { ConfigProps } from '../../CmpPanel';
-
+import { createHistoryRecord, PositionProps, SizeProps, useHistoryStore } from '@/store/modules/history';
+import { useEffect, useState } from 'react';
 
 const StyleConfig = ({ component, updateComponent }: ConfigProps) => {
+  const pushHistory = useHistoryStore((state) => state.push);
+
+  const [positionSize, setPositionSize] = useState({ ...component.style });
+
   const updateCmpStyle = (key: string, value: number) => {
     updateComponent({
       ...component,
@@ -20,8 +25,34 @@ const StyleConfig = ({ component, updateComponent }: ConfigProps) => {
         [key]: Number(value),
       },
     });
+    const handlePushHistory = (key1: 'left' | 'width', key2: 'top' | 'height') => {
+      const oldProperty = {
+        [key1]: component?.style?.[key1] as number,
+        [key2]: component?.style?.[key2] as number,
+      };
+      const newProperty = {
+        [key1]: key === key1 ? value : (component?.style?.[key1] as number),
+        [key2]: key === key2 ? value : (component?.style?.[key2] as number),
+      };
+      if (newProperty[key1] === oldProperty[key1] && newProperty[key2] === oldProperty[key2]) return [];
+      return [oldProperty, newProperty];
+    };
+    if (key === 'width' || key === 'height') {
+      const [oldSize, newSize] = handlePushHistory('width', 'height');
+      if (!oldSize && !newSize) return
+      pushHistory(createHistoryRecord.size(component!, oldSize as unknown as SizeProps, newSize as unknown as SizeProps));
+    }
+    if (key === 'left' || key === 'top') {
+      const [oldPosition, newPosition] = handlePushHistory('left', 'top');
+      if (!oldPosition && !newPosition) return
+      pushHistory(createHistoryRecord.move(component!, oldPosition as unknown as PositionProps, newPosition as unknown as PositionProps));
+    }
   };
-  const { style } = component
+  const { style } = component;
+
+  useEffect(() => {
+    setPositionSize(component.style!);
+  }, [component.style]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -31,10 +62,14 @@ const StyleConfig = ({ component, updateComponent }: ConfigProps) => {
           <InputGroupInput
             type="number"
             min={0}
-            defaultValue={component.style?.width}
-            onChange={(e) => updateCmpStyle('width', Number((e.target as HTMLInputElement).value))}
+            onChange={(e) => setPositionSize({ ...positionSize, width: e.target.value })}
             onBlur={(e) => updateCmpStyle('width', Number((e.target as HTMLInputElement).value))}
-            value={component.style?.width}
+            onKeyDown={(e) => {
+              if (e.keyCode === 13) {
+                updateCmpStyle('width', Number((e.target as HTMLInputElement).value));
+              }
+            }}
+            value={positionSize?.width}
             disabled={component.lock || component?.group}
           />
           <InputGroupAddon>
@@ -45,9 +80,14 @@ const StyleConfig = ({ component, updateComponent }: ConfigProps) => {
           <InputGroupInput
             type="number"
             min={0}
-            onChange={(e) => updateCmpStyle('height', Number((e.target as HTMLInputElement).value))}
+            onChange={(e) => setPositionSize({ ...positionSize, height: e.target.value })}
             onBlur={(e) => updateCmpStyle('height', Number((e.target as HTMLInputElement).value))}
-            value={component.style?.height}
+            onKeyDown={(e) => {
+              if (e.keyCode === 13) {
+                updateCmpStyle('height', Number((e.target as HTMLInputElement).value));
+              }
+            }}
+            value={positionSize?.height}
             disabled={component.lock || component?.group}
           />
           <InputGroupAddon>
@@ -61,9 +101,14 @@ const StyleConfig = ({ component, updateComponent }: ConfigProps) => {
           <InputGroupInput
             type="number"
             min={0}
-            onChange={(e) => updateCmpStyle('top', Number((e.target as HTMLInputElement).value))}
+            onChange={(e) => setPositionSize({ ...positionSize, top: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.keyCode === 13) {
+                updateCmpStyle('top', Number((e.target as HTMLInputElement).value));
+              }
+            }}
             onBlur={(e) => updateCmpStyle('top', Number((e.target as HTMLInputElement).value))}
-            value={component.style?.top}
+            value={positionSize?.top}
             disabled={component.lock}
           />
           <InputGroupAddon>
@@ -74,9 +119,14 @@ const StyleConfig = ({ component, updateComponent }: ConfigProps) => {
           <InputGroupInput
             type="number"
             min={0}
-            onChange={(e) => updateCmpStyle('left', Number((e.target as HTMLInputElement).value))}
+            onChange={(e) => setPositionSize({ ...positionSize, left: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.keyCode === 13) {
+                updateCmpStyle('left', Number((e.target as HTMLInputElement).value));
+              }
+            }}
             onBlur={(e) => updateCmpStyle('left', Number((e.target as HTMLInputElement).value))}
-            value={component.style?.left}
+            value={positionSize?.left}
             disabled={component.lock}
           />
           <InputGroupAddon>
@@ -96,7 +146,7 @@ const StyleConfig = ({ component, updateComponent }: ConfigProps) => {
             <span>其他</span>
           </AccordionTrigger>
           <AccordionContent>
-            <RotateConfig style={style} updateCmpStyle={updateCmpStyle}/>
+            <RotateConfig style={style} updateCmpStyle={updateCmpStyle} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

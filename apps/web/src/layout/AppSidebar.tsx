@@ -1,41 +1,94 @@
-
-import { Button } from "@repo/ui/components/button"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@repo/ui/components/sidebar"
-import { Database, HelpCircle } from "lucide-react"
-import { IconAppCenter, IconSemiLogo } from '@douyinfe/semi-icons'
-import { Menu, MenuItem } from "@/components/Menu"
-import { LayoutDashboard, FolderKanban, Image, Layers, Globe, Component } from "lucide-react"
-
+import { Button } from '@repo/ui/components/button';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@repo/ui/components/sidebar';
+import { Database, HelpCircle, Map } from 'lucide-react';
+import { IconAppCenter, IconSemiLogo } from '@douyinfe/semi-icons';
+import { Menu, MenuItem } from '@/components/Menu';
+import { LayoutDashboard, FolderKanban, Image, Layers, Globe, Component } from 'lucide-react';
 
 const AppSidebar = () => {
   const menuItems: MenuItem[] = [
-    { key: "dashboard", label: "工作台", icon: <LayoutDashboard className="size-4" />, path: "/manage/dashboard" },
     {
-      key: "resource",
-      label: "我的应用",
-      icon: <FolderKanban className="size-4" />,
+      key: 'dashboard',
+      label: '工作台',
+      icon: <LayoutDashboard className="size-4" />,
+      path: '/manage/dashboard',
+    },
+    {
+      key: 'project',
+      label: '项目管理',
+      icon: <Globe className="size-4" />,
       children: [
-        { key: "project", label: "项目管理", icon: <Globe className="size-4" />, path: "/manage/resource/project" },
-        { key: "application", label: "应用管理", icon: <IconAppCenter className="size-4" />, path: "/manage/resource/application" },
-        { key: "component", label: "组件资源", icon: <Layers className="size-4" />, path: "/manage/resource/component" },
-        { key: "image", label: "图片资源", icon: <Image className="size-4" />, path: "/manage/resource/image" },
+        {
+          key: 'resource',
+          label: '项目资源',
+          icon: <IconAppCenter className="size-4" />,
+          path: '/manage/project/resource',
+        },
       ],
     },
-    { key: "template", label: "社区模板", icon: <Component className="size-4" />, path: "/manage/template" },
-    { key: "dataSource", label: "数据源", icon: <Database className="size-4" />, path: "/manage/dataSource" },
-  ]
+    {
+      key: 'resource',
+      label: '我的应用',
+      icon: <FolderKanban className="size-4" />,
+      path: '/manage/application',
+      // children: [
+      //   {
+      //     key: 'application',
+      //     label: '应用管理',
+      //     icon: <IconAppCenter className="size-4" />,
+      //     path: '/manage/resource/application',
+      //   },
+      //   {
+      //     key: 'component',
+      //     label: '组件资源',
+      //     icon: <Layers className="size-4" />,
+      //     path: '/manage/resource/component',
+      //   },
+      //   {
+      //     key: 'image',
+      //     label: '图片资源',
+      //     icon: <Image className="size-4" />,
+      //     path: '/manage/resource/image',
+      //   },
+      // ],
+    },
+
+    {
+      key: 'resource',
+      label: '资源管理',
+      icon: <Globe className="size-4" />,
+      children: [
+        {
+          key: 'file',
+          label: '静态资源',
+          icon: <Image className="size-4" />,
+          path: '/manage/resource/file',
+        },
+        {
+          key: 'map',
+          label: '地图资源',
+          icon: <Map className="size-4" />,
+          path: '/manage/resource/map',
+        },
+      ],
+    },
+    {
+      key: 'template',
+      label: '社区模板',
+      icon: <Component className="size-4" />,
+      path: '/manage/template',
+    },
+  ];
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex justify-center items-center gap-2">
+        <div className="flex justify-center items-center gap-2 h-[50px] border-b">
           <IconSemiLogo />
-          <span className="logo-title">
-            超级无敌机器大人
-          </span>
+          <span className="logo-title">超级无敌机器大人</span>
         </div>
       </SidebarHeader>
-      <SidebarContent >
-        <Menu items={menuItems} defaultOpenKeys={["dashboard"]} />
+      <SidebarContent>
+        <Menu items={menuItems} defaultOpenKeys={['dashboard']} />
       </SidebarContent>
       <SidebarFooter>
         <Button variant="outline">
@@ -44,7 +97,7 @@ const AppSidebar = () => {
         </Button>
       </SidebarFooter>
     </Sidebar>
-  )
-}
+  );
+};
 
-export default AppSidebar
+export default AppSidebar;

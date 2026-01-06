@@ -42,7 +42,7 @@ export default class CmpHotKeysService {
       name: '展示 / 隐藏元素'
     },
     {
-      id: 'lock',
+      id: 'lockCanvas',
       key: 'ctrl+l, command+l',
       name: '锁定 / 解锁元素'
     },

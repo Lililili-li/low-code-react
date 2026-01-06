@@ -53,7 +53,6 @@ const CanvasDom = ({
   );
   const pageComponents = useDesignStore((state) => state.pageSchema.components);
   const currentCmpId = useDesignStore((state) => state.currentCmpId);
-  const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
 
   const { spacePressed, setScope, clearScope } = useCanvasHotKeys(() =>
     setTimeout(() => setDeleteDialogOpen(true)),

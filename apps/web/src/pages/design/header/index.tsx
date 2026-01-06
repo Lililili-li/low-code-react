@@ -1,5 +1,4 @@
 import LanguageToggle from '@/components/LanguageToggle';
-import Select from '@/components/Select';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useDesignStore } from '@/store/modules/design';
 import { Button } from '@repo/ui/components/button';
@@ -10,30 +9,11 @@ import {
   Database,
   Home,
   Layers,
-  Pencil,
-  PlusCircle,
   Save,
-  Settings,
   Variable,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import SavePage from './SavePage';
-import { TextBoxSettings20Regular } from '@ricons/fluent';
-
-const pageOptions = [
-  {
-    label: '综合概览',
-    value: '1',
-  },
-  {
-    label: '客流分析',
-    value: '2',
-  },
-  {
-    label: '景区资源',
-    value: '3',
-  },
-];
+import PageManage from './components/PageManage';
 
 const designConfig = [
   {
@@ -63,6 +43,8 @@ const Header = () => {
   const config = useDesignStore((state) => state.config);
   const setSiderBarModel = useDesignStore((state) => state.setSiderBarModel);
 
+
+
   return (
     <div className="flex items-center px-4 h-full justify-between relative">
       <div className="header-left flex gap-2">
@@ -84,32 +66,7 @@ const Header = () => {
           </Toggle>
         ))}
       </div>
-      <div className="header-center flex gap-2 items-center absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
-        <Select
-          value="1"
-          onChange={(value) => {}}
-          options={pageOptions}
-          placeholder="请选择页面"
-          allowClear={false}
-          className="w-[240px]"
-        />
-
-        <SavePage
-          renderTrigger={
-            <Button size="sm" variant="outline">
-              <PlusCircle />
-            </Button>
-          }
-        />
-        <SavePage
-          renderTrigger={
-            <Button size="sm" variant="outline">
-              <TextBoxSettings20Regular className='size-5'/>
-            </Button>
-          }
-          type='update'
-        />
-      </div>
+      <PageManage />
       <div className="header-right flex gap-2">
         <Button size="sm" variant="outline">
           <Save />

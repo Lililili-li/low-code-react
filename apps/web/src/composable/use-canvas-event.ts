@@ -26,6 +26,9 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
   const addSelectedCmpIds = useDesignStore((state) => state.addSelectedCmpIds);
   const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
 
+  const pushHistory = useHistoryStore.getState().push;
+
+
 
   // 画布拖拽状态
   const canvasDragState = useRef({
@@ -424,7 +427,6 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
     }
     const isMultipleSelect = selectedCmpIds.length > 1;
     if (dragState.isDragging) {
-      const pushHistory = useHistoryStore.getState().push;
       if (isMultipleSelect && isComponentMoved(dragState)) {
         const selectComponents = pageComponents.filter((item) => selectedCmpIds.includes(item.id));
         pushHistory(
@@ -455,6 +457,24 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
             ),
           );
         }
+      }
+    }
+    if (dragState.scale.isScaling) {
+      const oldSize = {
+        width: (dragState.draggedCmp?.style?.width as number),
+        height: (dragState.draggedCmp?.style?.height as number)
+      }
+      const newCmp = pageComponents.find(item => item.id === currentCmpId)
+      const newSize = {
+        width: (newCmp?.style?.width as number),
+        height: (newCmp?.style?.height as number)
+      }
+      if (oldSize.width !== newSize.width || newSize.height !== oldSize.height) {
+        pushHistory(createHistoryRecord.size(
+          dragState.draggedCmp!,
+          oldSize,
+          newSize
+        ))
       }
     }
     dragStateRef.current.isDragging = false;

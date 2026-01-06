@@ -9,10 +9,10 @@ import {
 } from '@repo/ui/components/dialog';
 import { PlusCircle } from 'lucide-react';
 import { useState } from 'react';
-import './SavePage.less';
+import './CreatePage.less';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 
-interface SavePageProps {
+interface CreatePageProps {
   renderTrigger: React.ReactNode;
   type?: 'create' | 'update';
 }
@@ -44,7 +44,7 @@ const pages = [
   },
 ];
 
-const SavePage = ({ renderTrigger, type = 'create' }: SavePageProps) => {
+const CreatePage = ({ renderTrigger, type = 'create' }: CreatePageProps) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [currentMenu, setCurrentMenu] = useState('all');
   return (
@@ -95,4 +95,4 @@ const SavePage = ({ renderTrigger, type = 'create' }: SavePageProps) => {
   );
 };
 
-export default SavePage;
+export default CreatePage;

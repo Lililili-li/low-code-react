@@ -200,19 +200,52 @@ export function useComponentOperations() {
   const lockComponent = (currentCmp: ComponentSchema) => {
     const isMultiple = selectCmpIds.length > 1
     if (isMultiple) {
+      const selectComponents = pageComponents.filter(item => selectCmpIds.includes(item.id))
+      const isLock = selectComponents.every(item => item.lock)
       selectCmpIds.forEach(id => {
         const selectCmp = pageComponents.find(item => item.id === id)
         if (!selectCmp) return
-        updateCurrentCmp({ ...selectCmp, lock: !selectCmp?.lock }, true)
+        updateCurrentCmp({ ...selectCmp, lock: !selectCmp?.lock })
       })
+      if (isLock) {
+        pushHistory(createHistoryRecord.unlockMultiple(selectComponents))
+      } else {
+        pushHistory(createHistoryRecord.lockMultiple(selectComponents))
+      }
     } else {
-      updateCurrentCmp({ ...currentCmp, lock: !currentCmp?.lock }, true)
+      updateCurrentCmp({ ...currentCmp, lock: !currentCmp?.lock })
+      if (currentCmp.lock) {
+        pushHistory(createHistoryRecord.unlock(currentCmp))
+      } else {
+        pushHistory(createHistoryRecord.lock(currentCmp))
+      }
     }
   }
 
   // 隐藏显示组件
   const visibleComponent = (currentCmp: ComponentSchema) => {
-    updateCurrentCmp({ ...currentCmp, visible: !currentCmp.visible }, true)
+    const isMultiple = selectCmpIds.length > 1
+    if (isMultiple) {
+      // const selectComponents = pageComponents.filter(item => selectCmpIds.includes(item.id))
+      // const isVisible = selectComponents.every(item => item.visible)
+      selectCmpIds.forEach(id => {
+        const selectCmp = pageComponents.find(item => item.id === id)
+        if (!selectCmp) return
+        updateCurrentCmp({ ...selectCmp, visible: !selectCmp?.visible })
+      })
+      // if (isVisible) {
+      //   pushHistory(createHistoryRecord.hiddenMultiple(selectComponents))
+      // } else {
+      //   pushHistory(createHistoryRecord.visibleMultiple(selectComponents))
+      // }
+    } else {
+      updateCurrentCmp({ ...currentCmp, visible: !currentCmp.visible })
+      // if (currentCmp.visible) {
+      //   pushHistory(createHistoryRecord.hidden(currentCmp))
+      // } else {
+      //   pushHistory(createHistoryRecord.visible(currentCmp))
+      // }
+    }
   }
 
   // 拆分组件
@@ -232,11 +265,12 @@ export function useComponentOperations() {
         newStyle.top = newStyle.top !== 0 ? Number((cmp.style?.top as number) + (component.style?.top as number)) : newStyle.top;
       }
       selectIds.push(cmp.id);
-      addComponent({ ...cmp, style: newStyle }, true)
+      addComponent({ ...cmp, style: newStyle })
     })
-    setCurrentCmpId(component.children?.[0]?.id ?? '')
+    setCurrentCmpId('')
     setSelectedCmpIds(selectIds)
-    removeComponent(component.id, true);
+    removeComponent(component.id);
+    pushHistory(createHistoryRecord.split(component, component.children!))
   }
 
   // 组合组件
@@ -263,6 +297,7 @@ export function useComponentOperations() {
     } as ComponentSchema;
     let maxWidth = 0;
     let maxHeight = 0;
+    const selectComponents = pageComponentsParams.filter(item => selectCmpIdsParams.includes(item.id))
     selectCmpIdsParams.forEach(id => {
       const selectCmp = pageComponentsParams.find(item => item.id === id)
       if (!selectCmp) return
@@ -292,14 +327,14 @@ export function useComponentOperations() {
     component.style!.width = maxWidth - (component.style!.left as number);
     component.style!.height = maxHeight - (component.style!.top as number);
     const groupComponent = { ...component, children: newChildren }
-    addComponent(groupComponent, true)
+    addComponent(groupComponent)
     setCurrentCmpId(component.id)
     setSelectedCmpIds([component.id])
+    pushHistory(createHistoryRecord.group(selectComponents!, groupComponent))
   }
 
   // 更新组件位置 // 水平方向以及垂直方向
   const updatePosition = (dir: 'horizontal' | 'vertical', align: 'start' | 'center' | 'end', component: ComponentSchema) => {
-    const isGroup = component?.group;
     const isHorizontal = dir === 'horizontal';
     const prop = isHorizontal ? 'left' : 'top';
     const dimension = isHorizontal ? 'width' : 'height';
@@ -318,27 +353,15 @@ export function useComponentOperations() {
     };
 
     const newPosition = calculatePosition(align);
-    const distance = (component.style?.[prop] as number) - newPosition;
-
-    if (isGroup) {
-      const updatedChildren = component.children?.map(child => ({
-        ...child,
-        style: {
-          ...child.style,
-          [prop]: (child.style?.[prop] as number) - distance
-        }
-      }));
-      updateCurrentCmp({
-        ...component,
-        children: updatedChildren,
-        style: { ...component.style, [prop]: newPosition }
-      });
-    } else {
-      updateCurrentCmp({
-        ...component,
-        style: { ...component.style, [prop]: newPosition }
-      });
+    const newComponent = {
+      ...component,
+      style: { ...component.style, [prop]: newPosition }
     }
+    updateCurrentCmp(newComponent);
+    const oldP = { left: (component.style?.left as number), top: (component.style?.top as number) }
+    const newP = { left: (newComponent.style?.left as number), top: (newComponent.style?.top as number) }
+    pushHistory(createHistoryRecord.move(component, oldP, newP))
+
   };
 
   // 组件翻转 // 水平方向以及垂直方向
@@ -361,7 +384,6 @@ export function useComponentOperations() {
           [rotateAxis]: newRotation
         }
       }));
-
       updateCurrentCmp({
         ...component,
         children: updatedChildren,
@@ -396,11 +418,16 @@ export function useComponentOperations() {
       return newPosition
     }
     if (isMultiple) {
+      const newPositions = [] as { left: number, top: number, id: string }[]
+      const selectComponents = pageComponents.filter(item => selectCmpIds.includes(item.id))
+      const oldPositions = selectComponents.map(item => ({ id: item.id, left: (item.style?.left as number), top: (item.style?.top as number) }))
       selectCmpIds.forEach(id => {
         const selectCmp = pageComponents.find(item => item.id === id)
         if (!selectCmp) return
-        updatePosition(selectCmp)
+        const newPosition = updatePosition(selectCmp)
+        newPositions.push({ ...newPosition, id })
       })
+      pushHistory(createHistoryRecord.moveMultiple(selectComponents, oldPositions, newPositions))
     } else {
       if (!component?.id) return;
       const oldPosition = { left: (component.style?.left as number), top: (component.style?.top as number) }

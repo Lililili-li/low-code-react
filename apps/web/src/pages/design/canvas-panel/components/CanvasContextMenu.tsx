@@ -21,14 +21,8 @@ import { useComponentOperations } from '@/composable/use-component-operations';
 import { toast } from 'sonner';
 import { Item, Separator, Submenu, contextMenu } from 'react-contexify';
 
-const CanvasMenu = ({
-  updateCurrentCmp,
-}: {
-  currentCmp: ComponentSchema;
-  selectedCmpIds: string[];
-  updateCurrentCmp: (cmp: ComponentSchema) => void;
-}) => {
-  const { pasteComponent } = useComponentOperations(updateCurrentCmp);
+const CanvasMenu = () => {
+  const { pasteComponent } = useComponentOperations();
 
   const clearClipboard = async () => {
     try {
@@ -69,7 +63,6 @@ const CanvasMenu = ({
 
 const ComponentMenu = ({
   currentCmp,
-  updateCurrentCmp,
   selectedCmpIds,
   onDeleteClick,
 }: {
@@ -86,7 +79,7 @@ const ComponentMenu = ({
     splitComponent,
     combinationComponent,
     visibleComponent,
-  } = useComponentOperations(updateCurrentCmp);
+  } = useComponentOperations();
 
   const isLock = selectedCmpIds.length > 1 ? false : currentCmp?.id ? currentCmp?.lock : false;
 
@@ -202,11 +195,7 @@ const CanvasContextMenu = ({ onDeleteClick }: { onDeleteClick: () => void }) => 
           onDeleteClick={onDeleteClick}
         />
       ) : (
-        <CanvasMenu
-          currentCmp={currentCmp!}
-          updateCurrentCmp={updateCurrentCmp}
-          selectedCmpIds={selectedCmpIds}
-        />
+        <CanvasMenu />
       )}
     </>
   );

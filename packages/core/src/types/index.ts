@@ -29,7 +29,7 @@ export interface ComponentSchema {
   style?: ExtendedCSSProperties; // 样式
   visible: boolean;              // 是否隐藏
   lock: boolean;                 // 是否锁定
-  animation?: AnimationConfig        
+  animation?: AnimationConfig
   className?: string;            // 样式类名
   children?: ComponentSchema[]   // 分组下的组件
 }
@@ -61,4 +61,5 @@ export interface PageSchema {
   globalHeaders: string,
   globalCss: string,
   components: ComponentSchema[];
+  state: Record<string, any>
 }

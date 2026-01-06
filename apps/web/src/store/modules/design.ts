@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { Draft } from "immer";
 import { PageSchema, ComponentSchema } from '@repo/core/types'
-import { useHistoryStore, createHistoryRecord, HistoryActionType } from './history'
+import { useHistoryStore, createHistoryRecord } from './history'
 
 export interface DesignState {
   config: {
@@ -20,12 +20,12 @@ export interface DesignState {
   componentsMap: Map<string, ComponentSchema> // TODO 涉及到架构层次
 }
 
-interface DesignActions {
+export interface DesignActions {
   setSiderBarModel: (siderBarModel: DesignState['config']['siderBarModel']) => void
   setCanvasPanel: (canvasPanel: Partial<DesignState['config']['canvasPanel']>) => void
   setPageSchema: (pageSchema: Partial<PageSchema>) => void
   setCurrentCmpId: (id: string) => void
-  updateCurrentCmp: (component: Partial<ComponentSchema>, recordHistory?: boolean) => void
+  updateCurrentCmp: (component: Partial<ComponentSchema>) => void
   addComponent: (component: ComponentSchema, recordHistory?: boolean) => void
   addSelectComponent: (components: ComponentSchema[], recordHistory?: boolean) => void
   removeComponent: (id: string, recordHistory?: boolean) => void
@@ -34,6 +34,8 @@ interface DesignActions {
   addSelectedCmpIds: (id: string) => void
   updateSelectCmp: (components: ComponentSchema[]) => void
   setHoverId: (id: string) => void
+  setPageState: (state: Record<string, any>) => void
+  updatePageState: (key: string, value: any, isDelete?: boolean) => void
 }
 
 export const useDesignStore = create<DesignState & DesignActions>()(
@@ -64,12 +66,18 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       globalHeaders: '{}',
       globalCss: '',
       components: [],
+      state: {
+        profile: {
+          name: '张三'
+        }
+      },
     },
     currentCmp: {} as ComponentSchema,
     currentCmpId: '',
     selectedCmpIds: [] as string[],
     hoverId: '',
     componentsMap: new Map(),
+
     setHoverId: (id: string) => {
       set((state) => {
         state.hoverId = id
@@ -185,6 +193,25 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         state.pageSchema.components = state.pageSchema.components.map((cmp) =>
           componentMap.get(cmp.id) || cmp
         );
+      })
+    },
+
+    // 设置页面变量
+    setPageState(pageState: Record<string, any>) {
+      set((state) => {
+        state.pageSchema.state = {
+          ...state.pageSchema.state,
+          ...pageState
+        }
+      })
+    },
+    updatePageState(key: string, value?: any, isDelete=false) {
+      set((state) => {
+        if (isDelete) {
+          delete state.pageSchema.state[key]
+        } else {
+          state.pageSchema.state[key] = value;
+        }
       })
     }
   }))

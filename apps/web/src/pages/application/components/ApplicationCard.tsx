@@ -7,7 +7,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import SaveApplication from '../SaveApplication';
 import applicationApi from '@/api/application';
 import { useNavigate } from 'react-router';
-import SavePage from '@/pages/design/components/SavePage';
+import SavePage from '@/pages/design/header/components/CreatePage';
 
 interface ApplicationCardProps {
   data: Record<string, any>;

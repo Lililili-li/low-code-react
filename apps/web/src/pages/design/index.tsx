@@ -3,7 +3,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@repo/ui/components/resizable';
-import Header from './components/Header';
+import Header from './header';
 import { useDesignStore } from '@/store/modules/design';
 import MaterialPanel from './material-panel/MaterialPanel';
 import LayerPanel from './layer-panel/LayerPanel';
@@ -35,7 +35,7 @@ const Design = () => {
         <ResizablePanelGroup direction="horizontal" className="w-full h-full" onLayout={() => {
           eventBus.emit('handleResize')
         }}>
-          <ResizablePanel defaultSize={20} maxSize={25}>
+          <ResizablePanel defaultSize={20} maxSize={25} style={{overflow: 'none'}}>
             <div className="sidebar w-full h-full">{<PanelComponent />}</div>
           </ResizablePanel>
           <ResizableHandle withHandle />

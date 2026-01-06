@@ -8,13 +8,14 @@ const Login = lazy(() => import('@/pages/Login'));
 const Layout = lazy(() => import('@/layout'));
 
 const Dashboard = lazy(() => import('@/pages/dashboard/Dashboard'));
-const Project = lazy(() => import('@/pages/project/Project'));
 const Application = lazy(() => import('@/pages/application/Application'));
 const Components = lazy(() => import('@/pages/component/Component'));
-const Images = lazy(() => import('@/pages/image/Image'));
-
+const FileResource = lazy(() => import('@/pages/resource/file-resource'));
+const MapResource = lazy(() => import('@/pages/resource/map-resource'));
 
 const Design = lazy(() => import('@/pages/design/index'));
+
+const ProjectResource = lazy(() => import('@/pages/project/resource'));
 
 const router = createBrowserRouter([
   {
@@ -38,21 +39,42 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: 'project',
+            children: [
+              {
+                path: 'resource',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ProjectResource />
+                  </Suspense>
+                ),
+              },
+            ],
+          },
+          {
+            path: 'application',
+            element: (
+              <Suspense fallback={<LoadingSpinner />}>
+                <Application />
+              </Suspense>
+            ),
+          },
+          {
             path: 'resource',
             children: [
               {
-                path: 'project',
+                path: 'file',
                 element: (
                   <Suspense fallback={<LoadingSpinner />}>
-                    <Project />
+                    <FileResource />
                   </Suspense>
                 ),
               },
               {
-                path: 'application',
+                path: 'map',
                 element: (
                   <Suspense fallback={<LoadingSpinner />}>
-                    <Application />
+                    <MapResource />
                   </Suspense>
                 ),
               },
@@ -61,14 +83,6 @@ const router = createBrowserRouter([
                 element: (
                   <Suspense fallback={<LoadingSpinner />}>
                     <Components />
-                  </Suspense>
-                ),
-              },
-              {
-                path: 'image',
-                element: (
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Images />
                   </Suspense>
                 ),
               },
@@ -82,8 +96,8 @@ const router = createBrowserRouter([
           <Suspense fallback={<LoadingSpinner />}>
             <Design />
           </Suspense>
-        )
-      }
+        ),
+      },
     ],
   },
   {
@@ -96,8 +110,8 @@ const router = createBrowserRouter([
   },
   {
     path: 'demo',
-    element: <Demo />
-  }
+    element: <Demo />,
+  },
 ]);
 
 export default router;

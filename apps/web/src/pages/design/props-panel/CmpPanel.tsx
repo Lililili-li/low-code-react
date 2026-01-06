@@ -39,12 +39,12 @@ const CmpPanel = () => {
   const currentCmpId = useDesignStore((state) => state.currentCmpId);
   const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
   const currentCmp = useDesignStore((state) => state.pageSchema.components.find(item => item.id === currentCmpId));
-  const PropsCmp = materialCmp[currentCmp!.type as MaterialType]?.propsPanel;
+  const PropsCmp = materialCmp[currentCmp?.type as MaterialType]?.propsPanel;
 
   const visible = currentCmp?.visible;
   const lock = currentCmp?.lock;
 
-  const { updatePosition, transformComponent } = useComponentOperations(updateCurrentCmp);
+  const { updatePosition, transformComponent, lockComponent } = useComponentOperations();
 
   const [activeTab, setActiveTab] = useState('props');
   return (
@@ -103,9 +103,7 @@ const CmpPanel = () => {
               <div className="flex-1 items-center flex">
                 <Switch
                   checked={lock}
-                  onCheckedChange={(value) => {
-                    updateCurrentCmp({ ...currentCmp, lock: value });
-                  }}
+                  onCheckedChange={() => lockComponent(currentCmp!)}
                 />
               </div>
             </div>

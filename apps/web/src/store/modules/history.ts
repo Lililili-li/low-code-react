@@ -15,12 +15,19 @@ export type HistoryActionType =
   | 'group'    // 组合组件
   | 'split'    // 拆分组件
   | 'lock'     // 锁定组件
+  | 'lockMultiple'     // 锁定组件
   | 'unlock'   // 解锁组件
+  | 'unlockMultiple'   // 解锁组件
   | 'visible'  // 显示组件
+  | 'visibleMultiple'  // 显示组件
   | 'hidden'   // 隐藏组件
-  | 'layer';   // 图层操作
+  | 'hiddenMultiple'   // 隐藏组件
+  | 'layer'   // 图层操作
+  | 'transform' //旋转
+  | 'size' // 尺寸
 
-interface PositionProps { left: number, top: number, id?: string }
+export interface PositionProps { left: number, top: number, id?: string }
+export interface SizeProps { width: number, height: number }
 
 // 单条历史记录
 export interface HistoryRecord {
@@ -34,8 +41,12 @@ export interface HistoryRecord {
   components?: ComponentSchema[]       // 操作的组件ID
   oldPosition?: PositionProps
   newPosition?: PositionProps
+  oldSize?: SizeProps
+  newSize?: SizeProps
   oldPositions?: PositionProps[]
   newPositions?: PositionProps[]
+  oldValue?: Record<string, any>
+  newValue?: Record<string, any>
 }
 
 interface HistoryState {
@@ -60,24 +71,92 @@ interface HistoryActions {
   canRedo: () => boolean;
 }
 
+// 清理选中状态的辅助函数
+const clearSelectionIfNeeded = (
+  componentId: string | undefined,
+  setCurrentCmpId: (id: string) => void,
+  setSelectedCmpIds: (ids: string[]) => void,
+  currentCmpId: string,
+  selectedCmpIds: string[]
+) => {
+  if (componentId && currentCmpId === componentId) {
+    setCurrentCmpId('')
+  }
+  if (componentId && selectedCmpIds.length === 1 && selectedCmpIds[0] === componentId) {
+    setSelectedCmpIds([])
+  }
+}
+
+// 更新组件属性的辅助函数
+const updateComponentProperty = (
+  components: ComponentSchema[],
+  updateCurrentCmp: (cmp: ComponentSchema) => void,
+  property: 'lock' | 'visible',
+  value: boolean
+) => {
+  components.forEach(cmp => {
+    updateCurrentCmp({
+      ...cmp,
+      [property]: value
+    })
+  })
+}
+
+// 更新组件位置的辅助函数
+const updateComponentPosition = (
+  component: ComponentSchema | undefined,
+  position: PositionProps | undefined,
+  updateCurrentCmp: (cmp: ComponentSchema) => void
+) => {
+  if (!component || !position) return
+  updateCurrentCmp({
+    ...component,
+    style: {
+      ...component.style,
+      left: position.left,
+      top: position.top
+    }
+  })
+}
+
+// 更新组件尺寸的辅助函数
+const updateComponentSize = (
+  component: ComponentSchema | undefined,
+  size: SizeProps | undefined,
+  updateCurrentCmp: (cmp: ComponentSchema) => void
+) => {
+  if (!component || !size) return
+  updateCurrentCmp({
+    ...component,
+    style: {
+      ...component.style,
+      width: size.width,
+      height: size.height
+    }
+  })
+}
+
 const handleComponentOpt = (actionType: HistoryActionType, record: HistoryRecord, type: 'undo' | 'redo') => {
   const { addComponent, removeComponent, updateCurrentCmp, setCurrentCmpId, currentCmpId, setSelectedCmpIds, selectedCmpIds, pageSchema } = useDesignStore.getState()
+
+  const isUndo = type === 'undo'
+
   switch (actionType) {
     case 'add':
-      if (type === 'undo') {
-        removeComponent(record.componentId!)
-        if (currentCmpId === record.componentId) {
-          setCurrentCmpId('')
-        }
-        if (selectedCmpIds.length === 1 && selectedCmpIds[0] === record.componentId) {
-          setSelectedCmpIds([])
+      if (isUndo) {
+        if (record.componentId) {
+          removeComponent(record.componentId)
+          clearSelectionIfNeeded(record.componentId, setCurrentCmpId, setSelectedCmpIds, currentCmpId, selectedCmpIds)
         }
       } else {
-        addComponent(record.component!)
+        if (record.component) {
+          addComponent(record.component)
+        }
       }
-      break;
+      break
+
     case 'addMultiple':
-      if (type === 'undo') {
+      if (isUndo) {
         record.components?.forEach(item => {
           removeComponent(item.id)
         })
@@ -85,32 +164,107 @@ const handleComponentOpt = (actionType: HistoryActionType, record: HistoryRecord
         record.components?.forEach(item => {
           addComponent(item)
         })
-        if (currentCmpId === record.componentId) {
-          setCurrentCmpId('')
-        }
-        if (selectedCmpIds.length === 1 && selectedCmpIds[0] === record.componentId) {
-          setSelectedCmpIds([])
-        }
+        clearSelectionIfNeeded(record.componentId, setCurrentCmpId, setSelectedCmpIds, currentCmpId, selectedCmpIds)
       }
-      break;
+      break
+
     case 'delete':
-      if (type === 'undo') {
-        addComponent(record.component!)
+      if (isUndo) {
+        if (record.component) {
+          addComponent(record.component)
+        }
         if (!currentCmpId) {
           setSelectedCmpIds([])
         }
       } else {
-        removeComponent(record.componentId!)
-        if (currentCmpId === record.componentId) {
-          setCurrentCmpId('')
-        }
-        if (selectedCmpIds.length === 1 && selectedCmpIds[0] === record.componentId) {
-          setSelectedCmpIds([])
+        if (record.componentId) {
+          removeComponent(record.componentId)
+          clearSelectionIfNeeded(record.componentId, setCurrentCmpId, setSelectedCmpIds, currentCmpId, selectedCmpIds)
         }
       }
-      break;
+      break
+
     case 'deleteMultiple':
-      if (type === 'undo') {
+      if (isUndo) {
+        record.components?.forEach(item => {
+          addComponent(item)
+        })
+      } else {
+        record.components?.forEach(item => {
+          removeComponent(item.id)
+        })
+        clearSelectionIfNeeded(record.componentId, setCurrentCmpId, setSelectedCmpIds, currentCmpId, selectedCmpIds)
+      }
+      break
+
+    case 'move':
+      if (record.componentId) {
+        const currentCmp = pageSchema.components.find(item => item.id === record.componentId)
+        const position = isUndo ? record.oldPosition : record.newPosition
+        updateComponentPosition(currentCmp, position, updateCurrentCmp)
+      }
+      break
+
+    case 'moveMultiple':
+      record.components?.forEach(item => {
+        const positions = isUndo ? record.oldPositions : record.newPositions
+        const position = positions?.find(p => p.id === item.id)
+        updateComponentPosition(item, position, updateCurrentCmp)
+      })
+      break
+
+    case 'lock':
+      if (record.component) {
+        updateComponentProperty([record.component], updateCurrentCmp, 'lock', !isUndo)
+      }
+      break
+
+    case 'lockMultiple':
+      if (record.components) {
+        updateComponentProperty(record.components, updateCurrentCmp, 'lock', !isUndo)
+      }
+      break
+
+    case 'unlock':
+      if (record.component) {
+        updateComponentProperty([record.component], updateCurrentCmp, 'lock', isUndo)
+      }
+      break
+
+    case 'unlockMultiple':
+      if (record.components) {
+        updateComponentProperty(record.components, updateCurrentCmp, 'lock', isUndo)
+      }
+      break
+
+    // TODO 涉及到变量暂不操作
+    // case 'visible':
+    //   if (record.component) {
+    //     updateComponentProperty([record.component], updateCurrentCmp, 'visible', !isUndo)
+    //   }
+    //   break
+
+    // case 'visibleMultiple':
+    //   if (record.components) {
+    //     updateComponentProperty(record.components, updateCurrentCmp, 'visible', !isUndo)
+    //   }
+    //   break
+
+    // case 'hidden':
+    //   if (record.component) {
+    //     updateComponentProperty([record.component], updateCurrentCmp, 'visible', isUndo)
+    //   }
+    //   break
+
+    // case 'hiddenMultiple':
+    //   if (record.components) {
+    //     updateComponentProperty(record.components, updateCurrentCmp, 'visible', isUndo)
+    //   }
+    //   break
+
+    case 'group':
+      if (isUndo) {
+        removeComponent(record.component?.id!)
         record.components?.forEach(item => {
           addComponent(item)
         })
@@ -118,53 +272,38 @@ const handleComponentOpt = (actionType: HistoryActionType, record: HistoryRecord
         record.components?.forEach(item => {
           removeComponent(item.id!)
         })
-        if (currentCmpId === record.componentId) {
-          setCurrentCmpId('')
-        }
-        if (selectedCmpIds.length === 1 && selectedCmpIds[0] === record.componentId) {
-          setSelectedCmpIds([])
-        }
+        addComponent(record.component!)
       }
-      break;
-    case 'move':
-      if (type === 'undo') {
-        const currentCmp = pageSchema.components.find(item => item.id === record.componentId)
-        updateCurrentCmp({
-          ...currentCmp,
-          style: { ...currentCmp?.style, left: record.oldPosition?.left, top: record.oldPosition?.top }
-        })
-      } else {
-        const currentCmp = pageSchema.components.find(item => item.id === record.componentId)
-        updateCurrentCmp({
-          ...currentCmp,
-          style: { ...currentCmp?.style, left: record.newPosition?.left, top: record.newPosition?.top }
-        })
-      }
-      break;
-    case 'moveMultiple':
-      if (type === 'undo') {
+      break
+    case 'split':
+      if (isUndo) {
+        addComponent(record.component!)
         record.components?.forEach(item => {
-          const position = record.oldPositions?.find(p => p.id === item.id)
-          updateCurrentCmp({
-            ...item,
-            style: { ...item?.style, left: position?.left, top: position?.top }
-          })
+          removeComponent(item.id!)
         })
+        setSelectedCmpIds([])
       } else {
+        removeComponent(record.component?.id!)
         record.components?.forEach(item => {
-          const position = record.newPositions?.find(p => p.id === item.id)
-          updateCurrentCmp({
-            ...item,
-            style: { ...item?.style, left: position?.left, top: position?.top }
-          })
+          addComponent({ ...item, style: { ...item.style, left: (record.component?.style?.left as number) + (item.style?.left as number), top: (record.component?.style?.top as number) + (item.style?.top as number) } })
         })
+        setCurrentCmpId('')
+        setSelectedCmpIds(record.components?.map(item => item.id)!)
       }
-      break;
-    default:
-      break;
-  }
+      break
 
+    case 'size':
+      if (record.componentId) {
+        const currentCmp = pageSchema.components.find(item => item.id === record.componentId)
+        const size = isUndo ? record.oldSize : record.newSize
+        updateComponentSize(currentCmp, size, updateCurrentCmp)
+      }
+      break
+    default:
+      break
+  }
 }
+
 
 export const useHistoryStore = create<HistoryState & HistoryActions>()(
   immer((set, get) => ({
@@ -179,7 +318,6 @@ export const useHistoryStore = create<HistoryState & HistoryActions>()(
         if (state.currentIndex < state.undoRecords.length - 1) {
           state.undoRecords = state.undoRecords.slice(0, state.currentIndex + 1);
         }
-
         // 创建新记录
         const newRecord: HistoryRecord = {
           ...record,
@@ -203,11 +341,6 @@ export const useHistoryStore = create<HistoryState & HistoryActions>()(
       const state = get();
       if (state.undoRecords.length === 0) return;
       const record = state.undoRecords[0];
-      // const method = useDesignStore((state) => ({
-      //   addComponent: state.addComponent,
-      //   removeComponent: state.removeComponent
-      // }));
-
       set((s) => {
         s.redoRecords.unshift(record);
         s.undoRecords.shift();
@@ -289,17 +422,9 @@ export const createHistoryRecord = {
     oldPositions,
     newPositions,
   }),
-
-  // paste: (component: ComponentSchema, type: 'copy' | 'cut'): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-  //   type,
-  //   title: `粘贴-${component.name}`,
-  //   componentId: component.id,
-  //   component,
-  // }),
-
   group: (components: ComponentSchema[], groupComponent: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
     type: 'group',
-    title: `组合-${components.length}`,
+    title: `组合-${components.map(c => c.name).join(',')}`,
     componentIds: components.map(c => c.id),
     component: groupComponent,
     components
@@ -307,43 +432,77 @@ export const createHistoryRecord = {
 
   split: (groupComponent: ComponentSchema, components: ComponentSchema[]): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
     type: 'split',
-    title: `拆分-${groupComponent.name}`,
+    title: `拆分-${components.map(c => c.name).join(',')}`,
     componentId: groupComponent.id,
     component: groupComponent,
     components,
   }),
 
-  // lock: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-  //   type: 'lock',
-  //   title: `锁定组件 ${component.name}`,
-  //   componentId: component.id,
-  //   oldValue: { lock: false },
-  //   newValue: { lock: true },
-  // }),
+  lock: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'lock',
+    title: `锁定-${component.name}`,
+    componentId: component.id,
+    component,
+  }),
+  lockMultiple: (components: ComponentSchema[]): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'lockMultiple',
+    title: `锁定-${components.map(item => item.name).join(',')}`,
+    componentIds: components.map(item => item.id),
+    components,
+  }),
 
-  // unlock: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-  //   type: 'unlock',
-  //   title: `解锁组件 ${component.name}`,
-  //   componentId: component.id,
-  //   oldValue: { lock: true },
-  //   newValue: { lock: false },
-  // }),
+  unlock: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'unlock',
+    title: `解锁-${component.name}`,
+    componentId: component.id,
+    component,
+  }),
+  unlockMultiple: (components: ComponentSchema[]): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'unlockMultiple',
+    title: `解锁-${components.map(item => item.name).join(',')}`,
+    componentIds: components.map(item => item.id),
+    components,
+  }),
 
-  // visible: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-  //   type: 'visible',
-  //   title: `显示组件 ${component.name}`,
-  //   componentId: component.id,
-  //   oldValue: { visible: false },
-  //   newValue: { visible: true },
-  // }),
+  visible: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'visible',
+    title: `显示-${component.name}`,
+    componentId: component.id,
+    component
+  }),
+  visibleMultiple: (components: ComponentSchema[]): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'visibleMultiple',
+    title: `显示-${components.map(item => item.name).join(',')}`,
+    componentIds: components.map(item => item.id),
+    components,
+  }),
 
-  // hidden: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-  //   type: 'hidden',
-  //   title: `隐藏组件 ${component.name}`,
-  //   componentId: component.id,
-  //   oldValue: { visible: true },
-  //   newValue: { visible: false },
-  // }),
+  hidden: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'hidden',
+    title: `隐藏-${component.name}`,
+    componentId: component.id,
+    component
+  }),
+  hiddenMultiple: (components: ComponentSchema[]): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'hiddenMultiple',
+    title: `隐藏-${components.map(item => item.name).join(',')}`,
+    componentIds: components.map(item => item.id),
+    components,
+  }),
+
+  transform: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'transform',
+    title: `旋转-${component.name}`,
+    componentId: component.id,
+    component
+  }),
+  size: (component: ComponentSchema, oldSize: SizeProps, newSize: SizeProps): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
+    type: 'size',
+    title: `尺寸-${component.name}`,
+    componentId: component.id,
+    oldSize,
+    newSize,
+  }),
 
   // layer: (component: ComponentSchema, action: 'top' | 'bottom' | 'up' | 'down', oldIndex: number, newIndex: number): Omit<HistoryRecord, 'id' | 'timestamp'> => {
   //   const actionMap = { top: '置顶', bottom: '置底', up: '上移', down: '下移' };

@@ -8,9 +8,11 @@ import { useHistoryStore } from "@/store/modules/history";
 
 const cmpHotKeysService = new CmpHotKeysService()
 
-export function useCanvasHotKeys(onDelete: () => void = () => {}) {
+export function useCanvasHotKeys(onDelete: () => void = () => { }) {
   const currentCmpId = useDesignStore((state) => state.currentCmpId);
   const zoom = useDesignStore((state) => state.config.canvasPanel.zoom);
+  const lockZoom = useDesignStore((state) => state.config.canvasPanel.lockZoom);
+  const setCanvasPanel = useDesignStore((state) => state.setCanvasPanel);
   const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
   const pageComponents = useDesignStore((state) => state.pageSchema.components);
 
@@ -22,7 +24,6 @@ export function useCanvasHotKeys(onDelete: () => void = () => {}) {
     cutComponent,
     pasteComponent,
     visibleComponent,
-    lockComponent,
     splitComponent,
     combinationComponent,
     moveComponent
@@ -35,6 +36,7 @@ export function useCanvasHotKeys(onDelete: () => void = () => {}) {
     zoom: 1,
     selectedCmpIds: [] as string[],
     pageComponents: [] as ComponentSchema[],
+    lockZoom
   });
 
   // 同步最新值到 ref（这个 useEffect 可以频繁执行，不影响快捷键注册）
@@ -44,8 +46,9 @@ export function useCanvasHotKeys(onDelete: () => void = () => {}) {
       zoom,
       selectedCmpIds,
       pageComponents,
+      lockZoom
     };
-  }, [currentCmpId, zoom, selectedCmpIds, pageComponents]);
+  }, [currentCmpId, zoom, selectedCmpIds, pageComponents, lockZoom]);
 
   // 快捷键注册只执行一次（空依赖数组）
   useEffect(() => {
@@ -66,9 +69,9 @@ export function useCanvasHotKeys(onDelete: () => void = () => {}) {
         const { currentCmp } = contextRef.current;
         if (currentCmp) visibleComponent(currentCmp);
       },
-      lock: () => {
-        const { currentCmp } = contextRef.current;
-        if (currentCmp) lockComponent(currentCmp);
+      lockCanvas: () => {
+        const { lockZoom } = contextRef.current
+        setCanvasPanel({ lockZoom: !lockZoom })
       },
       delete: () => {
         onDelete()
@@ -98,11 +101,11 @@ export function useCanvasHotKeys(onDelete: () => void = () => {}) {
         if (currentCmp || selectedCmpIds.length) moveComponent('moveRight', currentCmp, selectedCmpIds, pageComponents)
       },
       undo: () => {
-        if (!canUndo()) return 
+        if (!canUndo()) return
         undo()
       },
       redo: () => {
-        if (!canRedo()) return 
+        if (!canRedo()) return
         redo()
       }
     };

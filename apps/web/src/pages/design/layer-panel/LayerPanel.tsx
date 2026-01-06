@@ -26,7 +26,6 @@ import LayerContextMenu from './components/LayerContextMenu';
 const MENU_ID = 'layer-context-menu';
 const LayerPanel = () => {
   const pageComponents = useDesignStore((state) => state.pageSchema.components);
-  const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp)
   const currentCmpId = useDesignStore((state) => state.currentCmpId)
   const { theme } = useTheme();
 

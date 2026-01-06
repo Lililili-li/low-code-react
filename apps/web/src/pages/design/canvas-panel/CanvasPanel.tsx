@@ -129,6 +129,7 @@ const CanvasPanel = () => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         e.stopPropagation();
+        if (config.canvasPanel.lockZoom) return
         const delta = e.deltaY > 0 ? -0.01 : 0.01;
         const prevZoom = config.canvasPanel.zoom;
         setCanvasPanel({ zoom: Math.min(Math.max((prevZoom ?? 1) + delta, 0.1), 2) });
@@ -139,7 +140,7 @@ const CanvasPanel = () => {
     return () => {
       canvasElement.removeEventListener('wheel', handleWheel);
     };
-  }, [config.canvasPanel.zoom, setCanvasPanel]);
+  }, [config.canvasPanel, setCanvasPanel]);
 
   // 窗口 resize 时重新计算
   const handleResize = useCallback(() => autoCenter(), [pageSchemaSubset.width, setCanvasPanel]);
