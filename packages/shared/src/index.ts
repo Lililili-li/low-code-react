@@ -16,3 +16,5 @@ export const isArray = (value: any) => Array.isArray(value)
 export const isFunction = (value: any) => typeof value === 'function'
 
 
+export const byteToMB = (byte: number) => byte / 1024 / 1024
+

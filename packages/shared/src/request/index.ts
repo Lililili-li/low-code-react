@@ -12,7 +12,7 @@ interface ApiResponse<T = unknown> {
 // 创建 axios 实例
 const instance: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000,
+  timeout: 60 * 1000,
   headers: {
     'Content-Type': 'application/json',
   },

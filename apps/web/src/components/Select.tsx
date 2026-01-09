@@ -8,6 +8,7 @@ import {
 } from '@repo/ui/components/select';
 import { cn } from '@repo/ui/lib/utils';
 import Empty from './Empty';
+import React from 'react';
 
 interface SelectProps {
   value: string;
@@ -22,7 +23,7 @@ interface SelectProps {
   disabled?: boolean
 }
 
-const Select = ({
+const Select = React.forwardRef<HTMLButtonElement, SelectProps>(({
   value,
   onChange,
   allowClear,
@@ -30,17 +31,16 @@ const Select = ({
   className,
   placeholder,
   disabled = false,
-  ...props
-}: SelectProps) => {
+}, ref) => {
   return (
-    <ShaSelect value={value} onValueChange={(value) => onChange(value)} {...props}>
+    <ShaSelect value={value} onValueChange={(value) => onChange(value)}>
       <SelectTrigger
+        ref={ref}
         className={cn('h-[32px] group justify-between', className)}
         style={{ height: 32 }}
         allowClear={allowClear}
         onClear={() => onChange('')}
         disabled={disabled}
-        {...props}
       >
         <div className="flex items-center gap-2 justify-between flex-1 relative">
           <SelectValue placeholder={placeholder}>
@@ -61,6 +61,8 @@ const Select = ({
       </SelectContent>
     </ShaSelect>
   );
-};
+});
+
+Select.displayName = 'Select';
 
 export default Select;

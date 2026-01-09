@@ -27,7 +27,7 @@ import projectApi from '@/api/project';
 import { toast } from 'sonner';
 import React, { useEffect, useState } from 'react';
 import Select from '@/components/Select';
-import { useSystemStore } from '@/store/modules/system';
+import commonApi from '@/api/common';
 
 const SaveProject = ({
   getProjects,
@@ -40,8 +40,7 @@ const SaveProject = ({
   id?: number;
   renderTrigger: React.ReactNode;
 }) => {
-
-  const industries = useSystemStore(state => state.industries);
+  const { data: industries } = useRequest(() => commonApi.getCategoryByModuleId('industry'));
 
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -84,7 +83,7 @@ const SaveProject = ({
       form.reset({
         name: data.name,
         description: data.description,
-        industry_id: data.industry_id.toString()
+        industry_id: data.industry_id.toString(),
       });
     },
   });
@@ -94,8 +93,6 @@ const SaveProject = ({
       getProjectById();
     }
   }, [openDialog]);
-
-  
 
   return (
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
@@ -140,7 +137,7 @@ const SaveProject = ({
                           }))!
                         }
                         placeholder="请选择行业"
-                        className='w-full'
+                        className="w-full"
                       />
                     </FormControl>
                     <FormMessage />

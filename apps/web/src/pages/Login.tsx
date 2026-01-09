@@ -54,7 +54,7 @@ const Login = () => {
     onSuccess: (result) => {
       setUser(result as unknown as UserState['user'])
       toast.success(t('message.loginSuccess'))
-      navigate("/manage");
+      navigate("/manage/dashboard");
     },
   });
   const navigate = useNavigate();

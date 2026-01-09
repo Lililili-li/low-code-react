@@ -8,13 +8,15 @@ import {
   DialogTrigger,
 } from '@repo/ui/components/dialog';
 import { PlusCircle } from 'lucide-react';
-import { useState } from 'react';
-import './CreatePage.less';
+import { useRef, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
+import SavePage, { SavePageRef } from './SavePage';
 
-interface CreatePageProps {
+interface PageCenterProps {
   renderTrigger: React.ReactNode;
   type?: 'create' | 'update';
+  onCreateSuccess: () => void;
+  application_id: number;
 }
 
 const menuItems = [
@@ -40,13 +42,15 @@ const pages = [
   {
     name: '财报数据大屏',
     id: 1,
-    cover: '//heartmm.xyz/static/cover.png',
+    cover: 'http://heartmm.xyz/static/cover.png',
   },
 ];
 
-const CreatePage = ({ renderTrigger, type = 'create' }: CreatePageProps) => {
+const PageCenter = ({ renderTrigger, type = 'create', onCreateSuccess, application_id }: PageCenterProps) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [currentMenu, setCurrentMenu] = useState('all');
+  const savePageRef = useRef<SavePageRef>(null);
+
   return (
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
       <Tooltip>
@@ -69,7 +73,12 @@ const CreatePage = ({ renderTrigger, type = 'create' }: CreatePageProps) => {
             ></Menu>
           </div>
           <div className="content grid grid-cols-3 gap-4 p-4">
-            <div className="hover:translate-y-[-4px] transition-all flex flex-col items-center justify-center gap-2 h-[200px] bg-white dark:bg-[#1d1d1d] p-4 py-3 rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+            <div
+              className="hover:translate-y-[-4px] transition-all flex flex-col items-center justify-center gap-2 h-[200px] bg-white dark:bg-[#1d1d1d] p-4 py-3 rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
+              onClick={() => {
+                savePageRef.current?.openDialog('create');
+              }}
+            >
               <PlusCircle className="text-primary" size={32} />
               <div className="title text-sm dark:text-gray-300 text-gray-600">新建空白页面</div>
             </div>
@@ -91,8 +100,16 @@ const CreatePage = ({ renderTrigger, type = 'create' }: CreatePageProps) => {
           </div>
         </div>
       </DialogContent>
+      <SavePage
+        ref={savePageRef}
+        onCreateSuccess={() => {
+          onCreateSuccess();
+          setOpenDialog(false);
+        }}
+        application_id={application_id}
+      />
     </Dialog>
   );
 };
 
-export default CreatePage;
+export default PageCenter;

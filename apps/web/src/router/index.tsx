@@ -2,18 +2,20 @@ import { createBrowserRouter } from 'react-router';
 import AuthGuard from '@/components/AuthGuard';
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import Demo from '@/pages/Demo';
 
 const Login = lazy(() => import('@/pages/Login'));
 const Layout = lazy(() => import('@/layout'));
 
 const Dashboard = lazy(() => import('@/pages/dashboard/Dashboard'));
-const Application = lazy(() => import('@/pages/application/Application'));
+const Application = lazy(() => import('@/pages/application'));
 const Components = lazy(() => import('@/pages/component/Component'));
 const FileResource = lazy(() => import('@/pages/resource/file-resource'));
 const MapResource = lazy(() => import('@/pages/resource/map-resource'));
 
-const Design = lazy(() => import('@/pages/design/index'));
+const CategoryManage = lazy(() => import('@/pages/system/category-manage'));
+const Template = lazy(() => import('@/pages/template'));
+
+const Design = lazy(() => import('@/pages/design'));
 
 const ProjectResource = lazy(() => import('@/pages/project/resource'));
 
@@ -29,6 +31,7 @@ const router = createBrowserRouter([
             <Layout />
           </Suspense>
         ),
+
         children: [
           {
             path: 'dashboard',
@@ -88,6 +91,27 @@ const router = createBrowserRouter([
               },
             ],
           },
+          {
+            path: 'system',
+            children: [
+              {
+                path: 'category',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <CategoryManage />
+                  </Suspense>
+                ),
+              },
+            ],
+          },
+          {
+            path: 'template',
+            element: (
+              <Suspense fallback={<LoadingSpinner />}>
+                <Template />
+              </Suspense>
+            ),
+          },
         ],
       },
       {
@@ -107,10 +131,6 @@ const router = createBrowserRouter([
         <Login />
       </Suspense>
     ),
-  },
-  {
-    path: 'demo',
-    element: <Demo />,
   },
 ]);
 

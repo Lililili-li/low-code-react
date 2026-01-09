@@ -1,3 +1,7 @@
+/**
+ * 侧边栏分类菜单
+ */
+
 import React from 'react';
 
 interface MenuItem {

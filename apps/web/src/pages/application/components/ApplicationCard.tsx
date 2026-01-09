@@ -1,13 +1,13 @@
 import { Card, CardContent, CardTitle } from '@/components/Card';
-import { APP_STATUS } from '../Application';
+import { APP_STATUS } from '..';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/tooltip';
 import { Button } from '@repo/ui/components/button';
 import { AppWindow, Copy, Edit, Share, Trash2, Wrench } from 'lucide-react';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import SaveApplication from '../SaveApplication';
 import applicationApi from '@/api/application';
-import { useNavigate } from 'react-router';
-import SavePage from '@/pages/design/header/components/CreatePage';
+import PageCenter from './PageCenter';
+import { toast } from 'sonner';
 
 interface ApplicationCardProps {
   data: Record<string, any>;
@@ -21,6 +21,15 @@ const ApplicationCard = ({
   getApplications,
   projectOptions,
 }: ApplicationCardProps) => {
+
+  const handleCreatePage = () => {
+    toast.success('创建成功');
+    getApplications()
+    setTimeout(() => {
+      window.open('/design?id=' + data.id, '_blank');
+    }, 1000);
+  };
+
   return (
     <Card
       key={data.id}
@@ -130,14 +139,16 @@ const ApplicationCard = ({
                 <span>开发</span>
               </Button>
             ) : (
-              <SavePage
+              <PageCenter
+                application_id={data.id}
                 renderTrigger={
                   <Button variant="default" size="sm">
                     <Wrench />
                     <span>开发</span>
                   </Button>
                 }
-              ></SavePage>
+                onCreateSuccess={handleCreatePage}
+              ></PageCenter>
             )}
           </div>
         </div>

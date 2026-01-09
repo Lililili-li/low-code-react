@@ -14,6 +14,7 @@ export interface UserState {
 
 interface UserActions {
   setUser: (user: UserState['user']) => void
+  clearUser: () => void
 }
 
 export const useUserStore = create<UserState & UserActions>()(
@@ -31,6 +32,18 @@ export const useUserStore = create<UserState & UserActions>()(
         set((state) => {
           state.user = user
         })
+      },
+      clearUser: () => {
+        set((state) => {
+          state.user = {
+            avatar: null,
+            account: '',
+            user_name: '',
+            is_active: true,
+            team_id: 0,
+            access_token: ""
+          }
+        })
       }
     })),
     {
@@ -39,8 +52,12 @@ export const useUserStore = create<UserState & UserActions>()(
         getItem: (name) => {
           const str = localStorage.getItem(name);
           if (!str) return null;
-          const user = JSON.parse(str);
-          return { state: { user }, version: 0 };
+          try {
+            const user = JSON.parse(str);
+            return { state: { user }, version: 0 };
+          } catch {
+            return null;
+          }
         },
         setItem: (name, value) => {
           localStorage.setItem(name, JSON.stringify(value.state.user));

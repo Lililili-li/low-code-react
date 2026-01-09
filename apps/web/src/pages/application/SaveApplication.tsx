@@ -61,10 +61,13 @@ const CreateApplication = ({
 
   const createOrUpdate = () => {
     const values = form.getValues();
+    const screen_size =
+      values.screen_size === '2' ? applicationSize : { width: 1920, height: 1080 };
     const params = {
       name: values.name,
       project_id: Number(values.project_id),
       status: Number(values.status),
+      ...screen_size,
       ...(values.description && { description: values.description }),
     };
     return type === 'create'
@@ -78,6 +81,7 @@ const CreateApplication = ({
       toast.success('保存成功');
       setOpenDialog(false);
       getApplications();
+      form.reset();
     },
   });
 
@@ -99,7 +103,7 @@ const CreateApplication = ({
       description: '',
       screen_size: '1', // 1为默认2为自定义
       status: '1',
-      project_id: query?.id || undefined,
+      project_id: query?.id || '',
     },
   });
 
@@ -111,6 +115,7 @@ const CreateApplication = ({
         form.reset({
           ...data,
           project_id: data.project_id.toString(),
+          screen_size: data.width === 1920 && data.height === 1080 ? '1' : '2',
         });
       },
     },
@@ -122,7 +127,13 @@ const CreateApplication = ({
     }
   }, [openDialog]);
   return (
-    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+    <Dialog
+      open={openDialog}
+      onOpenChange={(value) => {
+        setOpenDialog(value);
+        form.reset();
+      }}
+    >
       <DialogTrigger asChild>{renderTrigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <Form {...form}>
@@ -221,7 +232,12 @@ const CreateApplication = ({
                                   type="number"
                                   className="w-[100px] h-[32px]"
                                   value={applicationSize.width}
-                                  onChange={(e) => setApplicationSize({ ...applicationSize, width: Number(e.target.value) })}
+                                  onChange={(e) =>
+                                    setApplicationSize({
+                                      ...applicationSize,
+                                      width: Number(e.target.value),
+                                    })
+                                  }
                                 />
                                 x
                                 <Input
@@ -229,7 +245,12 @@ const CreateApplication = ({
                                   type="number"
                                   className="w-[100px] h-[32px]"
                                   value={applicationSize.height}
-                                  onChange={(e) => setApplicationSize({ ...applicationSize, height: Number(e.target.value) })}
+                                  onChange={(e) =>
+                                    setApplicationSize({
+                                      ...applicationSize,
+                                      height: Number(e.target.value),
+                                    })
+                                  }
                                 />
                               </>
                             ) : (

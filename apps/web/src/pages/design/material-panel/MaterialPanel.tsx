@@ -48,7 +48,7 @@ const MaterialPanel = () => {
               style={{ borderRadius: 4 }}
               key={item.id}
             >
-              <DynamicIcon name={item.icon} />
+              <DynamicIcon name={item.icon} className='size-4.5'/>
               <span>{item.name}</span>
             </Toggle>
           );
@@ -65,7 +65,6 @@ const MaterialPanel = () => {
                 className="flex-col h-auto p-2 w-[60px] data-[state=on]:bg-blue-500 data-[state=on]:text-white"
                 onClick={() => {
                   setActiveSubCategory(item.id.toString())
-                  
                 }}
                 style={{ borderRadius: 4 }}
                 key={item.id}
@@ -112,7 +111,7 @@ const MaterialPanel = () => {
                   <img
                     src={item.cover}
                     alt=""
-                    className="rounded-sm hover:scale-105 transition-all cursor-move"
+                    className="rounded-sm hover:scale-105 transition-all cursor-move min-w-[150px]"
                   />
                   <div className="header dark:bg-[#2a2a2b] text-center w-full bg-[#f2f3f5]">
                     <span className="text-sm dark:text-gray-300 text-gray-500">{item.name}</span>

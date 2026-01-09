@@ -27,22 +27,35 @@ import { Input } from '@repo/ui/components/input';
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
 import { Label } from '@repo/ui/components/label';
 import { useRequest } from 'ahooks';
-import commonApi from '@/api/common';
+import projectApi from '@/api/project';
+import dayjs from 'dayjs';
 
 interface IndustryProps {
   queryParams: any;
   setQueryParams: any;
-  getProjects: any;
+  getList: any;
 }
 
-const Industry = ({ queryParams, setQueryParams, getProjects }: IndustryProps) => {
-  const [industryKeywords, setIndustryKeywords] = useState('');
-  const { data: industries } = useRequest(() => commonApi.getCategoryByModuleId('industry'));
+const ProjectSelect = ({ queryParams, setQueryParams, getList }: IndustryProps) => {
+  const [keywords, setKeywords] = useState('');
+  const {
+    data: projects,
+    loading,
+    runAsync: getProjects,
+  } = useRequest((params = {page: 1, size: 99999}) => projectApi.getProjects(params), {
+    onSuccess: (data) => {
+      data.list = data.list.map((item) => {
+        item.created_at = dayjs(item.created_at).format('YYYY-MM-DD HH:mm:ss');
+        item.updated_at = dayjs(item.updated_at).format('YYYY-MM-DD HH:mm:ss');
+        return item;
+      });
+    },
+  });
 
   const showIndustries = useMemo(() => {
-    const newData = industries
-      ?.filter((industry) => {
-        return industry.name.includes(industryKeywords);
+    const newData = projects?.list
+      .filter((project) => {
+        return project.name.includes(keywords);
       })
       .map((item) => {
         return {
@@ -55,7 +68,7 @@ const Industry = ({ queryParams, setQueryParams, getProjects }: IndustryProps) =
       value: '' as any,
     });
     return newData;
-  }, [industryKeywords, industries]);
+  }, [keywords, projects]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -83,10 +96,10 @@ const Industry = ({ queryParams, setQueryParams, getProjects }: IndustryProps) =
       <div className="filter-wrap h-[50px] px-3 flex items-center gap-2">
         <InputGroup>
           <InputGroupInput
-            placeholder="请输入行业名称"
-            defaultValue={industryKeywords}
+            placeholder="请输入项目名称"
+            defaultValue={keywords}
             onEnterSearch={(value) => {
-              setIndustryKeywords(value);
+              setKeywords(value)
             }}
           />
           <InputGroupAddon>
@@ -105,11 +118,11 @@ const Industry = ({ queryParams, setQueryParams, getProjects }: IndustryProps) =
       <ScrollArea className="flex-1 min-h-0 px-3">
         <TabMenu
           items={showIndustries || []}
-          activeId={queryParams.industry_id}
+          activeId={queryParams.project_id}
           onSelect={(id) => {
-            const newParams = { ...queryParams, industry_id: id.toString() };
+            const newParams = { ...queryParams, project_id: id.toString() };
             setQueryParams(newParams);
-            getProjects(newParams);
+            getList(newParams);
           }}
         />
       </ScrollArea>
@@ -217,4 +230,4 @@ const Industry = ({ queryParams, setQueryParams, getProjects }: IndustryProps) =
   );
 };
 
-export default Industry;
+export default ProjectSelect;

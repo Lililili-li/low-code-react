@@ -16,23 +16,14 @@ import {
 
 import { ChevronDown, Edit, PlusCircle, Trash2 } from 'lucide-react';
 import { IconAlertTriangle } from '@douyinfe/semi-icons';
-import CreatePage from './CreatePage';
+import CreatePage from '../../../application/components/PageCenter';
 import SavePage, { SavePageRef } from './SavePage';
-
-const pageOptions = [
-  {
-    label: '综合概览',
-    value: '1',
-  },
-  {
-    label: '客流分析',
-    value: '2',
-  },
-  {
-    label: '景区资源',
-    value: '3',
-  },
-];
+import { useRequest } from 'ahooks';
+import { useQuery } from '@/composable/use-query';
+import pageApi, { PageProps } from '@/api/page';
+import { toast } from 'sonner';
+import { useDesignStore } from '@/store/modules/design';
+import { PageSchema } from '@repo/core/types';
 
 const Select = ({
   options,
@@ -40,7 +31,7 @@ const Select = ({
   placeholder,
   onValueChange,
 }: {
-  options: typeof pageOptions;
+  options: { label: string; value: string }[];
   value: string;
   placeholder: string;
   onValueChange: (value: string) => void;
@@ -48,7 +39,6 @@ const Select = ({
   const [visible, setVisible] = useState(false);
 
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
-
 
   const savePageRef = useRef<SavePageRef>(null);
 
@@ -72,7 +62,7 @@ const Select = ({
               {options.map((item) => {
                 return (
                   <div
-                    className={`item flex justify-between items-center dark:hover:bg-[#242424] transition-all cursor-pointer p-1.5 text-sm rounded-[4px] ${value === item.value ? 'dark:bg-[#242424]' : ''}`}
+                    className={`item flex justify-between items-center dark:hover:bg-[#242424] hover:bg-[#f4f4f5] transition-all cursor-pointer p-1.5 text-sm rounded-[4px] ${value === item.value ? 'dark:bg-[#242424]' : ''}`}
                     onClick={() => {
                       onValueChange(item.value);
                       setVisible(false);
@@ -89,7 +79,7 @@ const Select = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               setVisible(false);
-                              savePageRef.current?.openDialog()
+                              savePageRef.current?.openDialog();
                             }}
                           >
                             <Edit className="size-3.5" />
@@ -146,16 +136,61 @@ const Select = ({
 };
 
 const PageManage = () => {
-  const [page, setPage] = useState('1');
+
+  const pageSchema = useDesignStore((state) => state.pageSchema)
+  const setPageSchema = useDesignStore((state) => state.setPageSchema)
+
+  const [currentPage, setCurrentPage] = useState('1');
+
+  const queryParams = useQuery();
+  const { data: pageOptions, runAsync: getPagesByApplicationId } = useRequest(
+    () => pageApi.getPagesByApplicationId(Number(queryParams!.id)),
+    {
+      onSuccess: (value) => {
+        setCurrentPage(value[0].id.toString());
+      }
+    },
+  );
+
+  useRequest(() => pageApi.getPageById(currentPage), {
+    onSuccess: (data: PageProps & { schema: PageSchema }) => {
+      if (data) {
+        setPageSchema({
+          ...pageSchema,
+          ...data.schema
+        })
+      }
+    },
+    refreshDeps: [currentPage],
+  })
+
+
+  const handleCreateSuccess = () => {
+    toast.success('创建成功');
+    getPagesByApplicationId();
+  }
+  
   return (
     <div className="header-center flex gap-1 items-center absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
-      <Select value={page} options={pageOptions} onValueChange={setPage} placeholder="请选择页面" />
+      <Select
+        value={currentPage}
+        options={
+          pageOptions?.map((item) => ({
+            label: item.name,
+            value: item.id.toString(),
+          })) || []
+        }
+        onValueChange={setCurrentPage}
+        placeholder="请选择页面"
+      />
       <CreatePage
         renderTrigger={
           <Button size="sm" variant="outline">
             <PlusCircle />
           </Button>
         }
+        application_id={Number(queryParams!.id)}
+        onCreateSuccess={handleCreateSuccess}
       />
     </div>
   );

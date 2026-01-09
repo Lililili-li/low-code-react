@@ -72,11 +72,15 @@ export function Menu({ items, defaultOpenKeys = [], className, activeKey, onSele
     const content = (
       <div
         className={cn(
-          'flex items-center gap-2 rounded-md px-3 py-2 text-sm cursor-pointer select-none transition-colors ',
-          active
-            ? 'bg-primary/10 text-primary font-medium'
-            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+          'flex items-center gap-2 rounded-md px-3 py-2 text-sm cursor-pointer select-none transition-colors',
           depth > 0 && 'pl-8',
+          hasChildren
+            ? active
+              ? 'text-[#3c7eff] font-medium hover:bg-[#e8e9eb] hover:text-[#3c7eff] dark:hover:bg-[#333333]'
+              : 'text-muted-foreground hover:bg-[#e8e9eb] hover:text-foreground dark:hover:bg-[#333333]'
+            : active
+              ? 'bg-[#e8e9eb] text-[#3c7eff] font-medium hover:bg-[#dfe0e3] hover:text-[#3c7eff] dark:bg-[#2a2a2a] dark:hover:bg-[#333333]'
+              : 'text-muted-foreground hover:bg-[#e8e9eb] hover:text-foreground dark:hover:bg-[#333333]',
         )}
         onClick={() => {
           if (hasChildren) {

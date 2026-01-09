@@ -16,10 +16,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@repo/ui/components/breadcrumb';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 const routeMap: Record<string, string> = {
-  resource: '我的应用',
   project: '项目管理',
   component: '组件资源',
   image: '图片资源',
@@ -38,6 +37,11 @@ const AppHeader = () => {
     .split('/')
     .filter((item, index) => item !== 'manage' && index > 0);
   const crumbs = locationPath.map((item) => routeMap[item]) || [];
+
+  const navigate = useNavigate();
+
+  const clearUser = useUserStore((state) => state.clearUser)
+
   return (
     <div className="app-header h-[50px] flex justify-between px-3 items-center border-b dark:bg-[#18181b]">
       <div className="sidebar-status flex items-center h-full">
@@ -54,9 +58,9 @@ const AppHeader = () => {
           <TooltipContent>{state === 'expanded' ? '收起' : '展开'}</TooltipContent>
         </Tooltip>
         <Breadcrumb>
-          <BreadcrumbList className='flex'>
+          <BreadcrumbList className="flex">
             {crumbs.map((item, index) => (
-              <div key={index} className='flex items-center gap-2'>
+              <div key={index} className="flex items-center gap-2">
                 {index !== crumbs.length - 1 && (
                   <>
                     <BreadcrumbItem>{item}</BreadcrumbItem>
@@ -83,7 +87,7 @@ const AppHeader = () => {
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </PopoverTrigger>
-          <PopoverContent className="w-56 p-2" align='end'>
+          <PopoverContent className="w-56 p-2" align="end">
             <div className="information flex gap-2">
               <Avatar>
                 <AvatarImage src={user.avatar || 'https://github.com/shadcn.png'} alt="Avatar" />
@@ -100,7 +104,14 @@ const AppHeader = () => {
                 <IconUserSetting />
                 <span>个人设置</span>
               </Button>
-              <Button variant="ghost" className="w-full text-[13px] justify-start gap-1.5">
+              <Button
+                variant="ghost"
+                className="w-full text-[13px] justify-start gap-1.5"
+                onClick={() => {
+                  navigate('/login');
+                  clearUser()
+                }}
+              >
                 <IconQuit />
                 <span>退出登录</span>
               </Button>

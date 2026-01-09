@@ -6,10 +6,13 @@ import { useHistoryStore, createHistoryRecord } from './history'
 
 export interface DesignState {
   config: {
-    siderBarModel: 'material' | 'layers' | 'variable' | 'datasource' // 侧边栏当前打开的组件
+    siderBarModel: 'material' | 'layers' | 'variable' | 'datasource' | null // 侧边栏当前打开的组件
     canvasPanel: {
       zoom: number
       lockZoom: boolean
+    },
+    propPanel: {
+      open: boolean
     }
   }
   pageSchema: PageSchema
@@ -21,7 +24,8 @@ export interface DesignState {
 }
 
 export interface DesignActions {
-  setSiderBarModel: (siderBarModel: DesignState['config']['siderBarModel']) => void
+  setSiderBarModel: (siderBarModel: DesignState['config']['siderBarModel'] | null) => void
+  setPropsPanelOpen: (open: boolean) => void
   setCanvasPanel: (canvasPanel: Partial<DesignState['config']['canvasPanel']>) => void
   setPageSchema: (pageSchema: Partial<PageSchema>) => void
   setCurrentCmpId: (id: string) => void
@@ -45,6 +49,9 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       canvasPanel: {
         zoom: 1,
         lockZoom: false
+      },
+      propPanel: {
+        open: true
       }
     },
     pageSchema: {
@@ -66,11 +73,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       globalHeaders: '{}',
       globalCss: '',
       components: [],
-      state: {
-        profile: {
-          name: '张三'
-        }
-      },
+      state: {},
     },
     currentCmp: {} as ComponentSchema,
     currentCmpId: '',
@@ -83,10 +86,15 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         state.hoverId = id
       })
     },
-    setSiderBarModel: (siderBarModel: DesignState['config']['siderBarModel']) => {
+    setSiderBarModel: (siderBarModel: DesignState['config']['siderBarModel'] | null) => {
       set((state) => {
         state.config.siderBarModel = siderBarModel
-        sessionStorage.setItem('siderBarModel', siderBarModel)
+        sessionStorage.setItem('siderBarModel', siderBarModel || '')
+      })
+    },
+    setPropsPanelOpen: (open: boolean) => {
+      set((state) => {
+        state.config.propPanel.open = open
       })
     },
     setPageSchema: (pageSchema: Partial<PageSchema>) => {
@@ -205,7 +213,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         }
       })
     },
-    updatePageState(key: string, value?: any, isDelete=false) {
+    updatePageState(key: string, value?: any, isDelete = false) {
       set((state) => {
         if (isDelete) {
           delete state.pageSchema.state[key]

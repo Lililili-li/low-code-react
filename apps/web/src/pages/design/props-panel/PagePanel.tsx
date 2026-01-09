@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@repo/ui/components/input-group';
 import Select from '@/components/Select';
@@ -128,7 +128,13 @@ const PagePanel = () => {
 
   const [uploadType, setUploadType] = useState('1'); // 1为背景图片上传，2为直接输入地址
   const [files, setFiles] = useState<UploadFile[]>([]);
-  console.log();
+  const id = useId()
+  useEffect(() => {
+    if (pageSchema.background.useType === '1') {
+      if (!pageSchema.background.image) return;
+      setFiles([{url: pageSchema.background.image, uid: id }]);
+    }
+  }, [pageSchema.background]);
 
   return (
     <div className="page-panel-container min-w-[300px]">
@@ -233,10 +239,10 @@ const PagePanel = () => {
                           ...pageSchema,
                           background: {
                             ...pageSchema.background,
-                            image: import.meta.env.VITE_FILE_URL + '/' + response?.path,
+                            image: response?.path,
                           },
                         });
-                        return (import.meta.env.VITE_FILE_URL + '/' + response?.path) as string;
+                        return (response?.path) as string;
                       }}
                       description={
                         <div className="text-xs text-muted-foreground mt-1">

@@ -1,4 +1,3 @@
-
 import { request } from "@repo/shared/request"
 
 export interface CreateApplicationParams {
@@ -6,6 +5,8 @@ export interface CreateApplicationParams {
   description?: string
   project_id: number
   status: number
+  width: number
+  height: number
 }
 
 export interface ApplicationProps {
@@ -21,6 +22,8 @@ export interface ApplicationProps {
   created_user: {
     user_name: string
   }
+  width: number
+  height: number
 }
 
 export interface PaginationProps {

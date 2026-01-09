@@ -111,6 +111,7 @@ const CanvasPanel = () => {
   }, [effectiveZoom, pageSchemaSubset.width, pageSchemaSubset.height, config.canvasPanel.zoom]);
 
   const autoCenter = () => {
+    
     if (canvasRef.current) {
       const { width } = canvasRef.current.getBoundingClientRect();
       const scale = (width - 40) / pageSchemaSubset.width;
@@ -204,7 +205,6 @@ const CanvasPanel = () => {
                   unit={computedUnit}
                 />
               </div>
-
               {/* 画布区域 */}
               <CanvasDom
                 canvasRef={setCanvasRef}

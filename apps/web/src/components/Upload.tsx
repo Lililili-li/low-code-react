@@ -1,15 +1,14 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@repo/ui/components/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@repo/ui/components/dialog';
 import { cn } from '@repo/ui/lib/utils';
 import { Plus, X, Eye, Loader2 } from 'lucide-react';
 import Viewer from 'react-viewer';
 
 export interface UploadFile {
   uid: string;
-  name: string;
+  name?: string;
   url: string;
-  status: 'uploading' | 'done' | 'error';
+  status?: 'uploading' | 'done' | 'error';
   percent?: number;
 }
 
@@ -22,7 +21,9 @@ interface UploadProps {
   multiple?: boolean;
   disabled?: boolean;
   className?: string;
-  description?: React.ReactNode
+  description?: React.ReactNode;
+  model?: 'picture' | 'file';
+  trigger?: React.ReactNode;
 }
 
 const Upload = ({
@@ -34,9 +35,12 @@ const Upload = ({
   multiple = false,
   disabled = false,
   className,
-  description
+  description,
 }: UploadProps) => {
-  const [fileList, setFileList] = useState<UploadFile[]>(value);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  useEffect(() => {
+    setFileList(value);
+  }, [value])
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -117,14 +121,13 @@ const Upload = ({
     [fileList, maxCount, onChange, onUpload, updateFileList],
   );
 
-  const handleClick = () => {
+  const handleUploadClick = () => {
     if (!disabled && inputRef.current) {
       inputRef.current.click();
     }
   };
 
   const canUpload = fileList.length < maxCount && !disabled;
-
   return (
     <div className={cn('flex flex-wrap gap-2', className)}>
       {fileList.map((file) => (
@@ -140,9 +143,9 @@ const Upload = ({
             <div className="w-full h-full flex items-center justify-center text-destructive text-xs">
               上传失败
             </div>
-          ) : (
+          ) : file.url ? (
             <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-          )}
+          ) : null}
 
           {file.status === 'done' && (
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -160,7 +163,7 @@ const Upload = ({
                 variant="ghost"
                 size="icon"
                 className="size-8 text-white hover:bg-white/20"
-                onClick={() => handleRemove(file.uid)}
+                onClick={() => handleRemove(file?.uid)}
               >
                 <X className="size-4" />
               </Button>
@@ -173,7 +176,7 @@ const Upload = ({
               variant="ghost"
               size="icon"
               className="absolute top-1 right-1 size-5 bg-black/50 text-white hover:bg-black/70"
-              onClick={() => handleRemove(file.uid)}
+              onClick={() => handleRemove(file?.uid)}
             >
               <X className="size-3" />
             </Button>
@@ -183,7 +186,7 @@ const Upload = ({
 
       {canUpload && (
         <div
-          onClick={handleClick}
+          onClick={handleUploadClick}
           className={cn(
             'w-full h-[150px] rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-primary hover:bg-accent',
             disabled && 'cursor-not-allowed opacity-50',
@@ -191,9 +194,7 @@ const Upload = ({
         >
           <Plus className="size-6 text-muted-foreground" />
           <span className="text-xs text-muted-foreground mt-1">上传图片</span>
-          {
-            description && description
-          }
+          {description && description}
         </div>
       )}
 
@@ -206,7 +207,11 @@ const Upload = ({
         onChange={handleFileChange}
         disabled={disabled}
       />
-      <Viewer images={[{ src: previewImage }]}  visible={previewOpen} onClose={() => setPreviewOpen(false)}/>
+      <Viewer
+        images={[{ src: previewImage }]}
+        visible={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+      />
     </div>
   );
 };

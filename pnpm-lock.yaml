@@ -98,6 +98,9 @@ importers:
       react-shadow:
         specifier: ^20.6.0
         version: 20.6.0(prop-types@15.8.1)(react-dom@19.2.3)(react@19.2.3)
+      react-split:
+        specifier: ^2.0.14
+        version: 2.0.14(react@19.2.3)
       react-viewer:
         specifier: ^3.2.2
         version: 3.2.2
@@ -5352,6 +5355,16 @@ packages:
       react-dom: 19.2.3(react@19.2.3)
     dev: false
 
+  /react-split@2.0.14(react@19.2.3):
+    resolution: {integrity: sha512-bKWydgMgaKTg/2JGQnaJPg51T6dmumTWZppFgEbbY0Fbme0F5TuatAScCLaqommbGQQf/ZT1zaejuPDriscISA==}
+    peerDependencies:
+      react: '*'
+    dependencies:
+      prop-types: 15.8.1
+      react: 19.2.3
+      split.js: 1.6.5
+    dev: false
+
   /react-style-singleton@2.2.3(@types/react@19.2.7)(react@19.2.3):
     resolution: {integrity: sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ==}
     engines: {node: '>=10'}
@@ -5672,6 +5685,10 @@ packages:
 
   /space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
+    dev: false
+
+  /split.js@1.6.5:
+    resolution: {integrity: sha512-mPTnGCiS/RiuTNsVhCm9De9cCAUsrNFFviRbADdKiiV+Kk8HKp/0fWu7Kr8pi3/yBmsqLFHuXGT9UUZ+CNLwFw==}
     dev: false
 
   /state-local@1.0.7:

@@ -1,6 +1,6 @@
 import { Button } from '@repo/ui/components/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@repo/ui/components/sidebar';
-import { Database, HelpCircle, Map } from 'lucide-react';
+import { BookOpenText, Database, HelpCircle, Map, Settings, Settings2 } from 'lucide-react';
 import { IconAppCenter, IconSemiLogo } from '@douyinfe/semi-icons';
 import { Menu, MenuItem } from '@/components/Menu';
 import { LayoutDashboard, FolderKanban, Image, Layers, Globe, Component } from 'lucide-react';
@@ -27,9 +27,9 @@ const AppSidebar = () => {
       ],
     },
     {
-      key: 'resource',
-      label: '我的应用',
-      icon: <FolderKanban className="size-4" />,
+      key: 'application',
+      label: '应用管理',
+      icon: <IconAppCenter className="size-4" />,
       path: '/manage/application',
       // children: [
       //   {
@@ -72,11 +72,25 @@ const AppSidebar = () => {
         },
       ],
     },
+    // {
+    //   key: 'template',
+    //   label: '社区模板',
+    //   icon: <Component className="size-4" />,
+    //   path: '/manage/template',
+    // },
     {
-      key: 'template',
-      label: '社区模板',
-      icon: <Component className="size-4" />,
-      path: '/manage/template',
+      key: 'system',
+      label: '系统设置',
+      icon: <Settings className="size-4" />,
+      children: [
+        {
+          key: 'category',
+          label: '分类管理',
+          icon: <BookOpenText className="size-4" />,
+          path: '/manage/system/category',
+        },
+      ],
+      // path: '/manage/system',
     },
   ];
   return (
