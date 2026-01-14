@@ -11,17 +11,17 @@ import { Copy, Edit, PlusCircle, Trash2 } from 'lucide-react';
 import { Search } from 'lucide-react';
 import SaveVariable, { SaveVariableRef } from './components/SaveVariable';
 import { useMemo, useRef, useState } from 'react';
-import { useDesignStore } from '@/store/modules/design';
 import Empty from '@/components/Empty';
 import { isArray, isBoolean, isNumber, isObject, isString } from 'lodash-es';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { BracesVariable20Filled } from '@ricons/fluent';
 import { toast } from 'sonner';
+import { useDesignStateStore } from '@/store';
 
 const VariablePanel = () => {
   const saveVariableRef = useRef<SaveVariableRef>(null);
-  const state = useDesignStore((state) => state.pageSchema.state);
-  const updatePageState = useDesignStore((state) => state.updatePageState);
+  const state = useDesignStateStore((state) => state.state);
+  const updateState = useDesignStateStore((state) => state.updateState);
 
   const [tab, setTab] = useState('page');
   const [keywords, setKeywords] = useState('');
@@ -61,14 +61,15 @@ const VariablePanel = () => {
     variable: { key: string; defaultValue: string; type: string },
     tip = '变量保存成功',
   ) => {
-    updatePageState(variable.key, variable.defaultValue);
+    
+    updateState(variable.key, variable.defaultValue);
     saveVariableRef.current?.closeDialog();
     toast.success(tip);
   };
 
   const onCopySave = (item: { key: string; defaultValue: string; type: string }) => {
     const newKey = item.key + '_copy';
-    updatePageState(newKey, item.defaultValue);
+    updateState(newKey, item.defaultValue);
     saveVariableRef?.current?.openDialog({
       name: newKey,
       defaultValue: item.defaultValue,
@@ -172,7 +173,7 @@ const VariablePanel = () => {
                       variant="ghost"
                       className="p-0 size-6 rounded-[50%]"
                       onClick={() => {
-                        updatePageState(item.key, undefined, true);
+                        updateState(item.key, undefined, true);
                         toast.success('删除成功')
                         if (activeVariable?.key === item.key) {
                           setActiveVariable(null)

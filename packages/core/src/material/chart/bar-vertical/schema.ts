@@ -188,12 +188,16 @@ export const ChartBarVerticalMeta = {
       skewY: 0,
       scale: 1,
     },
-    visible: true,
+    visibleProp: {
+      type: 'normal',
+      value: true,
+    },
     lock: false,
-    animate: false,
+    animation: undefined,
     props: {
       option: defaultOption,
       dataType: '3'
     },
-  } as Pick<ChartPropsSchema, 'style' | 'visible' | 'lock' | 'props' | 'animate'>
+    className: ''
+  } as Pick<ChartPropsSchema, 'style' | 'visibleProp' | 'lock' | 'props' | 'animation' | 'className'>
 }

@@ -1,5 +1,4 @@
 import { useTheme } from '@/composable/use-theme';
-import { useDesignStore } from '@/store/modules/design';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@repo/ui/components/input-group';
 import { Toggle } from '@repo/ui/components/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
@@ -22,11 +21,12 @@ import {
 } from '@repo/ui/components/alert-dialog';
 import { useComponentOperations } from '@/composable/use-component-operations';
 import LayerContextMenu from './components/LayerContextMenu';
+import { useDesignComponentsStore } from '@/store/design/components';
 
 const MENU_ID = 'layer-context-menu';
 const LayerPanel = () => {
-  const pageComponents = useDesignStore((state) => state.pageSchema.components);
-  const currentCmpId = useDesignStore((state) => state.currentCmpId)
+  const pageComponents = useDesignComponentsStore((state) => state.components);
+  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId)
   const { theme } = useTheme();
 
   const { show } = useContextMenu({

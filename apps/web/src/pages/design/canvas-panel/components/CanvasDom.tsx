@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useState } from 'react';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import { useShallow } from 'zustand/react/shallow';
 import RenderCmp from './RenderCmp';
 import CanvasContextMenu from './CanvasContextMenu';
@@ -19,6 +19,7 @@ import { useCanvasHotKeys } from '@/composable/use-canvas-hot-keys';
 import { Menu, useContextMenu } from 'react-contexify';
 import { useTheme } from '@/composable/use-theme';
 import { useCanvasEvent } from '@/composable/use-canvas-event';
+import { useDesignComponentsStore } from '@/store/design/components';
 
 const MENU_ID = 'canvas-context-menu';
 
@@ -51,8 +52,9 @@ const CanvasDom = ({
       background: state.pageSchema.background,
     })),
   );
-  const pageComponents = useDesignStore((state) => state.pageSchema.components);
-  const currentCmpId = useDesignStore((state) => state.currentCmpId);
+  const components = useDesignComponentsStore((state) => state.components);
+  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
+
 
   const { spacePressed, setScope, clearScope } = useCanvasHotKeys(() =>
     setTimeout(() => setDeleteDialogOpen(true)),
@@ -173,7 +175,7 @@ const CanvasDom = ({
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                const cmp = pageComponents.find((c) => c.id === currentCmpId);
+                const cmp = components.find((c) => c.id === currentCmpId);
                 deleteComponent(cmp);
               }}
             >

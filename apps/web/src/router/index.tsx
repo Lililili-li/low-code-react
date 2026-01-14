@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router';
 import AuthGuard from '@/components/AuthGuard';
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import JSXDemo from '@/pages/JSXDemo';
+import Demo from '@/pages/Demo';
 
 const Login = lazy(() => import('@/pages/Login'));
 const Layout = lazy(() => import('@/layout'));
@@ -129,6 +131,22 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<LoadingSpinner />}>
         <Login />
+      </Suspense>
+    ),
+  },
+  {
+    path: 'jsx-demo',
+    element: (
+      <Suspense fallback={<LoadingSpinner />}>
+        <JSXDemo />
+      </Suspense>
+    ),
+  },
+  {
+    path: 'demo',
+    element: (
+      <Suspense fallback={<LoadingSpinner />}>
+        <Demo />
       </Suspense>
     ),
   },

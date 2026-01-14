@@ -6,7 +6,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/too
 import { Popover, PopoverTrigger, PopoverContent } from '@repo/ui/components/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/avatar';
 import { PanelLeft, PanelRight } from 'lucide-react';
-import { useUserStore } from '@/store/modules/user';
+import { useUserStore } from '@/store/user';
 import { Separator } from '@repo/ui/components/separator';
 import { IconQuit, IconUserSetting } from '@douyinfe/semi-icons';
 import {

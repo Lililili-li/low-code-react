@@ -15,7 +15,7 @@ import {
   Unlock,
 } from 'lucide-react';
 import { Cut20Filled } from '@ricons/fluent';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import { ComponentSchema } from '@repo/core/types';
 import { useComponentOperations } from '@/composable/use-component-operations';
 import { toast } from 'sonner';

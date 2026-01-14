@@ -3,9 +3,9 @@ import { Button } from '@repo/ui/components/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 import { HelpCircle, Keyboard, Lock, Redo, Undo, Unlock, LaptopMinimalCheck } from 'lucide-react';
 import { Slider } from '@repo/ui/components/slider';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import HotKeyDialog from '../../components/HotKeyDialog';
-import { useHistoryStore } from '@/store/modules/history';
+import { useHistoryStore } from '@/store/history';
 import { Popover, PopoverTrigger, PopoverContent } from '@repo/ui/components/popover';
 import Empty from '@/components/Empty';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
@@ -31,7 +31,7 @@ const ratioOptions = [
 ];
 
 const Toolbar = () => {
-  const { config, setCanvasPanel } = useDesignStore();
+  const { panelConfig, setCanvasPanel } = useDesignStore();
   const historyStore = useHistoryStore();
 
   return (
@@ -110,37 +110,37 @@ const Toolbar = () => {
       <div className="toolbar-right flex gap-2">
         <Select
           options={ratioOptions}
-          value={Number(config.canvasPanel.zoom * 100).toFixed(0)}
+          value={Number(panelConfig.canvasPanel.zoom * 100).toFixed(0)}
           onChange={(value) => setCanvasPanel({ zoom: Number(value) / 100 })}
           placeholder="请选择比例"
-          disabled={config.canvasPanel.lockZoom}
+          disabled={panelConfig.canvasPanel.lockZoom}
         />
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setCanvasPanel({ lockZoom: !config.canvasPanel.lockZoom })}
+              onClick={() => setCanvasPanel({ lockZoom: !panelConfig.canvasPanel.lockZoom })}
             >
-              {config.canvasPanel.lockZoom ? <Unlock /> : <Lock />}
+              {panelConfig.canvasPanel.lockZoom ? <Unlock /> : <Lock />}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{config.canvasPanel.lockZoom ? '解锁比例' : '锁定比例'}</TooltipContent>
+          <TooltipContent>{panelConfig.canvasPanel.lockZoom ? '解锁比例' : '锁定比例'}</TooltipContent>
         </Tooltip>
         <div className="slider-container flex items-center gap-2">
           <Slider
-            value={[Number(Number(config.canvasPanel.zoom * 100).toFixed(0))]}
+            value={[Number(Number(panelConfig.canvasPanel.zoom * 100).toFixed(0))]}
             min={10}
             max={200}
             step={1}
             onValueChange={(value) => setCanvasPanel({ zoom: Number(value[0]) / 100 })}
             className="w-[180px]"
-            disabled={config.canvasPanel.lockZoom}
+            disabled={panelConfig.canvasPanel.lockZoom}
           />
           <span
-            className={`lock ${config.canvasPanel.lockZoom ? 'text-muted-foreground' : 'text-foreground'}`}
+            className={`lock ${panelConfig.canvasPanel.lockZoom ? 'text-muted-foreground' : 'text-foreground'}`}
           >
-            {Number(config.canvasPanel.zoom * 100).toFixed(0)}%
+            {Number(panelConfig.canvasPanel.zoom * 100).toFixed(0)}%
           </span>
         </div>
       </div>

@@ -2,17 +2,22 @@
  * 辅助线
  */
 
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import { useEffect, useState } from 'react';
 import { eventBus } from '@repo/shared/index';
+import { useDesignComponentsStore } from '@/store/design/components';
+import { getVariableValue } from '@repo/core/variable';
+import { useDesignStateStore } from '@/store';
 
 const HelperLine = () => {
-  const currentCmpId = useDesignStore((state) => state.currentCmpId);
-  const currentCmp = useDesignStore((state) =>
-    state.pageSchema?.components?.find((comp) => comp.id === currentCmpId),
+  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
+  const currentCmp = useDesignComponentsStore((state) =>
+    state.components?.find((comp) => comp.id === currentCmpId),
   );
-  const zoom = useDesignStore((state) => state.config.canvasPanel.zoom);
-  const selectCmpIds = useDesignStore((state) => state.selectedCmpIds);
+  const zoom = useDesignStore((state) => state.panelConfig.canvasPanel.zoom);
+  const selectCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
+
+  const state = useDesignStateStore((state) => state.state)
 
   const shadowHost = document.getElementById('shadow-host');
   const [helperLine, setHelperLine] = useState({
@@ -29,8 +34,10 @@ const HelperLine = () => {
     const canvasWrapperTop = canvasWrapper?.getBoundingClientRect().top || 0;
     // 更新辅助线位置
     setHelperLine({
-      width: (canvasContentLeft + (currentCmp?.style?.left as number) - canvasWrapperLeft) / zoom || 0,
-      height: (canvasContentTop + (currentCmp?.style?.top as number) - canvasWrapperTop) / zoom || 0,
+      width:
+        (canvasContentLeft + (currentCmp?.style?.left as number) - canvasWrapperLeft) / zoom || 0,
+      height:
+        (canvasContentTop + (currentCmp?.style?.top as number) - canvasWrapperTop) / zoom || 0,
     });
   };
 
@@ -53,8 +60,15 @@ const HelperLine = () => {
       eventBus.off('handleHelperLine');
     };
   }, []);
+  const getVisibleProps = () => {
+    if (currentCmp?.visibleProp.type === 'normal') {
+      return currentCmp.visibleProp.value
+    }
+    return getVariableValue(currentCmp?.visibleProp.value as string, state)
+  };
   const helperLineVisible =
-    currentCmp && currentCmp.visible && !currentCmp.lock && selectCmpIds.length <= 1;
+    currentCmp && getVisibleProps() && !currentCmp.lock && selectCmpIds.length <= 1;
+
   return (
     <>
       {helperLineVisible && (

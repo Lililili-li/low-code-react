@@ -1,9 +1,10 @@
-import { useDesignStore } from "@/store/modules/design";
+import { useDesignStore } from "@/store/design";
 import materialCmp, { MaterialType } from "@repo/core/material";
-import { ComponentSchema } from "@repo/core/types";
+import { ComponentSchema, VisibleConfig } from "@repo/core/types";
 import { RefObject, useCallback, useRef } from "react";
 import { eventBus } from '@repo/shared/index';
-import { createHistoryRecord, useHistoryStore } from "@/store/modules/history";
+import { createHistoryRecord, useHistoryStore } from "@/store/history";
+import { useDesignComponentsStore } from "@/store/design/components";
 
 interface CanvasEventProps {
   setScope: (key: string) => void
@@ -15,16 +16,16 @@ interface CanvasEventProps {
 }
 
 export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setScrollY, setScrollX, clearScope }: CanvasEventProps) {
-  const pageComponents = useDesignStore((state) => state.pageSchema.components);
-  const zoom = useDesignStore((state) => state.config.canvasPanel.zoom);
-  const addComponent = useDesignStore((state) => state.addComponent);
-  const setCurrentCmpId = useDesignStore((state) => state.setCurrentCmpId);
-  const currentCmpId = useDesignStore((state) => state.currentCmpId);
-  const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
-  const updateSelectCmp = useDesignStore((state) => state.updateSelectCmp);
-  const setSelectedCmpIds = useDesignStore((state) => state.setSelectedCmpIds);
-  const addSelectedCmpIds = useDesignStore((state) => state.addSelectedCmpIds);
-  const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
+  const zoom = useDesignStore((state) => state.panelConfig.canvasPanel.zoom);
+  const components = useDesignComponentsStore((state) => state.components);
+  const addComponent = useDesignComponentsStore((state) => state.addComponent);
+  const setCurrentCmpId = useDesignComponentsStore((state) => state.setCurrentCmpId);
+  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
+  const updateCurrentCmp = useDesignComponentsStore((state) => state.updateCurrentCmp);
+  const updateSelectCmp = useDesignComponentsStore((state) => state.updateSelectCmp);
+  const setSelectedCmpIds = useDesignComponentsStore((state) => state.setSelectedCmpIds);
+  const addSelectedCmpIds = useDesignComponentsStore((state) => state.addSelectedCmpIds);
+  const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
 
   const pushHistory = useHistoryStore.getState().push;
 
@@ -89,7 +90,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
           left: Number(x.toFixed(0)),
           top: Number(y.toFixed(0)),
         },
-        visible: (schemaMeta.visible ?? false) as boolean,
+        visibleProp: schemaMeta.visibleProp as VisibleConfig ,
         lock: (schemaMeta.lock ?? false) as boolean,
         animation: {
           enable: false, // 是否开启动画
@@ -130,7 +131,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
   // 处理多选
   const handleSingleSelect = (cmpId: string, e: React.MouseEvent) => {
     if (cmpId !== currentCmpId) setCurrentCmpId(cmpId);
-    const currentCmp = pageComponents.find((c) => c.id === cmpId);
+    const currentCmp = components.find((c) => c.id === cmpId);
     if (!currentCmp) return;
     // 只更新 ref，不触发重渲染
     dragStateRef.current = {
@@ -157,7 +158,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
   };
   // 处理拖拽缩放
   const handleScaleSelect = (e: React.MouseEvent, target: HTMLDivElement) => {
-    const currentCmp = pageComponents.find((c) => c.id === currentCmpId);
+    const currentCmp = components.find((c) => c.id === currentCmpId);
     if (!currentCmp) return;
     // 点击缩放角
     dragStateRef.current.isDragging = false;
@@ -201,7 +202,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
           if (target.dataset.lock === 'true') return; // 如果是锁定的元素直接不能选中
           handleMultiSelect(cmpId);
         } else if (selectedCmpIds.length > 1) {
-          dragStateRef.current.multiDragInitialPositions = pageComponents
+          dragStateRef.current.multiDragInitialPositions = components
             .filter((cmp) => selectedCmpIds.includes(cmp.id))
             .map((cmp) => ({
               id: cmp.id,
@@ -225,7 +226,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
         setSelectedCmpIds([]);
       }
     },
-    [currentCmpId, pageComponents, setCurrentCmpId, spacePressed, selectedCmpIds],
+    [currentCmpId, components, setCurrentCmpId, spacePressed, selectedCmpIds],
   );
 
   // 拖拽单个组件移动
@@ -258,7 +259,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
 
       const updatedComponents = initialPositions
         .map((initial) => {
-          const component = pageComponents.find((cmp) => cmp.id === initial.id);
+          const component = components.find((cmp) => cmp.id === initial.id);
           if (!component) return null;
           return {
             ...component,
@@ -272,7 +273,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
         .filter(Boolean) as ComponentSchema[];
       updateSelectCmp(updatedComponents);
     },
-    [pageComponents, updateSelectCmp],
+    [components, updateSelectCmp],
   );
 
   // 拖拽缩放
@@ -428,7 +429,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
     const isMultipleSelect = selectedCmpIds.length > 1;
     if (dragState.isDragging) {
       if (isMultipleSelect && isComponentMoved(dragState)) {
-        const selectComponents = pageComponents.filter((item) => selectedCmpIds.includes(item.id));
+        const selectComponents = components.filter((item) => selectedCmpIds.includes(item.id));
         pushHistory(
           createHistoryRecord.moveMultiple(
             selectComponents!,
@@ -442,7 +443,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
         );
       } else {
         if (isComponentMoved(dragState)) {
-          const currentCmp = pageComponents.find((item) => item.id === dragState.draggedCmp?.id);
+          const currentCmp = components.find((item) => item.id === dragState.draggedCmp?.id);
           pushHistory(
             createHistoryRecord.move(
               currentCmp!,
@@ -464,7 +465,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
         width: (dragState.draggedCmp?.style?.width as number),
         height: (dragState.draggedCmp?.style?.height as number)
       }
-      const newCmp = pageComponents.find(item => item.id === currentCmpId)
+      const newCmp = components.find(item => item.id === currentCmpId)
       const newSize = {
         width: (newCmp?.style?.width as number),
         height: (newCmp?.style?.height as number)
@@ -481,7 +482,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
     dragStateRef.current.scale.isScaling = false;
     canvasDragState.current.canMove = false;
     dragStateRef.current.rafId = null;
-  }, [selectedCmpIds, pageComponents]);
+  }, [selectedCmpIds, components]);
 
   const handleMouseLeave = useCallback(() => {
     handleMouseUp();

@@ -16,7 +16,7 @@ import { Input } from '@repo/ui/components/input';
 import PageConfig from './components/page-config';
 import commonApi from '@/api/common';
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 
 const bgApply = [
   {
@@ -119,7 +119,7 @@ const themes = [
 const applicationCover = '//heartmm.xyz/static/cover.png';
 
 const PagePanel = () => {
-  const { pageSchema, setPageSchema } = useDesignStore();
+  const { pageSchema, updatePageSchema } = useDesignStore();
 
   const getThemeLine = useCallback((theme: { value: string[]; label: string }) => {
     const str = `linear-gradient(to right,${theme.value.join(',')})`;
@@ -128,11 +128,11 @@ const PagePanel = () => {
 
   const [uploadType, setUploadType] = useState('1'); // 1为背景图片上传，2为直接输入地址
   const [files, setFiles] = useState<UploadFile[]>([]);
-  const id = useId()
+  const id = useId();
   useEffect(() => {
     if (pageSchema.background.useType === '1') {
       if (!pageSchema.background.image) return;
-      setFiles([{url: pageSchema.background.image, uid: id }]);
+      setFiles([{ url: pageSchema.background.image, uid: id }]);
     }
   }, [pageSchema.background]);
 
@@ -159,10 +159,8 @@ const PagePanel = () => {
                   type="number"
                   min={0}
                   defaultValue={pageSchema.width}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setPageSchema({ ...pageSchema, width: Number(e.currentTarget.value) });
-                    }
+                  onEnterSearch={(e) => {
+                    updatePageSchema('width', Number(e.currentTarget.value));
                   }}
                 />
                 <InputGroupAddon>宽度</InputGroupAddon>
@@ -173,10 +171,8 @@ const PagePanel = () => {
                   type="number"
                   min={0}
                   defaultValue={pageSchema.height}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setPageSchema({ ...pageSchema, height: Number(e.currentTarget.value) });
-                    }
+                  onEnterSearch={(e) => {
+                    updatePageSchema('height', Number(e.currentTarget.value));
                   }}
                 />
                 <InputGroupAddon>高度</InputGroupAddon>
@@ -190,9 +186,9 @@ const PagePanel = () => {
                   options={bgApply}
                   placeholder="请选择背景"
                   onChange={(value) =>
-                    setPageSchema({
-                      ...pageSchema,
-                      background: { ...pageSchema.background, useType: value as '1' | '2' },
+                    updatePageSchema('background', {
+                      ...pageSchema.background,
+                      useType: value as '1' | '2',
                     })
                   }
                   className="flex-1 h-[32px]"
@@ -221,12 +217,9 @@ const PagePanel = () => {
                       onChange={(value) => {
                         setFiles(value);
                         if (!Boolean(value.length)) {
-                          setPageSchema({
-                            ...pageSchema,
-                            background: {
-                              ...pageSchema.background,
-                              image: '',
-                            },
+                          updatePageSchema('background', {
+                            ...pageSchema.background,
+                            image: '',
                           });
                         }
                       }}
@@ -235,14 +228,11 @@ const PagePanel = () => {
                         const formData = new FormData();
                         formData.append('file', file);
                         const response = await commonApi.uploadFile(formData);
-                        setPageSchema({
-                          ...pageSchema,
-                          background: {
-                            ...pageSchema.background,
-                            image: response?.path,
-                          },
+                        updatePageSchema('background', {
+                          ...pageSchema.background,
+                          image: response?.path,
                         });
-                        return (response?.path) as string;
+                        return response?.path as string;
                       }}
                       description={
                         <div className="text-xs text-muted-foreground mt-1">
@@ -255,9 +245,9 @@ const PagePanel = () => {
                       placeholder="请输入Url地址"
                       value={pageSchema.background.image}
                       onChange={(e) =>
-                        setPageSchema({
-                          ...pageSchema,
-                          background: { ...pageSchema.background, image: e.target.value },
+                        updatePageSchema('background', {
+                          ...pageSchema.background,
+                          image: e.target.value,
                         })
                       }
                     />
@@ -267,9 +257,9 @@ const PagePanel = () => {
                 <ColorPicker
                   value={pageSchema.background.color}
                   onChange={(value) =>
-                    setPageSchema({
-                      ...pageSchema,
-                      background: { ...pageSchema.background, color: value },
+                    updatePageSchema('background', {
+                      ...pageSchema.background,
+                      color: value,
                     })
                   }
                 />
@@ -283,10 +273,7 @@ const PagePanel = () => {
                   variant="outline"
                   value={pageSchema.adapterType}
                   onValueChange={(value) =>
-                    setPageSchema({
-                      ...pageSchema,
-                      adapterType: value as '1' | '2' | '3' | '4' | '5',
-                    })
+                    updatePageSchema('adapterType', value as '1' | '2' | '3' | '4' | '5')
                   }
                 >
                   <Tooltip>
@@ -358,7 +345,7 @@ const PagePanel = () => {
             </div>
 
             <div className="mt-4">
-              <PageConfig pageSchema={pageSchema} setPageSchema={setPageSchema} />
+              <PageConfig pageSchema={pageSchema} updatePageSchema={updatePageSchema} />
             </div>
           </TabsContent>
           <TabsContent value="theme">
@@ -394,9 +381,9 @@ const PagePanel = () => {
                 <Switch
                   value={pageSchema.filter?.open ? 'on' : 'off'}
                   onCheckedChange={(value) =>
-                    setPageSchema({
-                      ...pageSchema,
-                      filter: { ...pageSchema.filter, open: value },
+                    updatePageSchema('filter', {
+                      ...pageSchema.filter,
+                      open: value,
                     })
                   }
                 />
@@ -410,9 +397,9 @@ const PagePanel = () => {
                         className="flex-1"
                         value={[pageSchema.filter?.contrast || 0]}
                         onValueChange={(value) =>
-                          setPageSchema({
-                            ...pageSchema,
-                            filter: { ...pageSchema.filter, contrast: value[0] },
+                          updatePageSchema('filter', {
+                            ...pageSchema.filter,
+                            contrast: value[0],
                           })
                         }
                       />
@@ -426,9 +413,9 @@ const PagePanel = () => {
                         className="flex-1"
                         value={[pageSchema.filter?.saturation || 0]}
                         onValueChange={(value) =>
-                          setPageSchema({
-                            ...pageSchema,
-                            filter: { ...pageSchema.filter, saturation: value[0] },
+                          updatePageSchema('filter', {
+                            ...pageSchema.filter,
+                            saturation: value[0],
                           })
                         }
                       />
@@ -442,9 +429,9 @@ const PagePanel = () => {
                         className="flex-1"
                         value={[pageSchema.filter?.brightness || 0]}
                         onValueChange={(value) =>
-                          setPageSchema({
-                            ...pageSchema,
-                            filter: { ...pageSchema.filter, brightness: value[0] },
+                          updatePageSchema('filter', {
+                            ...pageSchema.filter,
+                            brightness: value[0],
                           })
                         }
                       />
@@ -458,9 +445,9 @@ const PagePanel = () => {
                         className="flex-1"
                         value={[pageSchema.filter?.opacity || 0]}
                         onValueChange={(value) => {
-                          setPageSchema({
-                            ...pageSchema,
-                            filter: { ...pageSchema.filter, opacity: value[0] },
+                          updatePageSchema('filter', {
+                            ...pageSchema.filter,
+                            opacity: value[0],
                           });
                         }}
                       />

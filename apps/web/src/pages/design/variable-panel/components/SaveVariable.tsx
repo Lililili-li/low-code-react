@@ -94,7 +94,7 @@ const SaveVariable = ({
           : data.type === 'string'
             ? String(data.defaultValue)
             : data.type === 'boolean'
-              ? Boolean(data.defaultValue)
+              ? data.defaultValue === 'false' ? false : true
               : data.type === 'array' || data.type === 'object'
                 ? JSON.parse(data.defaultValue)
                 : data.defaultValue;

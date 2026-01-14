@@ -1,6 +1,6 @@
 import LanguageToggle from '@/components/LanguageToggle';
 import ThemeToggle from '@/components/ThemeToggle';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import { Button } from '@repo/ui/components/button';
 import { Toggle } from '@repo/ui/components/toggle';
 import {
@@ -19,6 +19,8 @@ import pageApi from '@/api/page';
 import { useRequest } from 'ahooks';
 import { toast } from 'sonner';
 import FullScreenLoading from '@/components/FullScreenLoading';
+import { useDesignStateStore } from '@/store';
+import { useDesignComponentsStore } from '@/store/design/components';
 
 const designConfig = [
   {
@@ -45,13 +47,15 @@ const designConfig = [
 
 const Header = () => {
   const navigate = useNavigate();
-  const config = useDesignStore((state) => state.config);
+  const panelConfig = useDesignStore((state) => state.panelConfig);
   const setSiderBarModel = useDesignStore((state) => state.setSiderBarModel);
   const setPropsPanelOpen = useDesignStore((state) => state.setPropsPanelOpen);
   const pageSchema = useDesignStore((state) => state.pageSchema);
+  const state = useDesignStateStore((state) => state.state);
+  const components = useDesignComponentsStore((state) => state.components);
 
   const { runAsync: updatePageSchema, loading } = useRequest(
-    () => pageApi.updatePageSchema(pageSchema, pageSchema.id!),
+    () => pageApi.updatePageSchema({ ...pageSchema, state, components }, pageSchema.id!),
     {
       manual: true,
       onSuccess: () => {
@@ -71,12 +75,12 @@ const Header = () => {
           <Toggle
             size="sm"
             variant="outline"
-            pressed={config.siderBarModel === item.id}
+            pressed={panelConfig.siderBarModel === item.id}
             onClick={() => {
-              if (config.siderBarModel === item.id) {
+              if (panelConfig.siderBarModel === item.id) {
                 setSiderBarModel(null);
               } else {
-                setSiderBarModel(item.id as 'material' | 'layers' | 'variable')
+                setSiderBarModel(item.id as 'material' | 'layers' | 'variable');
               }
             }}
             key={item.id}
@@ -89,8 +93,8 @@ const Header = () => {
         <Toggle
           size="sm"
           variant="outline"
-          pressed={config.propPanel.open}
-          onClick={() => setPropsPanelOpen(!config.propPanel.open)}
+          pressed={panelConfig.propPanel.open}
+          onClick={() => setPropsPanelOpen(!panelConfig.propPanel.open)}
           className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
           <Settings2 />

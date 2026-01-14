@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
-import { useUserStore } from '@/store/modules/user'
+import { useUserStore } from '@/store/user'
 
 const AuthGuard: React.FC = () => {
   const navigate = useNavigate()

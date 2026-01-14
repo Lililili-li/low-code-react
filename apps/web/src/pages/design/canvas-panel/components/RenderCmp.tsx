@@ -1,18 +1,31 @@
-import { useDesignStore } from '@/store/modules/design';
 import materialCmp, { MaterialType } from '@repo/core/material';
 import { handleAnimationStyle, handleAnimationClass } from '@repo/core/compiler/animation';
+import { ComponentSchema } from '@repo/core/types';
+import { useDesignComponentsStore } from '@/store/design/components';
+import { useDesignStateStore } from '@/store';
+import { getVariableValue } from '@repo/core/variable';
 
 const RenderCmp = () => {
-  const pageSchema = useDesignStore((state) => state.pageSchema);
-  const currentCmpId = useDesignStore((state) => state.currentCmpId);
-  const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
-  const hoverId = useDesignStore((state) => state.hoverId);
-  const setHoverId = useDesignStore((state) => state.setHoverId);
+  const components = useDesignComponentsStore((state) => state.components);
+  const setHoverId = useDesignComponentsStore((state) => state.setHoverId);
+  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
+  const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
+  const hoverId = useDesignComponentsStore((state) => state.hoverId);
+  const state = useDesignStateStore((state) => state.state);
 
-  return pageSchema.components.map((item) => {
+  const shouldVisible = (item: ComponentSchema) => {
+    if (item.visibleProp?.type === 'normal') {
+      return item.visibleProp?.value;
+    } else {
+      const visibleValue = getVariableValue(item.visibleProp?.value as string, state);
+      return visibleValue;
+    }
+  };
+
+  return components.map((item) => {
     if (item.group) {
       return (
-        item.visible && (
+        shouldVisible(item) && (
           <div
             className="canvas-render-container"
             key={item.id}
@@ -42,7 +55,7 @@ const RenderCmp = () => {
                       className={animationClass}
                       key={child.id}
                     >
-                      <ChildComponent {...(child as any)} />
+                      <ChildComponent {...(child as any)} state={state} />
                     </div>
                   );
                 })}
@@ -67,7 +80,7 @@ const RenderCmp = () => {
     const Component = materialCmp[item.type as MaterialType].component;
     const animationClass = handleAnimationClass(item.animation);
     return (
-      item.visible && (
+      shouldVisible(item) && (
         <div
           className={`${animationClass} canvas-render-container`}
           key={item.id}
@@ -83,7 +96,7 @@ const RenderCmp = () => {
             setHoverId('');
           }}
         >
-          <Component {...(item as any)} />
+          <Component {...(item as any)} state={state}/>
           <div
             className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''} ${hoverId === item.id ? 'cmp-mask-hover' : ''}`}
             id={`cmp-mask-id-${item.id}`}

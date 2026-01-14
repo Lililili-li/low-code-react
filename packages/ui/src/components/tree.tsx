@@ -47,7 +47,6 @@ function Tree({
   defaultExpandedIds = [],
   className,
 }: TreeProps) {
-
   const [internalSelectedId, setInternalSelectedId] = React.useState<string | null>(
     defaultSelectedId,
   );
@@ -199,7 +198,7 @@ function TreeItem({ node, level }: TreeItemProps) {
           <span className="w-5" />
         )}
         {node.icon ?? defaultIcon}
-        <span className="truncate">{node.name}</span>
+        <span className="truncate">{node.label}</span>
       </div>
       {hasChildren && isExpanded && <TreeNodeList nodes={node.children!} level={level + 1} />}
     </div>

@@ -22,7 +22,7 @@ import { useRequest } from 'ahooks';
 import { useQuery } from '@/composable/use-query';
 import pageApi, { PageProps } from '@/api/page';
 import { toast } from 'sonner';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import { PageSchema } from '@repo/core/types';
 
 const Select = ({

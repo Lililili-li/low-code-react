@@ -14,10 +14,49 @@ import { Label } from '@repo/ui/components/label';
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/tooltip';
-import { Tree, type TreeNode } from '@repo/ui/components/tree';
-import { Plus, Save, Search, Settings, Trash2, Variable } from 'lucide-react';
+import { Tree } from '@repo/ui/components/tree';
+import { Save, Search, Settings, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { isObject } from '@repo/shared/index';
+import { useDesignStateStore } from '@/store';
+import { getVariableKey, searchVariable } from '@repo/core/variable';
+import { cloneDeep } from 'lodash-es';
 
-const BindVariable = ({ name }: { name: number }) => {
+const handleStateData = (state: Record<string, any>, parentKey: string) => {
+  const result = [] as { id: string; label: string; children?: any[]; parentKey: string }[];
+  Object.keys(state).forEach((key) => {
+    if (isObject(state[key])) {
+      result?.push({ id: key, label: key, children: handleStateData(state[key], key), parentKey });
+    } else {
+      result.push({ id: key, label: key, parentKey });
+    }
+  });
+  return result;
+};
+
+const BindVariableDialog = ({
+  id,
+  onChange,
+  onClear,
+}: {
+  id: string;
+  onChange: (value: string) => void;
+  onClear: () => void;
+}) => {
+  const state = useDesignStateStore((state) => state.state);
+
+  const stateTreeData = useMemo(() => {
+    return handleStateData(cloneDeep(state), '');
+  }, [state]);
+
+  const [bindVariable, setBindVariable] = useState<string>(id);
+
+  const [selectedVariable, setSelectedVariable] = useState<string>(getVariableKey(id));
+
+  // 1.回显变量，将传入的变量key高亮
+  // 2.点击变量，右侧显示变量
+  // 3.点击保存
+
   return (
     <Dialog>
       <Tooltip>
@@ -65,20 +104,14 @@ const BindVariable = ({ name }: { name: number }) => {
                   </InputGroup>
                   <Tree
                     className="mt-2"
-                    data={[
-                      {
-                        id: '1',
-                        label: 'visible',
-                        name: 'visible',
-                        children: [
-                          {
-                            id: '1',
-                            label: 'visible',
-                            name: 'visible',
-                          },
-                        ],
-                      },
-                    ]}
+                    data={stateTreeData}
+                    selectedId={selectedVariable}
+                    onSelect={(value) => {
+                      const variable = searchVariable(state, value);
+                      setBindVariable(variable);
+                      setSelectedVariable(value);
+                    }}
+                    defaultExpandedIds={['state']}
                   />
                 </ScrollArea>
               </div>
@@ -88,13 +121,18 @@ const BindVariable = ({ name }: { name: number }) => {
             <div className="title text-sm">表达式</div>
             <div className="list flex flex-col">
               <div className="list-top border rounded-[4px]">
-                <MonacoEditor height="280px" value='' language='javascript'/>
+                <MonacoEditor
+                  height="280px"
+                  value={bindVariable}
+                  language="javascript"
+                  onChange={setBindVariable}
+                />
               </div>
             </div>
             <div className="title text-sm">用法</div>
             <div className="usage flex-1 border rounded-[4px] min-h-0">
               <ScrollArea className="h-full overflow-auto p-2 text-sm">
-                <div className='flex-col flex gap-1.5'>
+                <div className="flex-col flex gap-1.5">
                   <p>
                     你可以通过点击左侧区域绑定变量或处理函数，或者点击右边的铅笔按钮切换到输入模式，输入复杂的表达式。
                   </p>
@@ -113,20 +151,26 @@ const BindVariable = ({ name }: { name: number }) => {
           </div>
         </div>
         <DialogFooter style={{ justifyContent: 'space-between' }}>
-          <DialogClose asChild>
-            <Button variant="destructive" size="sm">
-              <Trash2 />
-              <span>移除变量</span>
-            </Button>
-          </DialogClose>
-          <div className="flex gap-2">
+          {id && (
+            <DialogClose asChild>
+              <Button variant="destructive" size="sm" onClick={() => {
+                onClear()
+                setBindVariable('')
+                setSelectedVariable('')
+              }}>
+                <Trash2 />
+                <span>移除变量</span>
+              </Button>
+            </DialogClose>
+          )}
+          <div className="flex gap-2 justify-end flex-1">
             <DialogClose asChild>
               <Button variant="outline" size="sm">
                 取消
               </Button>
             </DialogClose>
             <DialogClose asChild>
-              <Button size="sm">
+              <Button size="sm" onClick={() => onChange(bindVariable)}>
                 <Save />
                 <span>保存</span>
               </Button>
@@ -138,4 +182,4 @@ const BindVariable = ({ name }: { name: number }) => {
   );
 };
 
-export default BindVariable;
+export default BindVariableDialog;

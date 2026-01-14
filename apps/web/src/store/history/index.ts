@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { ComponentSchema } from '@repo/core/types';
-import { useDesignStore } from './design';
+import { useDesignComponentsStore } from '../design/components';
 
 // 历史记录操作类型
 export type HistoryActionType =
@@ -18,10 +18,6 @@ export type HistoryActionType =
   | 'lockMultiple'     // 锁定组件
   | 'unlock'   // 解锁组件
   | 'unlockMultiple'   // 解锁组件
-  | 'visible'  // 显示组件
-  | 'visibleMultiple'  // 显示组件
-  | 'hidden'   // 隐藏组件
-  | 'hiddenMultiple'   // 隐藏组件
   | 'layer'   // 图层操作
   | 'transform' //旋转
   | 'size' // 尺寸
@@ -137,7 +133,7 @@ const updateComponentSize = (
 }
 
 const handleComponentOpt = (actionType: HistoryActionType, record: HistoryRecord, type: 'undo' | 'redo') => {
-  const { addComponent, removeComponent, updateCurrentCmp, setCurrentCmpId, currentCmpId, setSelectedCmpIds, selectedCmpIds, pageSchema } = useDesignStore.getState()
+  const { addComponent, removeComponent, updateCurrentCmp, setCurrentCmpId, currentCmpId, setSelectedCmpIds, selectedCmpIds, components } = useDesignComponentsStore.getState()
 
   const isUndo = type === 'undo'
 
@@ -199,7 +195,7 @@ const handleComponentOpt = (actionType: HistoryActionType, record: HistoryRecord
 
     case 'move':
       if (record.componentId) {
-        const currentCmp = pageSchema.components.find(item => item.id === record.componentId)
+        const currentCmp = components.find(item => item.id === record.componentId)
         const position = isUndo ? record.oldPosition : record.newPosition
         updateComponentPosition(currentCmp, position, updateCurrentCmp)
       }
@@ -237,31 +233,6 @@ const handleComponentOpt = (actionType: HistoryActionType, record: HistoryRecord
       }
       break
 
-    // TODO 涉及到变量暂不操作
-    // case 'visible':
-    //   if (record.component) {
-    //     updateComponentProperty([record.component], updateCurrentCmp, 'visible', !isUndo)
-    //   }
-    //   break
-
-    // case 'visibleMultiple':
-    //   if (record.components) {
-    //     updateComponentProperty(record.components, updateCurrentCmp, 'visible', !isUndo)
-    //   }
-    //   break
-
-    // case 'hidden':
-    //   if (record.component) {
-    //     updateComponentProperty([record.component], updateCurrentCmp, 'visible', isUndo)
-    //   }
-    //   break
-
-    // case 'hiddenMultiple':
-    //   if (record.components) {
-    //     updateComponentProperty(record.components, updateCurrentCmp, 'visible', isUndo)
-    //   }
-    //   break
-
     case 'group':
       if (isUndo) {
         removeComponent(record.component?.id!)
@@ -294,7 +265,7 @@ const handleComponentOpt = (actionType: HistoryActionType, record: HistoryRecord
 
     case 'size':
       if (record.componentId) {
-        const currentCmp = pageSchema.components.find(item => item.id === record.componentId)
+        const currentCmp = components.find(item => item.id === record.componentId)
         const size = isUndo ? record.oldSize : record.newSize
         updateComponentSize(currentCmp, size, updateCurrentCmp)
       }
@@ -460,32 +431,6 @@ export const createHistoryRecord = {
   unlockMultiple: (components: ComponentSchema[]): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
     type: 'unlockMultiple',
     title: `解锁-${components.map(item => item.name).join(',')}`,
-    componentIds: components.map(item => item.id),
-    components,
-  }),
-
-  visible: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-    type: 'visible',
-    title: `显示-${component.name}`,
-    componentId: component.id,
-    component
-  }),
-  visibleMultiple: (components: ComponentSchema[]): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-    type: 'visibleMultiple',
-    title: `显示-${components.map(item => item.name).join(',')}`,
-    componentIds: components.map(item => item.id),
-    components,
-  }),
-
-  hidden: (component: ComponentSchema): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-    type: 'hidden',
-    title: `隐藏-${component.name}`,
-    componentId: component.id,
-    component
-  }),
-  hiddenMultiple: (components: ComponentSchema[]): Omit<HistoryRecord, 'id' | 'timestamp'> => ({
-    type: 'hiddenMultiple',
-    title: `隐藏-${components.map(item => item.name).join(',')}`,
     componentIds: components.map(item => item.id),
     components,
   }),

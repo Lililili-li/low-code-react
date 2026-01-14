@@ -1,5 +1,5 @@
 import { useComponentOperations } from '@/composable/use-component-operations';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import { Cut20Filled } from '@ricons/fluent';
 import {
   ArrowUpFromLine,

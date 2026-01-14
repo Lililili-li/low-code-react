@@ -18,7 +18,7 @@ import projectApi from '@/api/project';
 import Empty from '@/components/Empty';
 import { Spinner } from '@repo/ui/components/spinner';
 import Select from '@/components/Select';
-import { useSystemStore } from '@/store/modules/system';
+import { useSystemStore } from '@/store/system';
 import ProjectSelect from './components/ProjectSelect';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 

@@ -1,9 +1,9 @@
 import PagePanel from './PagePanel'
 import CmpPanel from './CmpPanel'
-import { useDesignStore } from '@/store/modules/design'
+import { useDesignComponentsStore } from '@/store/design/components'
 
 const PropPanel = () => {
-  const cmpId = useDesignStore(state => state.currentCmpId)
+  const cmpId = useDesignComponentsStore(state => state.currentCmpId)
   return (
     <div className='w-full h-full'>
       {

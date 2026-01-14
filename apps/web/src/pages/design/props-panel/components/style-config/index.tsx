@@ -9,7 +9,7 @@ import { Label } from '@repo/ui/components/label';
 import RotateConfig from './RotateConfig';
 import FilterConfig from './FilterConfig';
 import { ConfigProps } from '../../CmpPanel';
-import { createHistoryRecord, PositionProps, SizeProps, useHistoryStore } from '@/store/modules/history';
+import { createHistoryRecord, PositionProps, SizeProps, useHistoryStore } from '@/store/history';
 import { useEffect, useState } from 'react';
 
 const StyleConfig = ({ component, updateComponent }: ConfigProps) => {

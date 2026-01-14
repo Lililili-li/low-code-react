@@ -5,7 +5,7 @@ import {
   type ImperativePanelHandle,
 } from '@repo/ui/components/resizable';
 import Header from './header';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import MaterialPanel from './material-panel/MaterialPanel';
 import LayerPanel from './layer-panel/LayerPanel';
 import VariablePanel from './variable-panel/VariablePanel';
@@ -24,8 +24,8 @@ const panelMap = {
 };
 
 const Design = () => {
-  const config = useDesignStore((state) => state.config);
-  const siderBarModel = config.siderBarModel;
+  const panelConfig = useDesignStore((state) => state.panelConfig);
+  const siderBarModel = panelConfig.siderBarModel;
 
   const getSiderBarPanel = () => {
     if (!siderBarModel) {
@@ -49,7 +49,7 @@ const Design = () => {
 
   const propPanelRef = useRef<ImperativePanelHandle>(null);
   useEffect(() => {
-    if (config.propPanel.open) {
+    if (panelConfig.propPanel.open) {
       propPanelRef.current?.expand();
     } else {
       propPanelRef.current?.collapse();
@@ -57,7 +57,7 @@ const Design = () => {
     requestAnimationFrame(() => {
       eventBus.emit('handleResize');
     });
-  }, [config.propPanel.open]);
+  }, [panelConfig.propPanel.open]);
   return (
     <div className="design-container h-full flex flex-col dark:bg-[#18181b]">
       <div className="design-header h-[50px] border-b shrink-0">

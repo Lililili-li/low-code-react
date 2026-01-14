@@ -1,9 +1,10 @@
 import { ComponentSchema } from '@repo/core/types'
 import useClipboard from './use-clipboard'
-import { useDesignStore } from '@/store/modules/design'
+import { useDesignStore } from '@/store/design'
 import { useEffect, useRef } from 'react'
 import { isNumber } from '@repo/shared/index'
-import { createHistoryRecord, useHistoryStore } from '@/store/modules/history'
+import { createHistoryRecord, useHistoryStore } from '@/store/history'
+import { useDesignComponentsStore } from '@/store/design/components'
 
 let isCopy = false
 
@@ -22,16 +23,16 @@ export function useComponentOperations() {
     y: 0
   })
 
-  const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
-  const selectCmpIds = useDesignStore((state) => state.selectedCmpIds)
-  const setSelectedCmpIds = useDesignStore(state => state.setSelectedCmpIds)
-  const removeComponent = useDesignStore((state) => state.removeComponent)
-  const removeSelectComponents = useDesignStore((state) => state.removeSelectComponents)
-  const addComponent = useDesignStore((state) => state.addComponent)
-  const addSelectComponent = useDesignStore((state) => state.addSelectComponent)
-  const setCurrentCmpId = useDesignStore((state) => state.setCurrentCmpId)
-  const zoom = useDesignStore((state) => state.config.canvasPanel.zoom)
-  const pageComponents = useDesignStore((state) => state.pageSchema.components)
+  const updateCurrentCmp = useDesignComponentsStore((state) => state.updateCurrentCmp);
+  const selectCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds)
+  const setSelectedCmpIds = useDesignComponentsStore(state => state.setSelectedCmpIds)
+  const removeComponent = useDesignComponentsStore((state) => state.removeComponent)
+  const removeSelectComponents = useDesignComponentsStore((state) => state.removeSelectComponents)
+  const addComponent = useDesignComponentsStore((state) => state.addComponent)
+  const addSelectComponent = useDesignComponentsStore((state) => state.addSelectComponent)
+  const setCurrentCmpId = useDesignComponentsStore((state) => state.setCurrentCmpId)
+  const zoom = useDesignStore((state) => state.panelConfig.canvasPanel.zoom)
+  const components = useDesignComponentsStore((state) => state.components)
   const pageSchema = useDesignStore((state) => state.pageSchema)
 
 
@@ -43,7 +44,7 @@ export function useComponentOperations() {
     if (isMultiple) {
       let components = [] as ComponentSchema[]
       selectCmpIds.forEach((id, index) => {
-        const selectCmp = pageComponents.find(item => item.id === id)
+        const selectCmp = components.find(item => item.id === id)
         if (!selectCmp) return
         const copyCmp = { ...selectCmp }
         copyCmp.id = (new Date().getTime() + index).toString()
@@ -60,7 +61,7 @@ export function useComponentOperations() {
   }
 
   // 剪切组件
-  const cutComponent = (component?: ComponentSchema, selectedCmpIdsParams = selectCmpIds, pageComponentsParams = pageComponents) => {
+  const cutComponent = (component?: ComponentSchema, selectedCmpIdsParams = selectCmpIds, pageComponentsParams = components) => {
     const isMultiple = selectedCmpIdsParams.length > 1
     if (isMultiple) {
       let components = [] as ComponentSchema[]
@@ -185,7 +186,7 @@ export function useComponentOperations() {
     }
     if (isMultiple) {
       selectCmpIds.forEach(id => {
-        const selectCmp = pageComponents.find(item => item.id === id)
+        const selectCmp = components.find(item => item.id === id)
         if (!selectCmp) return
         updateLevel(selectCmp)
       })
@@ -200,10 +201,10 @@ export function useComponentOperations() {
   const lockComponent = (currentCmp: ComponentSchema) => {
     const isMultiple = selectCmpIds.length > 1
     if (isMultiple) {
-      const selectComponents = pageComponents.filter(item => selectCmpIds.includes(item.id))
+      const selectComponents = components.filter(item => selectCmpIds.includes(item.id))
       const isLock = selectComponents.every(item => item.lock)
       selectCmpIds.forEach(id => {
-        const selectCmp = pageComponents.find(item => item.id === id)
+        const selectCmp = components.find(item => item.id === id)
         if (!selectCmp) return
         updateCurrentCmp({ ...selectCmp, lock: !selectCmp?.lock })
       })
@@ -226,12 +227,12 @@ export function useComponentOperations() {
   const visibleComponent = (currentCmp: ComponentSchema) => {
     const isMultiple = selectCmpIds.length > 1
     if (isMultiple) {
-      // const selectComponents = pageComponents.filter(item => selectCmpIds.includes(item.id))
+      // const selectComponents = components.filter(item => selectCmpIds.includes(item.id))
       // const isVisible = selectComponents.every(item => item.visible)
       selectCmpIds.forEach(id => {
-        const selectCmp = pageComponents.find(item => item.id === id)
+        const selectCmp = components.find(item => item.id === id)
         if (!selectCmp) return
-        updateCurrentCmp({ ...selectCmp, visible: !selectCmp?.visible })
+        updateCurrentCmp({ ...selectCmp, visibleProp: { ...selectCmp?.visibleProp, value: !selectCmp?.visibleProp.value } })
       })
       // if (isVisible) {
       //   pushHistory(createHistoryRecord.hiddenMultiple(selectComponents))
@@ -239,7 +240,7 @@ export function useComponentOperations() {
       //   pushHistory(createHistoryRecord.visibleMultiple(selectComponents))
       // }
     } else {
-      updateCurrentCmp({ ...currentCmp, visible: !currentCmp.visible })
+      updateCurrentCmp({ ...currentCmp, visibleProp: { ...currentCmp.visibleProp, value: !currentCmp.visibleProp.value } })
       // if (currentCmp.visible) {
       //   pushHistory(createHistoryRecord.hidden(currentCmp))
       // } else {
@@ -274,12 +275,15 @@ export function useComponentOperations() {
   }
 
   // 组合组件
-  const combinationComponent = (selectCmpIdsParams: string[] = selectCmpIds, pageComponentsParams: ComponentSchema[] = pageComponents) => {
+  const combinationComponent = (selectCmpIdsParams: string[] = selectCmpIds, pageComponentsParams: ComponentSchema[] = components) => {
     const component = {
       group: true,
       id: new Date().getTime().toString(),
       name: '组合组件_' + Date.now(),
-      visible: true,
+      visibleProp: {
+        type: 'normal',
+        value: true
+      },
       lock: false,
       children: [] as ComponentSchema[],
       style: {
@@ -398,7 +402,7 @@ export function useComponentOperations() {
   };
 
   // 快捷键移动组件
-  const moveComponent = (dir: 'moveUp' | 'moveDown' | 'moveLeft' | 'moveRight', component?: ComponentSchema, selectCmpIds: string[] = [], pageComponents: ComponentSchema[] = []) => {
+  const moveComponent = (dir: 'moveUp' | 'moveDown' | 'moveLeft' | 'moveRight', component?: ComponentSchema, selectCmpIds: string[] = [], components: ComponentSchema[] = []) => {
     const isMultiple = selectCmpIds.length > 1 || false
     const updatePosition = (component: ComponentSchema) => {
       const newPosition = { left: component.style?.left, top: component.style?.top } as { left: number, top: number }
@@ -419,10 +423,10 @@ export function useComponentOperations() {
     }
     if (isMultiple) {
       const newPositions = [] as { left: number, top: number, id: string }[]
-      const selectComponents = pageComponents.filter(item => selectCmpIds.includes(item.id))
+      const selectComponents = components.filter(item => selectCmpIds.includes(item.id))
       const oldPositions = selectComponents.map(item => ({ id: item.id, left: (item.style?.left as number), top: (item.style?.top as number) }))
       selectCmpIds.forEach(id => {
-        const selectCmp = pageComponents.find(item => item.id === id)
+        const selectCmp = components.find(item => item.id === id)
         if (!selectCmp) return
         const newPosition = updatePosition(selectCmp)
         newPositions.push({ ...newPosition, id })

@@ -25,7 +25,7 @@ import {
   InputGroupInput,
 } from "@repo/ui/components/input-group"
 import userApi from '@/api/user'
-import { UserState, useUserStore } from "@/store/modules/user";
+import { UserState, useUserStore } from "@/store/user";
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next";
 

@@ -1,16 +1,15 @@
 import React, { useCallback, useRef, useMemo, useEffect, useState } from 'react';
 import CanvasDom from './components/CanvasDom';
 import Toolbar from './components/Toolbar';
-import { useDesignStore } from '@/store/modules/design';
+import { useDesignStore } from '@/store/design';
 import ShadowView from 'react-shadow';
-import AnimationCss from 'animate.css?inline'
+import AnimationCss from 'animate.css?inline';
 import ReactContexifyCss from 'react-contexify/ReactContexify.css?inline';
 import shadowStyles from './assets/ShadowDom.less?inline';
 import { useTheme } from '@/composable/use-theme';
 import Ruler from '@scena/react-ruler';
 import { useShallow } from 'zustand/react/shallow';
 import { eventBus } from '@repo/shared/index';
-
 
 const RULER_SIZE = 20;
 
@@ -28,8 +27,9 @@ const CanvasPanel = () => {
     })),
   );
   const setCanvasPanel = useDesignStore((state) => state.setCanvasPanel);
-  const config = useDesignStore((state) => state.config);
+  const panelConfig = useDesignStore((state) => state.panelConfig);
   const { theme } = useTheme();
+  const globalCss = useDesignStore((state) => state.pageSchema.globalCss);
 
   const verticalRulerRef = useRef<Ruler>(null);
   const horizontalRulerRef = useRef<Ruler>(null);
@@ -45,7 +45,7 @@ const CanvasPanel = () => {
   }, []);
 
   // 实际使用的缩放值（未初始化时使用1）
-  const effectiveZoom = config.canvasPanel.zoom ?? 1;
+  const effectiveZoom = panelConfig.canvasPanel.zoom ?? 1;
 
   // 画布在容器中的偏移量（考虑缩放后的画布尺寸）
   const CANVAS_OFFSET = useMemo(() => {
@@ -93,7 +93,7 @@ const CanvasPanel = () => {
 
     const timer = setTimeout(() => {
       if (!canvasRef.current) return;
-      const currentZoom = config.canvasPanel.zoom ?? 1;
+      const currentZoom = panelConfig.canvasPanel.zoom ?? 1;
       const scaledWidth = pageSchemaSubset.width * currentZoom;
       const scaledHeight = pageSchemaSubset.height * currentZoom;
       // 重新计算 CANVAS_OFFSET
@@ -108,10 +108,14 @@ const CanvasPanel = () => {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [effectiveZoom, pageSchemaSubset.width, pageSchemaSubset.height, config.canvasPanel.zoom]);
+  }, [
+    effectiveZoom,
+    pageSchemaSubset.width,
+    pageSchemaSubset.height,
+    panelConfig.canvasPanel.zoom,
+  ]);
 
   const autoCenter = () => {
-    
     if (canvasRef.current) {
       const { width } = canvasRef.current.getBoundingClientRect();
       const scale = (width - 40) / pageSchemaSubset.width;
@@ -130,9 +134,9 @@ const CanvasPanel = () => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         e.stopPropagation();
-        if (config.canvasPanel.lockZoom) return
+        if (panelConfig.canvasPanel.lockZoom) return;
         const delta = e.deltaY > 0 ? -0.01 : 0.01;
-        const prevZoom = config.canvasPanel.zoom;
+        const prevZoom = panelConfig.canvasPanel.zoom;
         setCanvasPanel({ zoom: Math.min(Math.max((prevZoom ?? 1) + delta, 0.1), 2) });
       }
     };
@@ -141,7 +145,7 @@ const CanvasPanel = () => {
     return () => {
       canvasElement.removeEventListener('wheel', handleWheel);
     };
-  }, [config.canvasPanel, setCanvasPanel]);
+  }, [panelConfig.canvasPanel, setCanvasPanel]);
 
   // 窗口 resize 时重新计算
   const handleResize = useCallback(() => autoCenter(), [pageSchemaSubset.width, setCanvasPanel]);
@@ -165,6 +169,7 @@ const CanvasPanel = () => {
           <style>{AnimationCss}</style>
           <style>{shadowStyles}</style>
           <style>{ReactContexifyCss}</style>
+          <style>{globalCss}</style>
           <div className={`${theme === 'dark' ? 'dark ruler-wrapper' : 'ruler-wrapper'} `}>
             <div className="ruler-top-row" style={{ height: RULER_SIZE }}>
               <div

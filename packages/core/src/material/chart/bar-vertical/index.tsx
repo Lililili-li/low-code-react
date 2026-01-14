@@ -2,7 +2,7 @@ import { FC } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { ChartPropsSchema } from './schema';
 
-const BarVertical: FC<ChartPropsSchema> = ({ props, style }) => {
+const BarVertical: FC<ChartPropsSchema> = ({ props, style, state }) => {
   const transformParts = [
     `rotateX(${style?.rotateX ?? 0}deg)`,
     `rotateY(${style?.rotateY ?? 0}deg)`,

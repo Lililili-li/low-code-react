@@ -11,7 +11,8 @@
     "./canvas-event": "./src/canvas-event/index.ts",
     "./compiler": "./src/compiler/index.ts",
     "./compiler/animation": "./src/compiler/animation/index.ts",
-    "./compiler/event": "./src/compiler/event/index.ts"
+    "./compiler/event": "./src/compiler/event/index.ts",
+    "./variable": "./src/variable/index.ts"
   },
   "scripts": {
     "lint": "eslint \"**/*.ts\""
@@ -24,7 +25,9 @@
     "lodash-es": "^4.17.22",
     "lucide-react": "^0.555.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-countup": "^6.5.3",
+    "react-dom": "^19.1.1",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

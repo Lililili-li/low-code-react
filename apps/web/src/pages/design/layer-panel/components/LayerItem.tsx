@@ -1,4 +1,3 @@
-import { useDesignStore } from '@/store/modules/design';
 import { ComponentSchema } from '@repo/core/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 import { Eye12Regular, EyeOff16Regular } from '@ricons/fluent';
@@ -10,6 +9,7 @@ import {
 } from '@repo/ui/components/collapsible';
 import { Button } from '@repo/ui/components/button';
 import React, { useEffect } from 'react';
+import { useDesignComponentsStore } from '@/store/design/components';
 
 interface LayerItemProps {
   component: ComponentSchema;
@@ -30,14 +30,14 @@ const LayerItem = ({
   setCollapsibleItem,
   onContextMenu,
 }: LayerItemProps) => {
-  const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
-  const setSelectedCmpIds = useDesignStore((state) => state.setSelectedCmpIds);
-  const addSelectedCmpIds = useDesignStore((state) => state.addSelectedCmpIds);
-  const currentCmpId = useDesignStore((state) => state.currentCmpId);
-  const setCurrentCmpId = useDesignStore((state) => state.setCurrentCmpId);
-  const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
-  const hoverId = useDesignStore((state) => state.hoverId);
-  const setHoverId = useDesignStore((state) => state.setHoverId);
+  const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
+  const setSelectedCmpIds = useDesignComponentsStore((state) => state.setSelectedCmpIds);
+  const addSelectedCmpIds = useDesignComponentsStore((state) => state.addSelectedCmpIds);
+  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
+  const setCurrentCmpId = useDesignComponentsStore((state) => state.setCurrentCmpId);
+  const updateCurrentCmp = useDesignComponentsStore((state) => state.updateCurrentCmp);
+  const hoverId = useDesignComponentsStore((state) => state.hoverId);
+  const setHoverId = useDesignComponentsStore((state) => state.setHoverId);
 
   useEffect(() => {
     if (component.group && setCollapsibleItem) {
@@ -51,13 +51,13 @@ const LayerItem = ({
   }, [component.id, component.group, setCollapsibleItem]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // 设置当前选中的组件
     if (!selectedCmpIds.includes(component.id)) {
       setCurrentCmpId(component.id);
       setSelectedCmpIds([component.id]);
     }
-    
+
     // 调用父组件传入的处理函数
     onContextMenu?.(e);
   };
@@ -72,7 +72,7 @@ const LayerItem = ({
           }}
           className="flex flex-col gap-2"
         >
-          <div 
+          <div
             className={`flex items-center justify-between gap-4 px-2 py-1 rounded hover:bg-[#f4f4f5] hover:dark:bg-[#27272a] cursor-pointer ${component.id === currentCmpId || selectedCmpIds.includes(component.id) ? 'bg-[#f4f4f5] dark:bg-[#27272a]' : ''}`}
             onClick={(e) => {
               e.preventDefault();
@@ -156,22 +156,29 @@ const LayerItem = ({
         </div>
       </div>
       <div className="layer-item-right flex items-center transition-all gap-2">
-        <div
-          className={`visible flex items-center opacity-${!component.visible ? '100' : '0'} group-hover:opacity-100`}
-        >
-          <Tooltip>
-            <TooltipTrigger
-              onClick={() => updateCurrentCmp({ ...component, visible: !component.visible })}
-            >
-              {component.visible ? (
-                <Eye12Regular className="size-5" />
-              ) : (
-                <EyeOff16Regular className="size-5 text-primary" />
-              )}
-            </TooltipTrigger>
-            <TooltipContent>{component.visible ? '隐藏' : '显示'}</TooltipContent>
-          </Tooltip>
-        </div>
+        {component.visibleProp.type === 'normal' && (
+          <div
+            className={`visible flex items-center opacity-${!component.visibleProp?.value ? '100' : '0'} group-hover:opacity-100`}
+          >
+            <Tooltip>
+              <TooltipTrigger
+                onClick={() =>
+                  updateCurrentCmp({
+                    ...component,
+                    visibleProp: { ...component.visibleProp, value: !component.visibleProp?.value },
+                  })
+                }
+              >
+                {component.visibleProp?.value ? (
+                  <Eye12Regular className="size-5" />
+                ) : (
+                  <EyeOff16Regular className="size-5 text-primary" />
+                )}
+              </TooltipTrigger>
+              <TooltipContent>{component.visibleProp?.value ? '隐藏' : '显示'}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
         <div
           className={`lock flex items-center opacity-${component.lock ? '100' : '0'} group-hover:opacity-100`}
         >

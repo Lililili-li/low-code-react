@@ -19,6 +19,11 @@ export interface AnimationConfig {
   speed?: '' | 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out';
 }
 
+export type VisibleConfig = {
+  type: 'JsExpression' | 'normal',
+  value: string | boolean
+}
+
 export interface ComponentSchema {
   id: string;                    // 组件唯一标识
   type?: string;                  // 组件类型
@@ -27,11 +32,12 @@ export interface ComponentSchema {
   props?: {};                    // 组件属性
   events?: EventBind[];          // 事件绑定
   style?: ExtendedCSSProperties; // 样式
-  visible: boolean;              // 是否隐藏
+  visibleProp: VisibleConfig;              // 是否隐藏
   lock: boolean;                 // 是否锁定
   animation?: AnimationConfig
-  className?: string;            // 样式类名
+  className: string;            // 样式类名
   children?: ComponentSchema[]   // 分组下的组件
+  state: Record<string, any>
 }
 
 export interface EventBind {

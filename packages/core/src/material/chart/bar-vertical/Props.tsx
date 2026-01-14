@@ -68,11 +68,19 @@ const Props = ({
   schema,
   updateSchema,
 }: {
-  bindVariable?: ({ name }: { name: number }) => React.ReactNode;
+  bindVariable?: ({
+    key,
+    onChange,
+    onClear,
+  }: {
+    key: string;
+    onChange: (value: string) => void;
+    onClear: () => void;
+  }) => React.ReactNode;
   schema?: ChartPropsSchema;
   updateSchema?: (updates: Partial<ChartPropsSchema>) => void;
 }) => {
-  const { props, visible, lock } = schema || {};
+  const { props } = schema || {};
 
   const option = props?.option || {};
   const dataType = props?.dataType || ('1' as '1' | '2' | '3');
@@ -156,7 +164,7 @@ const Props = ({
             </SelectGroup>
           </SelectContent>
         </Select>
-        {dataType === '2' && bindVariable?.({ name: 1 })}
+        {dataType === '2' && bindVariable?.({ key: '', onChange: () => {}, onClear: () => {} })}
         {dataType === '1' && (
           <Dialog>
             <DialogTrigger asChild>
@@ -199,7 +207,7 @@ const Props = ({
           </Dialog>
         )}
       </div>
-      
+
       <div className="item">
         <Accordion type="multiple" className="w-full">
           <AccordionItem value="series">
