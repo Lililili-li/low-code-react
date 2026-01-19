@@ -8,7 +8,7 @@ import { createHighlighter, type Highlighter } from 'shiki';
 // 配置 loader 使用本地安装的 monaco-editor，而不是 CDN
 loader.config({ monaco });
 
-export type MonacoLanguage = 'javascript' | 'typescript' | 'json' | 'css' | 'html';
+export type MonacoLanguage = 'javascript' | 'typescript' | 'json' | 'css' | 'html' | 'sql';
 
 interface MonacoEditorProps {
   value: string;
@@ -28,7 +28,7 @@ const getHighlighter = () => {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
       themes: ['andromeeda', 'github-light'],
-      langs: ['javascript', 'typescript', 'json', 'css', 'html'],
+      langs: ['javascript', 'typescript', 'json', 'css', 'html', 'sql'],
     });
   }
   return highlighterPromise;
@@ -56,6 +56,7 @@ const MonacoEditor = ({
       monaco.languages.register({ id: 'json' });
       monaco.languages.register({ id: 'css' });
       monaco.languages.register({ id: 'html' });
+      monaco.languages.register({ id: 'sql' });
 
       shikiToMonaco(highlighter, monaco);
     };

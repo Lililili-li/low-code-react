@@ -3,6 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { PageSchema } from '@repo/core/types'
 import { useDesignStateStore } from './state'
 import { useDesignComponentsStore } from "./components";
+import { useDesignDatasourceStore } from "./dataSource";
 
 export interface DesignState {
   panelConfig: {
@@ -15,7 +16,7 @@ export interface DesignState {
       open: boolean
     }
   }
-  pageSchema: Omit<PageSchema, 'components' | 'state'>
+  pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>
 }
 
 export interface DesignActions {
@@ -75,9 +76,11 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       set((state) => {
         const { setState } = useDesignStateStore.getState()
         const { setComponents } = useDesignComponentsStore.getState()
+        const { setDatasource } = useDesignDatasourceStore.getState()
         state.pageSchema = { ...state.pageSchema, ...pageSchema }
         setState(pageSchema?.state || {})
         setComponents(pageSchema?.components || [])
+        setDatasource(pageSchema?.datasource || [])
       })
     },
     updatePageSchema: (key: keyof Omit<PageSchema, 'components' | 'state'>, value: any) => {

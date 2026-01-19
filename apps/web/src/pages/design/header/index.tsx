@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import FullScreenLoading from '@/components/FullScreenLoading';
 import { useDesignStateStore } from '@/store';
 import { useDesignComponentsStore } from '@/store/design/components';
+import { useDesignDatasourceStore } from '@/store/design/dataSource';
 
 const designConfig = [
   {
@@ -53,9 +54,10 @@ const Header = () => {
   const pageSchema = useDesignStore((state) => state.pageSchema);
   const state = useDesignStateStore((state) => state.state);
   const components = useDesignComponentsStore((state) => state.components);
+  const datasource = useDesignDatasourceStore((state) => state.datasource);
 
   const { runAsync: updatePageSchema, loading } = useRequest(
-    () => pageApi.updatePageSchema({ ...pageSchema, state, components }, pageSchema.id!),
+    () => pageApi.updatePageSchema({ ...pageSchema, state, components, datasource }, pageSchema.id!),
     {
       manual: true,
       onSuccess: () => {
@@ -105,7 +107,7 @@ const Header = () => {
       <PageManage />
 
       <div className="header-right flex gap-2">
-        <Button size="sm" variant="outline" onClick={updatePageSchema}>
+        <Button size="sm" onClick={updatePageSchema}>
           <Save />
           <span>保存</span>
         </Button>

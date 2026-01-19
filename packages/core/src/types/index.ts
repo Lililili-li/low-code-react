@@ -40,6 +40,56 @@ export interface ComponentSchema {
   state: Record<string, any>
 }
 
+export interface DatasourceSchema {
+  name: string,
+  id: string,
+  url: string,
+  method: string, //'GET' | 'POST' | 'PUT' | 'DELETE'
+  description: string,
+  timeout: {
+    type: string
+    value: string
+  },
+  schedule: {
+    type: string
+    value: string
+  },
+  params?: {
+    key: string,
+    value: string,
+    dataType: string
+  }[],
+  headerParams?: {
+    key: string,
+    value: string,
+    dataType: string
+  }[],
+  bodyParams?: {
+    type: string, //'none' | 'form-data' | 'x-www-form-urlencoded' | 'json'
+    params?: {
+      'form-data': {
+        key: string,
+        value: string,
+        dataType: string
+      }[],
+      'x-www-form-urlencoded': {
+        key: string,
+        value: string,
+        dataType: string
+      }[],
+      json: string,
+      none: string
+    },
+  },
+  handleResult?: string,
+  initRequest?: boolean,
+  requestType: 'sql' | 'http'
+  sqlParams?: {
+    key: string,
+    value: string,
+  }
+}
+
 export interface EventBind {
   name: string;
   handler: () => void;
@@ -68,4 +118,11 @@ export interface PageSchema {
   globalCss: string,
   components: ComponentSchema[];
   state: Record<string, any>
+  datasource: DatasourceSchema[]
+}
+
+
+export enum DataType {
+  JsExpression = 'JsExpression',
+  Normal = 'Normal',
 }

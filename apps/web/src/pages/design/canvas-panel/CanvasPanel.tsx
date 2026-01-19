@@ -5,6 +5,7 @@ import { useDesignStore } from '@/store/design';
 import ShadowView from 'react-shadow';
 import AnimationCss from 'animate.css?inline';
 import ReactContexifyCss from 'react-contexify/ReactContexify.css?inline';
+import tailwindCss from '@repo/ui/globals.css?inline';
 import shadowStyles from './assets/ShadowDom.less?inline';
 import { useTheme } from '@/composable/use-theme';
 import Ruler from '@scena/react-ruler';
@@ -170,6 +171,7 @@ const CanvasPanel = () => {
           <style>{shadowStyles}</style>
           <style>{ReactContexifyCss}</style>
           <style>{globalCss}</style>
+          <style>{tailwindCss}</style>
           <div className={`${theme === 'dark' ? 'dark ruler-wrapper' : 'ruler-wrapper'} `}>
             <div className="ruler-top-row" style={{ height: RULER_SIZE }}>
               <div

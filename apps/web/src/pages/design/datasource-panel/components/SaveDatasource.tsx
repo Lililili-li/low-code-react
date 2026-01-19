@@ -1,7 +1,6 @@
 import { Button } from '@repo/ui/components/button';
-import { X } from 'lucide-react';
-import { Ref, useImperativeHandle, useState } from 'react';
-import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
+import { HelpCircle, X } from 'lucide-react';
+import { Ref, useImperativeHandle, useRef, useState } from 'react';
 import {
   Form,
   FormControl,
@@ -11,97 +10,270 @@ import {
   FormMessage,
 } from '@repo/ui/components/form';
 import { Input } from '@repo/ui/components/input';
-import { Label } from '@repo/ui/components/label';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Select from '@/components/Select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
+import BindVariableDialog from '../../variable-panel/components/BindVariableDialog';
+import { DatasourceSchema, DataType } from '@repo/core/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
+import { ScrollArea } from '@repo/ui/components/scroll-area';
+import ParamsTab from './ParamsTab';
+import BodyParamsTab from './BodyParamsTab';
+import HeaderParamsTab from './HeaderParamsTab';
+import { useDesignDatasourceStore } from '@/store/design/dataSource';
 import MonacoEditor from '@repo/ui/components/monaco-editor';
+import { Switch } from '@repo/ui/components/switch';
+import { testInterface } from '@repo/core/datasource';
+import { useDesignStateStore } from '@/store';
+import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
+import { Label } from '@repo/ui/components/label';
+import Empty from '@/components/Empty';
 
-export interface SaveVariableRef {
-  openDialog: (params?: { name: string; defaultValue: string; type: string }) => void;
+const FormSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, {
+    message: '变量名称不能为空',
+  }),
+  method: z.string().min(1, {
+    message: '请求方法不能为空',
+  }),
+  url: z.string().min(1, {
+    message: '请求地址不能为空',
+  }),
+  description: z.string(),
+  timeout: z.object({
+    type: z.string(),
+    value: z.string(),
+  }),
+  schedule: z.object({
+    type: z.string(),
+    value: z.string(),
+  }),
+  initRequest: z.boolean(),
+  params: z.array(
+    z.object({
+      key: z.string(),
+      value: z.string(),
+      dataType: z.string(),
+    }),
+  ),
+  bodyParams: z.object({
+    type: z.string(),
+    params: z.object({
+      'form-data': z.array(
+        z.object({
+          key: z.string(),
+          value: z.string(),
+          dataType: z.string(),
+        }),
+      ),
+      'x-www-form-urlencoded': z.array(
+        z.object({
+          key: z.string(),
+          value: z.string(),
+          dataType: z.string(),
+        }),
+      ),
+      json: z.string(),
+      none: z.string(),
+    }),
+  }),
+  headerParams: z.array(
+    z.object({
+      key: z.string(),
+      value: z.string(),
+      dataType: z.string(),
+    }),
+  ),
+  handleResult: z.string(),
+  requestType: z.enum(['http', 'sql']),
+  sqlParams: z.object({
+    key: z.string(),
+    value: z.string(),
+  }),
+});
+
+type FormValues = z.infer<typeof FormSchema>;
+
+const createDefaultValues = (): FormValues => ({
+  id: Date.now().toString(),
+  name: '',
+  method: 'GET',
+  url: '',
+  description: '',
+  timeout: {
+    type: DataType.Normal,
+    value: '5000',
+  },
+  schedule: {
+    type: DataType.Normal,
+    value: '0',
+  },
+  initRequest: false,
+  params: [
+    {
+      key: '',
+      value: '',
+      dataType: DataType.Normal,
+    },
+  ],
+  bodyParams: {
+    type: 'none',
+    params: {
+      'form-data': [
+        {
+          key: '',
+          value: '',
+          dataType: DataType.Normal,
+        },
+      ],
+      'x-www-form-urlencoded': [
+        {
+          key: '',
+          value: '',
+          dataType: DataType.Normal,
+        },
+      ],
+      json: '',
+      none: '',
+    },
+  },
+  headerParams: [
+    {
+      key: '',
+      value: '',
+      dataType: DataType.Normal,
+    },
+  ],
+  handleResult: `function handleSuccess(res, state) { 
+ //如需查看结果，需将res返回 
+  console.log('处理返回后的结果.....');
+  return res;
+}`,
+  requestType: 'http',
+  sqlParams: {
+    key: 'sql',
+    value: 'select * from table',
+  },
+});
+
+export interface SaveDatasourceRef {
+  openDialog: (type: string, detail?: DatasourceSchema) => void;
   closeDialog: () => void;
 }
 
-const SaveDatasource = ({
-  ref,
-  onClose,
-  onSave,
-}: {
-  ref: Ref<SaveVariableRef>;
-  onClose: () => void;
-  onSave: (variable: { key: string; defaultValue: string; type: string }) => void;
-}) => {
+const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose: () => void }) => {
+  const addDatasource = useDesignDatasourceStore((state) => state.addDatasource);
+  const updateDatasource = useDesignDatasourceStore((state) => state.updateDatasource);
+  const state = useDesignStateStore((state) => state.state);
+
   const [visible, setVisible] = useState(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearResetTimer = () => {
+    if (resetTimer.current) {
+      clearTimeout(resetTimer.current);
+      resetTimer.current = null;
+    }
+  };
 
   const closeDialog = () => {
     setVisible(false);
     onClose();
-    setTimeout(() => {
-      form.reset();
+    clearResetTimer();
+    resetTimer.current = setTimeout(() => {
+      form.reset(createDefaultValues());
+      resetTimer.current = null;
     }, 500);
+    setParamsTab('params');
   };
-  const openDialog = (params?: { name: string; defaultValue: string; type: string }) => {
+  const [openType, setOpenType] = useState<string>('');
+  const openDialog = (type: string, detail?: DatasourceSchema) => {
+    clearResetTimer();
     setVisible(true);
-    if (params) {
-    }
+    setOpenType(type);
+    form.reset(detail ?? createDefaultValues());
   };
   useImperativeHandle(ref, () => ({
     openDialog,
     closeDialog,
   }));
 
-  const FormSchema = z.object({
-    name: z
-      .string()
-      .min(1, {
-        message: '变量名称不能为空',
-      })
-      .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, {
-        message: '变量名称只能包含数字、字母和下划线，且不能以数字开头',
-      }),
-    type: z.string().min(1, {
-      message: '变量类型不能为空',
-    }),
-    defaultValue: z.any(),
-  });
-  const form = useForm<z.infer<typeof FormSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      name: '',
-      type: 'string',
-      defaultValue: '',
-    },
+    defaultValues: createDefaultValues(),
   });
 
   const onSubmit = () => {
-    // form.handleSubmit((data) => {
-    //   const defaultValue =
-    //     data.type === 'number'
-    //       ? Number(data.defaultValue)
-    //       : data.type === 'string'
-    //         ? String(data.defaultValue)
-    //         : data.type === 'boolean'
-    //           ? Boolean(data.defaultValue)
-    //           : data.type === 'array' || data.type === 'object'
-    //             ? JSON.parse(data.defaultValue)
-    //             : data.defaultValue;
-    //   onSave({
-    //     key: data.name,
-    //     defaultValue,
-    //     type: data.type,
-    //   });
-    // })();
+    form.handleSubmit((data) => {
+      if (openType === 'copy' || openType === 'create') {
+        addDatasource({ ...data, id: Date.now().toString() });
+      } else {
+        updateDatasource(data.id, data);
+      }
+      closeDialog();
+    })();
   };
+
+  const [response, setResponse] = useState('');
+  const scrollAreaRef = useRef<HTMLElement | null>(null);
+
+  const testConnection = () => {
+    form.handleSubmit((data) => {
+      testInterface(data, state)
+        .then((res) => {
+          setResponse(JSON.stringify(res, null, 2));
+        })
+        .catch((err) => {
+          setResponse(JSON.stringify(err, null, 2));
+        })
+        .finally(() => {
+          scrollAreaRef.current?.scrollTo({
+            top: scrollAreaRef.current.scrollHeight,
+            behavior: 'smooth',
+          });
+        });
+    })();
+  };
+
+  const [paramsTab, setParamsTab] = useState('params');
 
   return (
     <div
-      className={`save-variable-container h-full overflow-hidden ${visible ? 'w-[500px]' : 'w-0 border-0'} duration-500 transition-[width] absolute right-0 top-0 translate-x-full border dark:bg-[#18181b] bg-white border-t-0 border-b-0`}
+      className={`save-variable-container flex flex-col h-full overflow-hidden ${visible ? 'w-[700px]' : 'w-0 border-0'} duration-500 transition-[width] absolute right-0 top-0 translate-x-full border dark:bg-[#18181b] bg-white border-t-0 border-b-0`}
       style={{ zIndex: 10 }}
     >
       <div className="save-variable-header min-w-[400px] flex items-center justify-between border-b p-2 px-3">
-        <div className="title text-[16px]">添加变量</div>
+        <div className="title text-[16px]">
+          {openType === 'create'
+            ? '添加'
+            : openType === 'check'
+              ? '查看'
+              : openType === 'copy'
+                ? '复制'
+                : '编辑'}
+          数据源
+        </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => onSubmit()} className="h-[28px] w-[60px]">
+          <Button size="sm" variant="outline" onClick={testConnection} className="h-[28px]">
+            <span>测试连接</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="size-4" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>只能查看接口返回，不可以修改变量</p>
+              </TooltipContent>
+            </Tooltip>
+          </Button>
+          <Button
+            size="sm"
+            onClick={onSubmit}
+            className="h-[28px] w-[60px]"
+            disabled={openType === 'check'}
+          >
             保存
           </Button>
           <Button
@@ -114,103 +286,400 @@ const SaveDatasource = ({
           </Button>
         </div>
       </div>
-      <div className="save-variable-content px-3 min-w-[350px]">
-        <Form {...form}>
-          <form>
-            <div className="flex flex-col gap-5 py-3">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col gap-2">
+      <ScrollArea
+        className="flex-1 min-h-0 px-3 w-full"
+        ref={scrollAreaRef as Ref<HTMLDivElement> | undefined}
+      >
+        <div className="save-variable-content min-w-[350px]">
+          <Form {...form}>
+            <form autoComplete="off">
+              <div className="flex flex-col gap-5 py-3">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>
+                        <span className="text-red-500">*</span>
+                        接口名称
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="请输入接口名称" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-3">
+                  <FormField
+                    control={form.control}
+                    name="method"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col gap-2 w-[200px]">
+                        <FormLabel className="h-4">
+                          <span className="text-red-500">*</span>
+                          请求方式
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            options={[
+                              {
+                                label: 'GET',
+                                value: 'GET',
+                              },
+                              {
+                                label: 'POST',
+                                value: 'POST',
+                              },
+                            ]}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="请选择请求方式"
+                            className="w-full"
+                          ></Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="url"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col gap-2 flex-1">
+                        <FormLabel>
+                          <span className="text-red-500">*</span>
+                          <span>请求地址</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="size-4 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>自动拼接全局配置的BaseURL</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="请求地址(自动拼接全局配置的BaseURL)" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>接口描述</FormLabel>
+                      <FormControl>
+                        <Input placeholder="接口描述（可选）" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-3">
+                  <FormField
+                    control={form.control}
+                    name="timeout"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col gap-2 flex-1">
+                        <FormLabel className="h-4">超时时长(ms)</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="超时时长（可选）"
+                              value={field.value.value}
+                              onChange={(e) =>
+                                field.onChange({ ...field.value, value: Number(e.target.value) })
+                              }
+                            />
+                            <BindVariableDialog
+                              id={
+                                field.value.type === DataType.JsExpression
+                                  ? field.value.value.toString()
+                                  : ''
+                              }
+                              onChange={(value) =>
+                                field.onChange({
+                                  ...field.value,
+                                  value,
+                                  type: DataType.JsExpression,
+                                })
+                              }
+                              onClear={() =>
+                                field.onChange({
+                                  ...field.value,
+                                  value: '5000',
+                                  type: DataType.Normal,
+                                })
+                              }
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="schedule"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col gap-2 flex-1">
+                        <FormLabel>
+                          <span>定时调用(ms)</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="size-4 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>定时调用接口时间，单位为毫秒，0为仅调用一次</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </FormLabel>
+                        <FormControl>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="定时调用(ms)"
+                              value={field.value.value}
+                              onChange={(e) =>
+                                field.onChange({ ...field.value, value: Number(e.target.value) })
+                              }
+                            />
+                            <BindVariableDialog
+                              id={
+                                field.value.type === DataType.JsExpression
+                                  ? field.value.value.toString()
+                                  : ''
+                              }
+                              onChange={(value) =>
+                                field.onChange({
+                                  ...field.value,
+                                  value,
+                                  type: DataType.JsExpression,
+                                })
+                              }
+                              onClear={() =>
+                                field.onChange({
+                                  ...field.value,
+                                  value: '0',
+                                  type: DataType.Normal,
+                                })
+                              }
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="initRequest"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col gap-2 flex-1">
+                        <FormLabel>
+                          <span>是否初始请求</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="size-4 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>定时调用接口时间，单位为毫秒，0为仅调用一次</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </FormLabel>
+                        <FormControl>
+                          <div className="h-8 flex items-center">
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="requestType"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2 flex-1">
+                      <FormLabel>
+                        <span>请求类型</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="size-4 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>sql请求需要后台单独出接口，并防止sql注入风险</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="h-8 flex items-center">
+                          <RadioGroup
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            orientation="horizontal"
+                            className="flex items-center gap-3"
+                          >
+                            <div className="flex items-center gap-2 cursor-pointer">
+                              <RadioGroupItem value="http" id="r1" />
+                              <Label htmlFor="r1" className="cursor-pointer">
+                                普通请求
+                              </Label>
+                            </div>
+                            <div className="flex items-center gap-2 cursor-pointer">
+                              <RadioGroupItem value="sql" id="r2" />
+                              <Label htmlFor="r2" className="cursor-pointer">
+                                SQL请求
+                              </Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormItem className="flex flex-col gap-2 flex-1">
+                  <FormLabel>
+                    <span>{form.watch('requestType') === 'http'? '请求参数': 'SQL查询'}</span>
+                  </FormLabel>
+                  <FormControl>
+                    {form.watch('requestType') === 'http' ? (
+                      <Tabs value={paramsTab} onValueChange={setParamsTab}>
+                        <TabsList>
+                          <TabsTrigger value="params">Params</TabsTrigger>
+                          {form.watch('method') === 'POST' && (
+                            <TabsTrigger value="body">
+                              <span>Body</span>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <HelpCircle />
+                                </TooltipTrigger>
+                                <TooltipContent>请求头会替换为选中的格式</TooltipContent>
+                              </Tooltip>
+                            </TabsTrigger>
+                          )}
+                          <TabsTrigger value="header">Header</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="params">
+                          <ParamsTab form={form} />
+                        </TabsContent>
+                        <TabsContent value="body">
+                          {form.watch('method') === 'POST' && <BodyParamsTab form={form} />}
+                        </TabsContent>
+                        <TabsContent value="header">
+                          <HeaderParamsTab form={form} />
+                        </TabsContent>
+                      </Tabs>
+                    ) : (
+                      <div className="flex flex-col">
+                        {form.watch('method') === 'POST' ? (
+                          <div className="flex flex-col gap-2">
+                            <FormField
+                              control={form.control}
+                              name="sqlParams"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-col gap-2">
+                                  <FormLabel>
+                                    <div className="flex items-center gap-2">
+                                      <span>key</span>
+                                    </div>
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input value={field.value.key} onChange={(e) => field.onChange({ ...field.value, key: e.target.value })} placeholder='请输入key值'/>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="sqlParams"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-col gap-2">
+                                  <FormLabel>
+                                    <div className="flex items-center gap-2">
+                                      <span>value</span>
+                                    </div>
+                                  </FormLabel>
+                                  <FormControl>
+                                    <MonacoEditor
+                                      value={field.value.value}
+                                      onChange={(value) =>
+                                        field.onChange({ ...field.value, value })
+                                      }
+                                      language="sql"
+                                      height={100}
+                                      lineNumbers='off'
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        ) : (
+                          <Empty description="SQL请求只能是post请求" />
+                        )}
+                      </div>
+                    )}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+                <FormField
+                  control={form.control}
+                  name="handleResult"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>
+                        <div className="flex items-center gap-2">
+                          <span>结果处理函数</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="size-4 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>res参数为接口返回结果,state参数为变量</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </FormLabel>
+                      <FormControl>
+                        <MonacoEditor
+                          value={field.value}
+                          onChange={(value) => field.onChange(value)}
+                          language="javascript"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {response && (
+                  <FormItem className="flex flex-col gap-2 flex-1">
                     <FormLabel>
-                      <span className="text-red-500">*</span>
-                      变量名称
+                      <span>返回结果</span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="只能包含数字字母下划线，且不能以数字开头" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col gap-2">
-                    <FormLabel>初始值类型</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        className="flex justify-between items-center"
-                      >
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="string" id="r1" />
-                          <Label htmlFor="r1">String</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="number" id="r2" />
-                          <Label htmlFor="r2">Number</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="boolean" id="r4" />
-                          <Label htmlFor="r4">Boolean</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="array" id="r5" />
-                          <Label htmlFor="r5">Array</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="object" id="r6" />
-                          <Label htmlFor="r6">Object</Label>
-                        </div>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="defaultValue"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col gap-2">
-                    <FormLabel>初始值</FormLabel>
-                    <FormControl>
                       <MonacoEditor
-                        value={field.value}
-                        onChange={field.onChange}
+                        value={response}
+                        onChange={(value) => setResponse(value)}
                         language="json"
-                        height={300}
-                        lineNumbers="off"
                       />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
-              />
-              <FormItem className="flex flex-col gap-2">
-                <FormLabel>提示</FormLabel>
-                <FormControl>
-                  <div className="tip p-2 text-sm dark:text-gray-300 text-gray-600 bg-[#f5f5f5] dark:bg-[#333] rounded-[4px] min-w-[300px]">
-                    字符串:"string"
-                    <br />
-                    数字:123
-                    <br />
-                    布尔值:true/false
-                    <br />
-                    对象:{`{"name":"xxx"}`}
-                    <br />
-                    数组:["1","2"]
-                    <br />
-                  </div>
-                </FormControl>
-              </FormItem>
-            </div>
-          </form>
-        </Form>
-      </div>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </ScrollArea>
     </div>
   );
 };

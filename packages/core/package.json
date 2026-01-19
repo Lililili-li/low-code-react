@@ -12,7 +12,8 @@
     "./compiler": "./src/compiler/index.ts",
     "./compiler/animation": "./src/compiler/animation/index.ts",
     "./compiler/event": "./src/compiler/event/index.ts",
-    "./variable": "./src/variable/index.ts"
+    "./variable": "./src/variable/index.ts",
+    "./datasource": "./src/datasource/index.ts"
   },
   "scripts": {
     "lint": "eslint \"**/*.ts\""
