@@ -44,6 +44,8 @@ const CmpPanel = () => {
 
   const PropsCmp = materialCmp[currentCmp?.type as MaterialType]?.propsPanel;
 
+  const cmpSelectEvents = materialCmp[currentCmp?.type as MaterialType]?.events || []; // 组件的内置事件
+
   const visibleProp = currentCmp?.visibleProp;
   const lock = currentCmp?.lock;
 
@@ -280,7 +282,9 @@ const CmpPanel = () => {
               />
             )}
           </TabsContent>
-          <TabsContent value="event">{currentCmp && <EventConfig />}</TabsContent>
+          <TabsContent value="event">
+            {currentCmp && <EventConfig selectEvents={cmpSelectEvents} />}
+          </TabsContent>
           <TabsContent value="animate">
             {currentCmp && (
               <AnimateConfig component={currentCmp!} updateComponent={updateCurrentCmp} />

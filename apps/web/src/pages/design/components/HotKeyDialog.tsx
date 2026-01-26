@@ -153,6 +153,15 @@ const HotKeyData = [
     ),
     windowsHotKey: 'Ctrl + Y',
   },
+   {
+    function: '保存',
+    macHotKey: (
+      <div className="flex items-center">
+        <Command size={16} /> + S
+      </div>
+    ),
+    windowsHotKey: 'Ctrl + S',
+  },
 ];
 
 const HotKeyDialog: FC<HotKeyDialogProps> = ({ children }) => {

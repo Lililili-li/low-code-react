@@ -8,7 +8,6 @@
     "./material": "./src/material/index.ts",
     "./event": "./src/event/index.ts",
     "./adaptation": "./src/adaptation/index.ts",
-    "./canvas-event": "./src/canvas-event/index.ts",
     "./compiler": "./src/compiler/index.ts",
     "./compiler/animation": "./src/compiler/animation/index.ts",
     "./compiler/event": "./src/compiler/event/index.ts",

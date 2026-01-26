@@ -19,6 +19,7 @@
   "exports": {
     "./app": "./src/app/index.ts",
     "./request": "./src/request/index.ts",
-    "./index": "./src/index.ts"
+    "./index": "./src/index.ts",
+    "./scheduleTask": "./src/schedule-task/index.ts"
   }
 }

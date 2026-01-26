@@ -24,20 +24,59 @@ export type VisibleConfig = {
   value: string | boolean
 }
 
+
+export interface ActionSchema {
+  changeVariable?: string // 函数字符串
+  navToPage?: {
+    pageId: string
+    delay: number
+    linkParams: {
+      key: string,
+      value: string,
+      dataType: string
+    }[]
+  }
+  navToLink?: {
+    linkUrl: string
+    delay: number
+    isBlank: boolean
+    linkParams: {
+      key: string,
+      value: string,
+      dataType: string
+    }[]
+  }
+  fetchAPI?: {
+    datasourceId: string[]
+  }
+}
+export type EventType = 'click' | 'doubleClick' | 'mouseEnter' | 'mouseLeave' | 'mounted' | 'unmounted' | string;
+
+export interface EventSchema {
+  id: string;
+  name: string;
+  type: EventType,
+  active: boolean,
+  actions: {
+    label: string,
+    type: 'changeVariable' | 'navToPage' | 'navToLink' | 'fetchAPI' | string,
+    value: ActionSchema
+  }[];
+}
+
 export interface ComponentSchema {
   id: string;                    // 组件唯一标识
   type?: string;                  // 组件类型
   group?: boolean                // 是否为分组
   name: string;                  // 组件名称
   props?: {};                    // 组件属性
-  events?: EventBind[];          // 事件绑定
+  events?: EventSchema[];          // 事件绑定
   style?: ExtendedCSSProperties; // 样式
   visibleProp: VisibleConfig;              // 是否隐藏
   lock: boolean;                 // 是否锁定
   animation?: AnimationConfig
-  className: string;            // 样式类名
+  className?: string;            // 样式类名
   children?: ComponentSchema[]   // 分组下的组件
-  state: Record<string, any>
 }
 
 export interface DatasourceSchema {
@@ -82,17 +121,13 @@ export interface DatasourceSchema {
     },
   },
   handleResult?: string,
+  handleParams?: string,
   initRequest?: boolean,
   requestType: 'sql' | 'http'
   sqlParams?: {
     key: string,
     value: string,
-  }
-}
-
-export interface EventBind {
-  name: string;
-  handler: () => void;
+  },
 }
 
 

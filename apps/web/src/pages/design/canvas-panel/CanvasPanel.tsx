@@ -11,6 +11,7 @@ import { useTheme } from '@/composable/use-theme';
 import Ruler from '@scena/react-ruler';
 import { useShallow } from 'zustand/react/shallow';
 import { eventBus } from '@repo/shared/index';
+import dayjs from 'dayjs';
 
 const RULER_SIZE = 20;
 
@@ -160,6 +161,7 @@ const CanvasPanel = () => {
 
   useEffect(() => {
     eventBus.on('handleResize', () => autoCenter());
+    (window as any)['dayjs'] = dayjs;
     return () => eventBus.off('handleResize');
   }, []);
 

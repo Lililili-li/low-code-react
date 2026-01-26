@@ -15,6 +15,9 @@ import './assets/index.less';
 import DatasourcePanel from './datasource-panel/DatasourcePanel';
 import { eventBus } from '@repo/shared/index';
 import { useEffect, useRef } from 'react';
+import TabMenu from '@/components/TabMenu';
+import { Database } from 'lucide-react';
+import { IconAppCenter, IconCode, IconLayers, IconShare } from '@douyinfe/semi-icons';
 
 const panelMap = {
   material: MaterialPanel,
@@ -26,6 +29,7 @@ const panelMap = {
 const Design = () => {
   const panelConfig = useDesignStore((state) => state.panelConfig);
   const siderBarModel = panelConfig.siderBarModel;
+  const setSiderBarModel = useDesignStore((state) => state.setSiderBarModel);
 
   const getSiderBarPanel = () => {
     if (!siderBarModel) {
@@ -78,7 +82,84 @@ const Design = () => {
             collapsible={true}
             collapsedSize={0}
           >
-            <div className="sidebar w-full h-full">{getSiderBarPanel()}</div>
+            <div className="sidebar w-full h-full flex">
+              <div className="tabs w-[70px] border-r h-full">
+                <TabMenu
+                  items={[
+                    {
+                      label: (
+                        <div className="flex flex-col gap-2 items-center">
+                          <IconAppCenter size="large" />
+                          <span className="text-[12px]">组件库</span>
+                        </div>
+                      ),
+                      value: 'material',
+                    },
+                    {
+                      label: (
+                        <div className="flex flex-col gap-2 items-center">
+                          <IconLayers size="large" />
+                          <span className="text-[12px]">图层</span>
+                        </div>
+                      ),
+                      value: 'layers',
+                    },
+                    {
+                      label: (
+                        <div className="flex flex-col gap-2 items-center">
+                          <IconShare size="large" />
+                          <span className="text-[12px]">变量</span>
+                        </div>
+                      ),
+                      value: 'variable',
+                    },
+                    {
+                      label: (
+                        <div className="flex flex-col gap-2 items-center">
+                          <Database className="size-5" />
+                          <span className="text-[12px]">数据源</span>
+                        </div>
+                      ),
+                      value: 'datasource',
+                    },
+                    // {
+                    //   label: (
+                    //     <div className="flex flex-col gap-2 items-center">
+                    //       <IconCode size="large" />
+                    //       <span className="text-[12px]">源码</span>
+                    //     </div>
+                    //   ),
+                    //   value: 'sourceCode',
+                    // },
+                  ]}
+                  activeId={siderBarModel as string}
+                  itemClassName="pl-2 py-3 justify-center rounded-none border-b"
+                  onSelect={(value) => {
+                    if (value === siderBarModel) {
+                      siderBarPanelRef.current?.collapse();
+                      setSiderBarModel(null);
+                    } else {
+                      siderBarPanelRef.current?.expand();
+                      setSiderBarModel(value as 'material' | 'layers' | 'variable' | 'datasource');
+                    }
+                  }}
+                />
+              </div>
+              <div className="content w-full h-full flex flex-col flex-1">
+                <div className="header border-b h-[40px]">
+                  <div className="title flex items-center pl-4 font-medium h-full text-sm">
+                    {siderBarModel === 'material' && '组件库'}
+                    {siderBarModel === 'layers' && '图层'}
+                    {siderBarModel === 'variable' && '变量'}
+                    {siderBarModel === 'datasource' && '数据源'}
+                    {/* {siderBarModel === 'sourceCode' && '源码'} */}
+                  </div>
+                </div>
+                <div className="body flex-1 min-h-0">
+                  {getSiderBarPanel()}
+                </div>
+              </div>
+            </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={63}>

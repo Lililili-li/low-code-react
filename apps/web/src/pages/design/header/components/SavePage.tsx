@@ -22,18 +22,22 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useImperativeHandle, useState } from 'react';
 import { Button } from '@repo/ui/components/button';
+import { useRequest } from 'ahooks';
+import pageApi from '@/api/page';
+import { toast } from 'sonner';
 
 export interface SavePageRef {
-  openDialog: () => void;
+  openDialog: (data?: Record<string, any>) => void;
 }
 
-const SavePage = ({ref}: {ref: React.Ref<SavePageRef>}) => {
+const SavePage = ({ ref }: { ref: React.Ref<SavePageRef> }) => {
   const [pageFormVisible, setPageFormVisible] = useState(false);
 
   const formSchema = z.object({
     name: z.string().min(1, {
       message: '页面名称不能为空',
     }),
+    id: z.string(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -43,12 +47,26 @@ const SavePage = ({ref}: {ref: React.Ref<SavePageRef>}) => {
     },
   });
 
-  const onSubmit = () => {
-    console.log(123123123);
-  };
+  const { runAsync: updatePageSchema, loading } = useRequest(
+    () => pageApi.updatePage({ name: form.getValues().name }, form.getValues().id),
+    {
+      manual: true,
+      onSuccess: () => {
+        toast.success('保存成功');
+        setPageFormVisible(false)
+        window.location.reload()
+      },
+    },
+  );
 
-  const openDialog = () => {
+  const openDialog = (data?: Record<string, any>) => {
     setPageFormVisible(true);
+    if (data) {
+      form.reset({
+        name: data.label,
+        id: data.value,
+      });
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -65,7 +83,7 @@ const SavePage = ({ref}: {ref: React.Ref<SavePageRef>}) => {
     >
       <DialogContent className="sm:max-w-[425px]">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(updatePageSchema)}>
             <DialogHeader>
               <DialogTitle>修改页面信息</DialogTitle>
               <DialogDescription>在此处修改当前页面信息，完成后点击保存。</DialogDescription>
@@ -76,7 +94,9 @@ const SavePage = ({ref}: {ref: React.Ref<SavePageRef>}) => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel><span className='text-red-500'>*</span>页面名称</FormLabel>
+                    <FormLabel>
+                      <span className="text-red-500">*</span>页面名称
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="请输入页面名称" {...field} />
                     </FormControl>
@@ -91,8 +111,8 @@ const SavePage = ({ref}: {ref: React.Ref<SavePageRef>}) => {
                   取消
                 </Button>
               </DialogClose>
-              <Button type="submit" size="sm">
-                保存
+              <Button type="submit" size="sm" disabled={loading}>
+                {loading ? '保存中...' : '保存'}
               </Button>
             </DialogFooter>
           </form>

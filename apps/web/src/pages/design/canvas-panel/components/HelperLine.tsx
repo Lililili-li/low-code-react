@@ -15,6 +15,7 @@ const HelperLine = () => {
     state.components?.find((comp) => comp.id === currentCmpId),
   );
   const zoom = useDesignStore((state) => state.panelConfig.canvasPanel.zoom);
+  const mutually = useDesignStore((state) => state.panelConfig.mutually);
   const selectCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
 
   const state = useDesignStateStore((state) => state.state)
@@ -71,7 +72,7 @@ const HelperLine = () => {
 
   return (
     <>
-      {helperLineVisible && (
+      {helperLineVisible && !mutually && (
         <div style={{ fontSize: 22 }} className="helper-container">
           <div
             className="helper-text"

@@ -22,7 +22,7 @@ import { ScrollArea } from '@repo/ui/components/scroll-area';
 import ParamsTab from './ParamsTab';
 import BodyParamsTab from './BodyParamsTab';
 import HeaderParamsTab from './HeaderParamsTab';
-import { useDesignDatasourceStore } from '@/store/design/dataSource';
+import { useDesignDatasourceStore } from '@/store/design/datasource';
 import MonacoEditor from '@repo/ui/components/monaco-editor';
 import { Switch } from '@repo/ui/components/switch';
 import { testInterface } from '@repo/core/datasource';
@@ -44,11 +44,11 @@ const FormSchema = z.object({
   }),
   description: z.string(),
   timeout: z.object({
-    type: z.string(),
+    type: z.enum(['Normal', 'JsExpression']),
     value: z.string(),
   }),
   schedule: z.object({
-    type: z.string(),
+    type: z.enum(['Normal', 'JsExpression']),
     value: z.string(),
   }),
   initRequest: z.boolean(),
@@ -88,6 +88,7 @@ const FormSchema = z.object({
     }),
   ),
   handleResult: z.string(),
+  handleParams: z.string(),
   requestType: z.enum(['http', 'sql']),
   sqlParams: z.object({
     key: z.string(),
@@ -104,11 +105,11 @@ const createDefaultValues = (): FormValues => ({
   url: '',
   description: '',
   timeout: {
-    type: DataType.Normal,
+    type: 'Normal',
     value: '5000',
   },
   schedule: {
-    type: DataType.Normal,
+    type: 'Normal',
     value: '0',
   },
   initRequest: false,
@@ -152,6 +153,11 @@ const createDefaultValues = (): FormValues => ({
   console.log('处理返回后的结果.....');
   return res;
 }`,
+  handleParams: `function handleParams(params, state) { 
+ //params为请求参数，state为变量
+  console.log('处理返回后的结果.....',params);
+  return params;
+}`,
   requestType: 'http',
   sqlParams: {
     key: 'sql',
@@ -188,13 +194,45 @@ const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose
       resetTimer.current = null;
     }, 500);
     setParamsTab('params');
+    setResponse('')
   };
   const [openType, setOpenType] = useState<string>('');
   const openDialog = (type: string, detail?: DatasourceSchema) => {
     clearResetTimer();
     setVisible(true);
     setOpenType(type);
-    form.reset(detail ?? createDefaultValues());
+    
+    // Convert DatasourceSchema to match form schema expectations
+    const resetData = detail ? {
+      ...detail,
+      timeout: {
+        type: detail.timeout.type as 'Normal' | 'JsExpression',
+        value: detail.timeout.value,
+      },
+      schedule: {
+        type: detail.schedule.type as 'Normal' | 'JsExpression',
+        value: detail.schedule.value,
+      },
+      params: detail.params || [],
+      headerParams: detail.headerParams || [],
+      bodyParams: detail.bodyParams || {
+        type: 'none',
+        params: {
+          'form-data': [],
+          'x-www-form-urlencoded': [],
+          json: '',
+          none: '',
+        },
+      },
+      handleResult: detail.handleResult || '',
+      initRequest: detail.initRequest || false,
+      sqlParams: detail.sqlParams || {
+        key: '',
+        value: '',
+      },
+    } : createDefaultValues();
+    
+    form.reset(resetData);
   };
   useImperativeHandle(ref, () => ({
     openDialog,
@@ -304,7 +342,7 @@ const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose
                         接口名称
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="请输入接口名称" {...field} />
+                        <Input placeholder="请输入接口名称" {...field} disabled={openType === 'check'}/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -336,6 +374,7 @@ const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose
                             onChange={field.onChange}
                             placeholder="请选择请求方式"
                             className="w-full"
+                            disabled={openType === 'check'}
                           ></Select>
                         </FormControl>
                         <FormMessage />
@@ -360,7 +399,7 @@ const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose
                           </Tooltip>
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="请求地址(自动拼接全局配置的BaseURL)" />
+                          <Input {...field} placeholder="请求地址(自动拼接全局配置的BaseURL)" disabled={openType === 'check'}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -374,7 +413,7 @@ const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose
                     <FormItem className="flex flex-col gap-2">
                       <FormLabel>接口描述</FormLabel>
                       <FormControl>
-                        <Input placeholder="接口描述（可选）" {...field} />
+                        <Input placeholder="接口描述（可选）" {...field} disabled={openType === 'check'}/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -393,8 +432,9 @@ const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose
                               placeholder="超时时长（可选）"
                               value={field.value.value}
                               onChange={(e) =>
-                                field.onChange({ ...field.value, value: Number(e.target.value) })
+                                field.onChange({ ...field.value, value: e.target.value })
                               }
+                              type='text'
                             />
                             <BindVariableDialog
                               id={
@@ -445,8 +485,9 @@ const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose
                               placeholder="定时调用(ms)"
                               value={field.value.value}
                               onChange={(e) =>
-                                field.onChange({ ...field.value, value: Number(e.target.value) })
+                                field.onChange({ ...field.value, value: e.target.value })
                               }
+                              type='text'
                             />
                             <BindVariableDialog
                               id={
@@ -631,6 +672,38 @@ const SaveDatasource = ({ ref, onClose }: { ref: Ref<SaveDatasourceRef>; onClose
                   </FormControl>
                   <FormMessage />
                 </FormItem>
+                <FormField
+                  control={form.control}
+                  name="handleParams"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>
+                        <div className="flex items-center gap-2">
+                          <span>请求参数处理函数</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="size-4 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>参数解释：params为请求参数,state为变量</p>
+                              <p>返回值解释：返回值为处理后的请求参数</p>
+                              <p>GET请求时params会自动转换为url参数</p>
+                              <p>POST请求时params会自动转换为body参数</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </FormLabel>
+                      <FormControl>
+                        <MonacoEditor
+                          value={field.value}
+                          onChange={(value) => field.onChange(value)}
+                          language="javascript"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="handleResult"

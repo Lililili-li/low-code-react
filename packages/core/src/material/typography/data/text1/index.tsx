@@ -4,7 +4,7 @@ import { getVariableValue } from '../../../../variable';
 import CountUp from 'react-countup';
 import bgIcon from '../assets/text-1.png';
 
-const Text: FC<TextPropsSchema> = ({ props, style, state }) => {
+const Text: FC<TextPropsSchema> = ({ props, style, state, className }) => {
   const { option, dataType, variable } = props;
   const transformParts = [
     `rotateX(${style?.rotateX ?? 0}deg)`,
@@ -48,6 +48,7 @@ const Text: FC<TextPropsSchema> = ({ props, style, state }) => {
         transform: transformParts.join(' '),
         position: 'relative',
       }}
+      className={className}
     >
       <div
         style={{

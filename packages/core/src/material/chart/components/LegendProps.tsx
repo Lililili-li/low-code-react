@@ -92,8 +92,9 @@ const LegendProps = ({ option, updateOption }: LegendProps) => {
           <ColorPicker
             value={legendOption.textStyle?.color}
             onChange={(value) => {
-              legendOption.textStyle!.color = value;
-              updateOption('legend', legendOption);
+              const options = {...legendOption}
+              options.textStyle!.color = value;
+              updateOption('legend', options);
             }}
           />
         </div>

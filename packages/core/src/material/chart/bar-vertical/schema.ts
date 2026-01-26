@@ -170,7 +170,7 @@ export interface ChartPropsSchema extends ComponentSchema {
   props: {
     option?: EChartsOption;
     dataType?: '1' | '2' | '3'; // 1: 静态数据, 2: 动态数据, 3: 原始数据
-    data?: any[]
+    data?: string
   }
 }
 
@@ -199,5 +199,11 @@ export const ChartBarVerticalMeta = {
       dataType: '3'
     },
     className: ''
-  } as Pick<ChartPropsSchema, 'style' | 'visibleProp' | 'lock' | 'props' | 'animation' | 'className'>
+  } as Pick<ChartPropsSchema, 'style' | 'visibleProp' | 'lock' | 'props' | 'animation' | 'className'>,
+  events: [
+    {
+      type: 'chartClick',
+      label: '图表点击事件',
+    }
+  ]
 }

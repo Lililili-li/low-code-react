@@ -1,4 +1,4 @@
-import { ComponentSchema } from "@repo/core/types";
+import { ComponentSchema, EventSchema } from "@repo/core/types";
 import { Draft } from "immer";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
@@ -6,7 +6,6 @@ import { createHistoryRecord, useHistoryStore } from "../history";
 
 interface ComponentsState {
   components: ComponentSchema[]
-  currentCmp: ComponentSchema
   currentCmpId: string
   selectedCmpIds: string[]
   hoverId: string
@@ -26,12 +25,14 @@ interface ComponentsActions {
   addSelectedCmpIds: (id: string) => void
   updateSelectCmp: (components: ComponentSchema[]) => void
   setHoverId: (id: string) => void
+  addCurrentCmpEvents: (events: EventSchema) => void
+  updateCurrentCmpEvents: (event: Partial<EventSchema>) => void
+  removeCurrentCmpEvents: (id: string) => void
 }
 
 export const useDesignComponentsStore = create<ComponentsState & ComponentsActions>()(
   immer((set, get) => ({
     components: [] as ComponentSchema[],
-    currentCmp: {} as ComponentSchema,
     currentCmpId: '',
     selectedCmpIds: [] as string[],
     hoverId: '',
@@ -141,5 +142,34 @@ export const useDesignComponentsStore = create<ComponentsState & ComponentsActio
         state.hoverId = id
       })
     },
+    addCurrentCmpEvents: (event: EventSchema) => {
+      set((state) => {
+        const currentEvents = state.components.find((cmp) => cmp.id === state.currentCmpId)?.events || []
+        currentEvents.push(event)
+        state.components = state.components.map((cmp) => cmp.id === state.currentCmpId ? { ...cmp, events: currentEvents } as Draft<ComponentSchema> : cmp)
+      })
+    },
+    updateCurrentCmpEvents: (event: Partial<EventSchema>) => {
+      set((state) => {
+        const currentComponent = state.components.find((cmp) => cmp.id === state.currentCmpId)
+        if (!currentComponent) return
+        const currentEvents = currentComponent.events || []
+        const index = currentEvents.findIndex((e) => e.id === event.id)
+        if (index !== -1) {
+          currentEvents[index] = { ...currentEvents[index], ...event } as Draft<EventSchema>
+        }
+        state.components = state.components.map((cmp) => cmp.id === state.currentCmpId ? { ...cmp, events: currentEvents } as Draft<ComponentSchema> : cmp)
+      })
+    },
+    removeCurrentCmpEvents: (id: string) => {
+      set((state) => {
+        const currentEvents = state.components.find((cmp) => cmp.id === state.currentCmpId)?.events || []
+        const index = currentEvents.findIndex((e) => e.id === id)
+        if (index !== -1) {
+          currentEvents.splice(index, 1)
+        }
+        state.components = state.components.map((cmp) => cmp.id === state.currentCmpId ? { ...cmp, events: currentEvents } as Draft<ComponentSchema> : cmp)
+      })
+    }
   }))
 )

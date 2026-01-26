@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { PageSchema } from '@repo/core/types'
 import { useDesignStateStore } from './state'
 import { useDesignComponentsStore } from "./components";
-import { useDesignDatasourceStore } from "./dataSource";
+import { useDesignDatasourceStore } from "./datasource";
 
 export interface DesignState {
   panelConfig: {
@@ -14,7 +14,8 @@ export interface DesignState {
     },
     propPanel: {
       open: boolean
-    }
+    },
+    mutually: boolean
   }
   pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>
 }
@@ -25,6 +26,7 @@ export interface DesignActions {
   setCanvasPanel: (canvasPanel: Partial<DesignState['panelConfig']['canvasPanel']>) => void
   setPageSchema: (pageSchema: PageSchema) => void
   updatePageSchema: (key: keyof Omit<PageSchema, 'components' | 'state'>, value: any) => void
+  setMutually: (open: boolean) => void
 }
 
 export const useDesignStore = create<DesignState & DesignActions>()(
@@ -37,7 +39,8 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       },
       propPanel: {
         open: true
-      }
+      },
+      mutually: false
     },
     pageSchema: {
       width: 1920,
@@ -93,5 +96,10 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         Object.assign(state.panelConfig.canvasPanel, canvasPanel)
       })
     },
+    setMutually: (open: boolean) => {
+      set((state) => {
+        state.panelConfig.mutually = open
+      })
+    }
   }))
 );

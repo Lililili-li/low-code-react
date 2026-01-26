@@ -89,5 +89,6 @@ export const TextData1Meta = {
       variable: ''
     },
     className: '',
-  } as Pick<TextPropsSchema, 'style' | 'visibleProp' | 'lock' | 'props' | 'animation' | 'className'>
+  } as Pick<TextPropsSchema, 'style' | 'visibleProp' | 'lock' | 'props' | 'animation' | 'className'>,
+  events: []
 }

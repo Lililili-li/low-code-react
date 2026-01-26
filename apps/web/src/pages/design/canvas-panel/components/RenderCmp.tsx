@@ -1,10 +1,18 @@
 import materialCmp, { MaterialType } from '@repo/core/material';
 import { handleAnimationStyle, handleAnimationClass } from '@repo/core/compiler/animation';
-import { ComponentSchema } from '@repo/core/types';
+import { ActionSchema, ComponentSchema } from '@repo/core/types';
 import { useDesignComponentsStore } from '@/store/design/components';
-import { useDesignStateStore } from '@/store';
+import { useDesignStateStore, useDesignStore } from '@/store';
 import { getVariableValue } from '@repo/core/variable';
+import { useDesignDatasourceStore } from '@/store/design/datasource';
+import {
+  parseChangeVariableAction,
+  parseFetchApiAction,
+  parseNavToLinkAction,
+  parseNavToPageAction,
+} from '@repo/core/event';
 
+const eventsMap: Record<string, any> = {};
 const RenderCmp = () => {
   const components = useDesignComponentsStore((state) => state.components);
   const setHoverId = useDesignComponentsStore((state) => state.setHoverId);
@@ -12,6 +20,9 @@ const RenderCmp = () => {
   const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
   const hoverId = useDesignComponentsStore((state) => state.hoverId);
   const state = useDesignStateStore((state) => state.state);
+  const setState = useDesignStateStore((state) => state.setState);
+  const datasource = useDesignDatasourceStore((state) => state.datasource);
+  const mutually = useDesignStore((state) => state.panelConfig.mutually);
 
   const shouldVisible = (item: ComponentSchema) => {
     if (item.visibleProp?.type === 'normal') {
@@ -79,6 +90,35 @@ const RenderCmp = () => {
 
     const Component = materialCmp[item.type as MaterialType].component;
     const animationClass = handleAnimationClass(item.animation);
+    item.events?.forEach((event) => {
+      if (event.type === 'chartClick') return
+      eventsMap['on' + event.type.charAt(0).toUpperCase() + event.type.slice(1)] = (e: any) => {
+        event.actions.forEach((action) => {
+          if (action.type === 'changeVariable') {
+            const changeVariableFunc = parseChangeVariableAction(
+              action.value as ActionSchema['changeVariable'],
+            );
+            const copyState = { ...state };
+            changeVariableFunc?.(e, copyState);
+            setState?.(copyState);
+          }
+          if (action.type === 'navToPage') {
+            parseNavToPageAction(action.value as ActionSchema['navToPage']);
+          }
+          if (action.type === 'navToLink') {
+            parseNavToLinkAction(action.value as ActionSchema['navToLink']);
+          }
+          if (action.type === 'fetchAPI') {
+            parseFetchApiAction(
+              action.value as ActionSchema['fetchAPI'],
+              state,
+              datasource,
+              setState,
+            );
+          }
+        });
+      };
+    });
     return (
       shouldVisible(item) && (
         <div
@@ -96,31 +136,42 @@ const RenderCmp = () => {
             setHoverId('');
           }}
         >
-          <Component {...(item as any)} state={state}/>
-          <div
-            className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''} ${hoverId === item.id ? 'cmp-mask-hover' : ''}`}
-            id={`cmp-mask-id-${item.id}`}
-            data-lock={item.lock}
-            style={{
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-            }}
-          >
-            {currentCmpId === item.id && selectedCmpIds.length === 1 && !item.lock && (
-              <>
-                <div className="l-t-move move-corner scale" id="left-top-corner"></div>
-                <div className="r-t-move move-corner scale" id="right-top-corner"></div>
-                <div className="r-b-move move-corner scale" id="right-bottom-corner"></div>
-                <div className="l-b-move move-corner scale" id="left-bottom-corner"></div>
-                <div className="t-move move-rect scale" id="top-rect"></div>
-                <div className="b-move move-rect scale" id="bottom-rect"></div>
-                <div className="l-move move-rect scale" id="left-rect"></div>
-                <div className="r-move move-rect scale" id="right-rect"></div>
-              </>
-            )}
+          <div className='cmp-container'  {...eventsMap}>
+            <Component
+              {...(item as any)}
+              state={state}
+              onStateChange={(value) => {
+                setState(value);
+              }}
+              datasource={datasource}
+            />
           </div>
+          {!mutually && (
+            <div
+              className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''} ${hoverId === item.id ? 'cmp-mask-hover' : ''}`}
+              id={`cmp-mask-id-${item.id}`}
+              data-lock={item.lock}
+              style={{
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+              }}
+            >
+              {currentCmpId === item.id && selectedCmpIds.length === 1 && !item.lock && (
+                <>
+                  <div className="l-t-move move-corner scale" id="left-top-corner"></div>
+                  <div className="r-t-move move-corner scale" id="right-top-corner"></div>
+                  <div className="r-b-move move-corner scale" id="right-bottom-corner"></div>
+                  <div className="l-b-move move-corner scale" id="left-bottom-corner"></div>
+                  <div className="t-move move-rect scale" id="top-rect"></div>
+                  <div className="b-move move-rect scale" id="bottom-rect"></div>
+                  <div className="l-move move-rect scale" id="left-rect"></div>
+                  <div className="r-move move-rect scale" id="right-rect"></div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )
     );

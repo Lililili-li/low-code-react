@@ -57,6 +57,7 @@ const Category = ({ queryParams, setQueryParams, getProjects, categories }: Indu
             setQueryParams(newParams);
             getProjects(newParams);
           }}
+          itemClassName='pl-4 mb-2'
         />
       </ScrollArea>
     </div>

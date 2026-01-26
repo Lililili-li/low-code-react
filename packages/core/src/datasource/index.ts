@@ -1,6 +1,7 @@
 import { request } from "@repo/shared/request";
 import { DatasourceSchema, DataType } from "@repo/core/types";
 import { getVariableValue } from "../variable";
+import { scheduleTask, stringToFunction } from "@repo/shared/index";
 
 type MethodType = keyof typeof request
 
@@ -76,17 +77,20 @@ const paramsContentTypeMap = {
 }
 
 
-export const testInterface = (params: DatasourceSchema, state: Record<string, any>) => {
-
-  const { method, url } = params;
+const getInterfaceData = (params: DatasourceSchema, state: Record<string, any>) => {
   return new Promise((resolve, reject) => {
-    const queryParams = parseQueryParams(params.params, state);
-    const bodyParams = params.requestType === 'http' ? parseBodyParams(params.bodyParams, state) : { [params.sqlParams?.key || '']: params.sqlParams?.value || '' };
+    const { method, url, timeout } = params;
+    const queryParams = parseQueryParams(params.params, state)
+    const arrangeQueryParams = handleParams(params, state, {...queryParams})
+    const bodyParams = params.requestType === 'http' ? handleParams(params, state, parseBodyParams(params.bodyParams, state)) : { [params.sqlParams?.key || '']: params.sqlParams?.value || '' };
+    const arrangeBodyParams = handleParams(params, state, {...bodyParams})
     const headerParams = parseQueryParams(params.headerParams, state);
+    const timeoutValue = timeout.type === DataType.Normal ? Number(timeout.value) : getVariableValue(timeout.value as string, state);
     if (method.toLowerCase() === 'post') {
-      request[method.toLowerCase() as MethodType](url, bodyParams, {
-        params: queryParams,
-        headers: { ...headerParams, 'Content-Type': paramsContentTypeMap[params.bodyParams?.type as keyof typeof paramsContentTypeMap] }
+      request[method.toLowerCase() as MethodType](url, arrangeBodyParams, {
+        params: arrangeQueryParams,
+        headers: { ...headerParams, 'Content-Type': paramsContentTypeMap[params.bodyParams?.type as keyof typeof paramsContentTypeMap] },
+        timeout: Number(timeoutValue || 60 * 1000)
       }).then((res) => {
         resolve(res);
       }).catch((err) => {
@@ -94,8 +98,9 @@ export const testInterface = (params: DatasourceSchema, state: Record<string, an
       })
     } else {
       request[method.toLowerCase() as MethodType](url, {
-        params: queryParams,
-        headers: headerParams
+        params: arrangeQueryParams,
+        headers: headerParams,
+        timeout: Number(timeoutValue || 60 * 1000)
       }).then((res) => {
         resolve(res);
       }).catch((err) => {
@@ -103,4 +108,32 @@ export const testInterface = (params: DatasourceSchema, state: Record<string, an
       })
     }
   })
+}
+
+export const handleParams = (datasourceItem: DatasourceSchema, state: Record<string, any>, params: any) => {
+  const functions = stringToFunction(datasourceItem.handleParams || '', { params: ['params', 'state'] })
+  return functions?.(params, state)
+}
+
+
+export const testInterface = async (params: DatasourceSchema, state: Record<string, any>) => {
+  return await getInterfaceData(params, state)
+}
+
+
+export const sendRequest = async (params: DatasourceSchema, state: Record<string, any>) => {
+  const res = await getInterfaceData(params, state)
+  const functions = stringToFunction(params.handleResult || '', { params: ['res', 'state'] })
+  const { schedule, initRequest = false } = params
+  const scheduleValue = schedule.type === DataType.Normal ? Number(schedule.value) : Number(getVariableValue(schedule.value as string, state))
+  // 开启定时任务如果 initRequest 为 true立即执行， schedule为0只执行一次
+  scheduleTask(scheduleValue, () => {
+    functions?.(res, state)
+  }, initRequest)
+}
+
+export const callSendRequest = async (params: DatasourceSchema, state: Record<string, any>) => {
+  const res = await getInterfaceData(params, state)
+  const functions = stringToFunction(params.handleResult || '', { params: ['res', 'state'] })
+  await functions?.(res, state)
 }

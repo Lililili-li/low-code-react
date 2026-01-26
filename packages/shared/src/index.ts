@@ -18,3 +18,26 @@ export const isFunction = (value: any) => typeof value === 'function'
 
 export const byteToMB = (byte: number) => byte / 1024 / 1024
 
+// 导出定时任务相关工具
+export {
+  ScheduleTask,
+  TaskManager,
+  createScheduleTask,
+  scheduleTask,
+  delayTask,
+  type ScheduleTaskOptions
+} from './schedule-task';
+
+// 导出函数字符串处理工具
+export {
+  SafeFunctionParser,
+  stringToFunction,
+  executeFunctionString,
+  simpleStringToFunction,
+  validateFunctionSyntax,
+  extractFunctionParams,
+  smartParseFunction,
+  type FunctionParseOptions,
+  type FunctionExecutionResult
+} from './handleFun';
+

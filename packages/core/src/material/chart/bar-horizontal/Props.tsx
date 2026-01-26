@@ -123,46 +123,26 @@ const Props = ({
     });
   };
 
-  const [staticData, setStaticData] = useState(cloneDeep(dataset));
-
-  const handleSaveStaticData = () => {
-    updateOption('dataset', { ...option.dataset, source: staticData.source });
-  };
-
-  const handleChangeDataType = (value: '1' | '2' | '3') => {
-    const newSchema = { ...schema };
-    const newProps = { ...newSchema.props };
-    const newOption = { ...schema?.props.option };
-    newProps.dataType = value;
-    if (value === '3') {
-      newOption!.dataset = dataset;
-    }
-    updateSchema?.({
-      ...newSchema,
-      props: {
-        ...newProps,
-        option: newOption,
-      },
-    });
-  };
-
-  const handleBindVariable = (value: string) => {
-    updateSchema?.({
-      ...schema,
-      props: {
-        ...schema?.props,
-        data: value
-      },
-    });
-  }
+  const originDataset = cloneDeep(dataset);
 
   return (
-    <div className="props-panel flex flex-col gap-0">
-      <div className="item flex justify-between gap-2 items-center px-2 mt-2">
+    <div className="props-panel flex flex-col gap-2">
+      <div className="item flex justify-between gap-2 items-center px-2 mt-4">
         <div className="shrink-0 w-[25%]">
           <Label>数据类型</Label>
         </div>
-        <Select value={dataType} onValueChange={handleChangeDataType}>
+        <Select
+          value={dataType}
+          onValueChange={(value) => {
+            updateSchema?.({
+              ...schema,
+              props: {
+                ...schema?.props,
+                dataType: value as '1' | '2' | '3',
+              },
+            });
+          }}
+        >
           <SelectTrigger size="sm" className="flex-1">
             <div className="flex items-center gap-2 justify-between flex-1 relative">
               <SelectValue placeholder="请选择数据类型"></SelectValue>
@@ -184,7 +164,7 @@ const Props = ({
             </SelectGroup>
           </SelectContent>
         </Select>
-        {dataType === '2' && bindVariable?.({ key: '', onChange: handleBindVariable, onClear: () => {} })}
+        {dataType === '2' && bindVariable?.({ key: '', onChange: () => {}, onClear: () => {} })}
         {dataType === '1' && (
           <Dialog>
             <DialogTrigger asChild>
@@ -198,12 +178,14 @@ const Props = ({
                 <DialogDescription>静态数据编辑用作展示图形数据</DialogDescription>
               </DialogHeader>
               <MonacoEditor
-                value={JSON.stringify(staticData, null, 2)}
+                value={JSON.stringify(originDataset, null, 2)}
                 onChange={(value) => {
                   try {
                     const dataSource = JSON.parse(value);
-                    setStaticData(dataSource);
-                  } catch (error) {}
+                    updateOption('dataset', { ...option.dataset, source: dataSource });
+                  } catch (error) {
+                    console.error(error, 'Invalid JSON Schema');
+                  }
                 }}
                 language="json"
                 height={'600px'}
@@ -216,7 +198,7 @@ const Props = ({
                   </Button>
                 </DialogClose>
                 <DialogClose asChild>
-                  <Button type="submit" size="sm" onClick={handleSaveStaticData}>
+                  <Button type="submit" size="sm">
                     保存
                   </Button>
                 </DialogClose>

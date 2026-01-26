@@ -61,7 +61,6 @@ const VariablePanel = () => {
     variable: { key: string; defaultValue: string; type: string },
     tip = '变量保存成功',
   ) => {
-    
     updateState(variable.key, variable.defaultValue);
     saveVariableRef.current?.closeDialog();
     toast.success(tip);

@@ -5,6 +5,7 @@ import { CirclePlus, Plus, X } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
 import { ScrollArea, ScrollBar } from './scroll-area';
 import { Button } from './button';
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
 export interface TabItem {
   id: string;
@@ -32,7 +33,6 @@ function ScrollableTabs({
   className,
 }: ScrollableTabsProps) {
   const handleTabClick = (tabId: string, e: React.MouseEvent) => {
-    console.log(tabId, 'tabId');
     const target = e.target as HTMLElement;
     if (target.closest('[data-close-button]')) {
       return;
@@ -73,7 +73,7 @@ function ScrollableTabs({
           {tabs.length === 0 && (
             <button
               data-close-button
-              onClick={onAddTab}
+              onClick={() => onAddTab?.()}
               className="ml-0.5 text-sm shrink-0 px-2 py-1 gap-1 flex items-center justify-center rounded-sm hover:bg-muted-foreground/20 transition-colors"
             >
               <span>添加动作</span>
@@ -84,12 +84,19 @@ function ScrollableTabs({
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       {showAddButton && (
-        <button
-          onClick={onAddTab}
-          className="flex h-full w-9 shrink-0 items-center justify-center border-l border-[#3c3c3c] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        >
-          <Plus className="size-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => onAddTab?.()}
+              className="flex h-full w-9 shrink-0 items-center justify-center border-l border-[#3c3c3c] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            >
+              <Plus className="size-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span>添加动作</span>
+          </TooltipContent>
+        </Tooltip>
       )}
     </div>
   );

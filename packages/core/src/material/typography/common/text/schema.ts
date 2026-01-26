@@ -64,5 +64,6 @@ export const TextMeta = {
       variable: ''
     },
     className: '',
-  } as Pick<TextPropsSchema, 'style' | 'visibleProp' | 'lock' | 'props' | 'animation' | 'className'>
+  } as Pick<TextPropsSchema, 'style' | 'visibleProp' | 'lock' | 'props' | 'animation' | 'className'>,
+  events: []
 }

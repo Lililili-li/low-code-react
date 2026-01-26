@@ -79,7 +79,7 @@ const Select = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               setVisible(false);
-                              savePageRef.current?.openDialog();
+                              savePageRef.current?.openDialog(item);
                             }}
                           >
                             <Edit className="size-3.5" />

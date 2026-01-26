@@ -1,7 +1,7 @@
 import { PageSchema } from "@repo/core/types"
 import { request } from "@repo/shared/request"
 
-interface CreatePageParams {
+export interface CreatePageParams {
   name: string
   application_id: number
 }
@@ -16,7 +16,7 @@ const createPage = (data: CreatePageParams) => {
   return request.post('/application/page', data)
 }
 
-const updatePage = (data: CreatePageParams, id: string) => {
+const updatePage = (data: Omit<CreatePageParams, 'application_id'>, id: string) => {
   return request.put(`/application/page/${id}`, data)
 }
 

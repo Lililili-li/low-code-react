@@ -124,6 +124,7 @@ const ProjectSelect = ({ queryParams, setQueryParams, getList }: IndustryProps) 
             setQueryParams(newParams);
             getList(newParams);
           }}
+          itemClassName='pl-4 mb-2'
         />
       </ScrollArea>
       {/* TODO后期放到系统设置中 */}

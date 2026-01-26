@@ -1,5 +1,3 @@
-import MonacoEditor from '@repo/ui/components/monaco-editor';
-import Select from '@/components/Select';
 import { Button } from '@repo/ui/components/button';
 import {
   Dialog,
@@ -11,8 +9,8 @@ import {
   DialogTitle,
 } from '@repo/ui/components/dialog';
 import { Label } from '@repo/ui/components/label';
-import { CirclePlus, Save, Search, SquarePen, Trash2 } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { CirclePlus, Save, Search, SquarePen, Trash2, TriangleAlert } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import Empty from '@/components/Empty';
 import { ScrollableTabs } from '@repo/ui/components/scrollable-tabs';
@@ -22,154 +20,222 @@ import ChangeVariable from './ChangeVariable';
 import NavToPage from './NavToPage';
 import NavToLink from './NavToLink';
 import FetchAPI from './FetchAPI';
+import { useDesignComponentsStore } from '@/store/design/components';
+import { cloneDeep } from 'lodash-es';
+import { ActionSchema, DataType, EventSchema, EventType } from '@repo/core/types';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@repo/ui/components/accordion';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@repo/ui/components/alert-dialog';
+import { Checkbox } from '@repo/ui/components/checkbox';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 
 const actionType = [
   {
     label: '修改变量',
-    type: '1',
+    type: 'changeVariable',
   },
   {
     label: '跳转当前应用页面',
-    type: '2',
+    type: 'navToPage',
   },
   {
     label: '跳转链接',
-    type: '3',
+    type: 'navToLink',
   },
   {
     label: '请求接口',
-    type: '4',
+    type: 'fetchAPI',
   },
 ];
 
-const eventType: { type: EventType; label: string; actions?: ActionProps[] }[] = [
-  {
-    type: 'click',
-    label: '单击事件',
-  },
-  {
-    type: 'doubleClick',
-    label: '双击事件',
-  },
-  {
-    type: 'mouseenter',
-    label: '鼠标移入事件',
-  },
-  {
-    type: 'mouseleave',
-    label: '鼠标移出事件',
-  },
-  {
-    type: 'mounted',
-    label: '页面挂载事件',
-  },
-  {
-    type: 'unmounted',
-    label: '页面卸载事件',
-  },
-];
 
 const EventConfigDialog = ({
+  eventType,
   events,
-  setEvents,
   openType,
-  icon,
-  updateEvent,
+  trigger,
+  currentEvent,
+  onSave,
 }: {
-  events: EventProps[];
-  setEvents: (events: EventProps[]) => void;
+  eventType: {
+    common: { type: string; label: string }[];
+    internal: { type: string; label: string }[];
+  };
+  events: EventSchema[];
   openType: 'create' | 'update';
-  icon: React.ReactNode;
-  updateEvent?: EventProps;
+  trigger: React.ReactNode;
+  currentEvent: EventSchema;
+  onSave: (event: EventSchema) => void;
 }) => {
-  const cloneEvents = useRef(JSON.parse(JSON.stringify(events)) as EventProps[]); // 深拷贝的events随便改
-  useEffect(() => {
-    cloneEvents.current = JSON.parse(JSON.stringify(events)) as EventProps[];
-  }, [events]);
-
   const [visible, setVisible] = useState(false);
 
-  const [activeEvent, setActiveEvent] = useState<EventProps>({} as EventProps); // 当前选中的事件
+  const [activeEvent, setActiveEvent] = useState({} as { label: string; type: string }); // 当前选中的事件
 
-  const handleChangeEvent = (item: EventProps) => {
-    setActiveEvent(item);
+  const [performAction, setPerformAction] = useState<ActionSchema>({
+    changeVariable: `function ChangeVariable(event, state) {
+  console.log('ChangeVariable called with state:', state);
+}`,
+    navToPage: {
+      pageId: '',
+      delay: 0,
+      linkParams: [
+        {
+          key: '',
+          value: '',
+          dataType: DataType.Normal,
+        },
+      ],
+    },
+    navToLink: {
+      linkUrl: '',
+      isBlank: false,
+      delay: 0,
+      linkParams: [
+        {
+          key: '',
+          value: '',
+          dataType: DataType.Normal,
+        },
+      ],
+    },
+    fetchAPI: {
+      datasourceId: [],
+    },
+  });
+
+  const handleChangeEvent = (item: { label: string; type: string }) => {
+    setActiveEvent({ label: item.label, type: item.type });
   };
 
-  const [actions, setActions] = useState<ActionProps[]>([] as ActionProps[]);
-  const [activeAction, setActiveAction] = useState<ActionProps>({} as ActionProps); // 当前选中的动作
+  const [actionTabs, setActionTabs] = useState<EventSchema['actions']>(
+    [] as EventSchema['actions'],
+  );
+  const [activeAction, setActiveAction] = useState<{ type: string; label: string }>(
+    {} as { type: string; label: string },
+  ); // 当前选中的动作
 
-  const handleActionClose = (id: string) => {
-    const newActions = actions.filter((action) => action.id !== id);
-    setActions(newActions);
+  const handleActionClose = (type: string) => {
+    const newActions = actionTabs.filter((action) => action.type !== type);
+    setActionTabs(newActions);
+    if (type === activeAction.type) {
+      setActiveAction({ type: newActions[0].type, label: newActions[0].label });
+    }
   };
   const handleChangeAction = (action: { label: string; type: string }) => {
-    activeAction.type = action.type;
-    activeAction.label = action.label;
-    setActiveAction(activeAction);
-    const existingAction = actions.find((a) => a.id === activeAction.id);
-    if (existingAction) {
-      Object.assign(existingAction, activeAction);
+    setActiveAction({ type: action.type, label: action.label });
+    const existingAction = actionTabs.find((a) => a.type === action.type);
+    if (!existingAction) {
+      handleAddAction(action);
     }
-    setActions([...actions]);
   };
-  const handleAddAction = () => {
-    const newAction: ActionProps = {
+
+  const handleAddAction = (action?: { label: string; type: string }) => {
+    const nextAction =
+      actionType.find((item) => !actionTabs.some((a) => a.type === item.type)) || actionType[0];
+    const newAction: { id: string; type: string; value: ActionSchema; label: string } = {
       id: Date.now().toString(),
-      type: actionType[0].type,
-      label: actionType.find((item) => item.type === '1')!.label,
+      type: action?.type || nextAction.type,
+      value: {
+        changeVariable: '',
+      },
+      label: action?.label || nextAction.label,
     };
-    setActions([...actions, newAction]);
+    if (actionTabs.length >= actionType.length) {
+      toast.warning('暂无更多动作可以添加');
+      return;
+    }
+    setActionTabs([...actionTabs, newAction]);
+    setActiveAction({ type: newAction.type, label: newAction.label });
     return newAction;
   };
 
   const [filterAction, setFilterAction] = useState('');
 
   const handleAddEvent = () => {
-    const nextEvent = eventType.find((type) => !events.find((e) => e.type === type.type));
-    if (events.length === eventType.length || !nextEvent) {
+    const nextEventType = eventType.common.find(
+      (item) => !events.find((e) => e.type === item.type),
+    );
+    if (!nextEventType) {
       toast.warning('暂无更多事件可以添加');
       return;
     }
+    setActiveEvent({ label: nextEventType.label, type: nextEventType.type });
     const newAction = handleAddAction();
-    setActiveEvent(nextEvent);
-    setActiveAction(newAction);
+    if (newAction) {
+      setActiveAction(newAction);
+    }
     setVisible(true);
   };
 
   const handleUpdateEvent = () => {
-    if (updateEvent && updateEvent.actions) {
-      setActiveEvent(updateEvent);
-      setActions([...updateEvent.actions]);
-      setActiveAction(updateEvent.actions[0] || ({} as ActionProps));
-    }
+    setActionTabs(currentEvent.actions);
+    setActiveEvent({ label: currentEvent.name, type: currentEvent.type });
+    setActiveAction(
+      currentEvent.actions[0] || ({} as { label: string; type: string; value: ActionSchema }),
+    );
     setVisible(true);
   };
 
   const handleSaveEvent = () => {
-    activeEvent.actions = actions;
-    const existingIndex = events.findIndex((e) => e.type === activeEvent.type);
-    if (existingIndex !== -1) {
-      const newEvents = [...events];
-      newEvents[existingIndex] = activeEvent;
-      setEvents(newEvents);
+    const newActionTabs = cloneDeep(actionTabs);
+    newActionTabs.forEach((action) => {
+      action.value = performAction[action.type as keyof ActionSchema] as any;
+    });
+    if (currentEvent.id) {
+      onSave({
+        ...currentEvent,
+        name: activeEvent.label,
+        type: activeEvent.type as EventType,
+        actions: newActionTabs,
+      });
     } else {
-      setEvents([...events, activeEvent]);
+      const newEvent = {
+        id: Date.now().toString(),
+        name: activeEvent.label,
+        type: activeEvent.type as EventType,
+        actions: newActionTabs,
+        active: true,
+      };
+      onSave(newEvent);
     }
+    setActionTabs([]);
+    setVisible(false);
   };
+
+  useEffect(() => {
+    if (currentEvent) {
+      const actionMap: Record<string, ActionSchema> = {};
+      currentEvent?.actions?.forEach((item) => {
+        actionMap[item.type] = item.value;
+      });
+      setPerformAction({
+        ...performAction,
+        ...actionMap,
+      });
+    }
+  }, [currentEvent]);
   return (
-    <Dialog open={visible} onOpenChange={setVisible}>
+    <Dialog
+      open={visible}
+      onOpenChange={() => {
+        setActionTabs([]);
+        setVisible(false);
+      }}
+    >
       <Button
         variant="ghost"
         size="sm"
         onClick={() => (openType === 'create' ? handleAddEvent() : handleUpdateEvent())}
       >
-        {icon}
+        {trigger}
       </Button>
       <DialogContent className="p-4 dark:bg-[#18181b] w-auto gap-4">
         <DialogHeader>
@@ -181,14 +247,20 @@ const EventConfigDialog = ({
             <div className="left border-r w-[25%] pr-4 flex flex-col shrink-0">
               <div className="event-list text-sm dark:bg-[#2c2c32] flex flex-col gap-1 p-2 rounded-[4px] border flex-1">
                 <Label className="mb-2 text-gray-300">基础事件</Label>
-                {eventType.map((item) => {
+                {eventType.common.map((item) => {
                   return (
                     <button
                       className={`pl-4 relative w-full text-left disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed transition-all rounded-[4px] duration-300 p-2 dark:hover:bg-[#3f3f45] hover:bg-gray-100  ${activeEvent?.type === item.type ? 'dark:bg-[#3f3f45]' : 'dark:hover:text-white'}`}
                       disabled={
-                        !!events.find(
-                          (event) => event.type === item.type && item.type !== activeEvent?.type,
-                        )
+                        currentEvent.id
+                          ? !!events.find(
+                              (event) =>
+                                event.type === item.type && item.type !== currentEvent?.type,
+                            )
+                          : !!events.find(
+                              (event) =>
+                                event.type === item.type && item.type !== activeEvent?.type,
+                            )
                       }
                       key={item.type}
                       onClick={() => handleChangeEvent(item)}
@@ -200,23 +272,49 @@ const EventConfigDialog = ({
                     </button>
                   );
                 })}
-                <Label className="my-2 text-gray-300">内置事件</Label>
-                <button
-                  className={`pl-4 relative w-full text-left disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed transition-all rounded-[4px] duration-300 p-2 dark:hover:bg-[#3f3f45] hover:bg-gray-100 `}
-                >
-                  选择完成
-                  {/* {activeEvent?.type === item.type && (
-                    <div className="line absolute top-0 left-0 h-full w-1 rounded-sm bg-primary"></div>
-                  )} */}
-                </button>
+                {eventType.internal && eventType.internal.length > 0 && (
+                  <Label className="my-2 text-gray-300">内置事件</Label>
+                )}
+                {eventType.internal &&
+                  eventType.internal.map((item) => {
+                    return (
+                      <button
+                        className={`pl-4 relative w-full text-left disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed transition-all rounded-[4px] duration-300 p-2 dark:hover:bg-[#3f3f45] hover:bg-gray-100  ${activeEvent?.type === item.type ? 'dark:bg-[#3f3f45]' : 'dark:hover:text-white'}`}
+                        disabled={
+                          currentEvent.id
+                            ? !!events.find(
+                                (event) =>
+                                  event.type === item.type && item.type !== currentEvent?.type,
+                              )
+                            : !!events.find(
+                                (event) =>
+                                  event.type === item.type && item.type !== activeEvent?.type,
+                              )
+                        }
+                        key={item.type}
+                        onClick={() => handleChangeEvent(item)}
+                      >
+                        {item.label}
+                        {activeEvent?.type === item.type && (
+                          <div className="line absolute top-0 left-0 h-full w-1 rounded-sm bg-primary"></div>
+                        )}
+                      </button>
+                    );
+                  })}
               </div>
             </div>
             <div className="right flex-1 pl-4 shrink-0 overflow-hidden">
               <ScrollableTabs
-                tabs={actions || []}
-                activeTab={activeAction.id}
+                tabs={
+                  actionTabs.map((item) => ({
+                    id: item.type,
+                    label: item.label,
+                    closable: true,
+                  })) || []
+                }
+                activeTab={activeAction.type}
                 onTabChange={(id) => {
-                  const action = actions.find((item) => item.id === id);
+                  const action = actionTabs.find((item) => item.type === id);
                   if (action) {
                     setActiveAction(action);
                   }
@@ -226,9 +324,9 @@ const EventConfigDialog = ({
                 showAddButton={true}
               />
               <>
-                {actions && actions.length > 0 ? (
+                {actionTabs && actionTabs.length > 0 ? (
                   <div className="flex dark:bg-[#2c2c32] gap-1 p-2 rounded-[4px] border mt-4 h-[500px]">
-                    <div className="left pr-4 border-r w-[30%] h-full flex flex-col gap-2">
+                    <div className="left pr-4 border-r w-[30%] h-full flex flex-col gap-2 shrink-0">
                       <div className="filter-wrap">
                         <InputGroup className="h-[32px]">
                           <InputGroupInput
@@ -243,7 +341,7 @@ const EventConfigDialog = ({
                           </InputGroupAddon>
                         </InputGroup>
                       </div>
-                      <div className="action-list text-sm">
+                      <div className="action-list text-sm flex flex-col gap-1">
                         {actionType.map((item) => {
                           return (
                             <button
@@ -261,10 +359,47 @@ const EventConfigDialog = ({
                       </div>
                     </div>
                     <div className="right pl-4 flex-1">
-                      {activeAction?.type === '1' && <ChangeVariable />}
-                      {activeAction?.type === '2' && <NavToPage />}
-                      {activeAction?.type === '3' && <NavToLink />}
-                      {activeAction?.type === '4' && <FetchAPI />}
+                      {activeAction?.type === 'changeVariable' && (
+                        <ChangeVariable
+                          value={performAction.changeVariable || ''}
+                          onValueChange={(value) =>
+                            setPerformAction((prev) => ({ ...prev, changeVariable: value }))
+                          }
+                        />
+                      )}
+                      {activeAction?.type === 'navToPage' && (
+                        <NavToPage
+                          value={performAction.navToPage}
+                          onValueChange={(value) =>
+                            setPerformAction({
+                              ...performAction,
+                              navToPage: value,
+                            })
+                          }
+                        />
+                      )}
+                      {activeAction?.type === 'navToLink' && (
+                        <NavToLink
+                          value={performAction.navToLink || ({} as ActionSchema['navToLink'])}
+                          onValueChange={(value) =>
+                            setPerformAction({
+                              ...performAction,
+                              navToLink: value,
+                            })
+                          }
+                        />
+                      )}
+                      {activeAction?.type === 'fetchAPI' && (
+                        <FetchAPI
+                          value={performAction.fetchAPI?.datasourceId || []}
+                          onValueChange={(value: string[]) => {
+                            setPerformAction({
+                              ...performAction,
+                              fetchAPI: { datasourceId: value },
+                            });
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -281,12 +416,10 @@ const EventConfigDialog = ({
                 取消
               </Button>
             </DialogClose>
-            <DialogClose asChild>
-              <Button size="sm" onClick={handleSaveEvent}>
-                <Save />
-                <span>保存</span>
-              </Button>
-            </DialogClose>
+            <Button size="sm" onClick={handleSaveEvent}>
+              <Save />
+              <span>保存</span>
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>
@@ -294,57 +427,133 @@ const EventConfigDialog = ({
   );
 };
 
-interface ActionProps {
-  id: string;
-  type: '1' | '2' | '3' | '4' | string;
-  label: string;
-}
-
-type EventType = 'click' | 'doubleClick' | 'mouseenter' | 'mouseleave' | 'mounted' | 'unmounted';
-
-interface EventProps {
-  type: EventType;
-  label: string;
-  actions?: ActionProps[];
-}
 // 设置变量  使用变量  或者静态数据
-const EventConfig = () => {
-  const [eventList, setEventList] = useState<EventProps[]>([]);
+const EventConfig = ({ selectEvents }: { selectEvents: { type: string; label: string }[] }) => {
+  const events = useDesignComponentsStore(
+    (state) => state.components.find((item) => item.id === state.currentCmpId)?.events,
+  );
+  const addCurrentCmpEvents = useDesignComponentsStore((state) => state.addCurrentCmpEvents);
+  const updateCurrentCmpEvents = useDesignComponentsStore((state) => state.updateCurrentCmpEvents);
+  const removeCurrentCmpEvents = useDesignComponentsStore((state) => state.removeCurrentCmpEvents);
+
+  const eventType = {
+    common: [
+      {
+        type: 'click',
+        label: '单击事件',
+      },
+      {
+        type: 'doubleClick',
+        label: '双击事件',
+      },
+      {
+        type: 'mouseEnter',
+        label: '鼠标移入事件',
+      },
+      {
+        type: 'mouseLeave',
+        label: '鼠标移出事件',
+      },
+      {
+        type: 'mounted',
+        label: '组件挂载事件',
+      },
+      {
+        type: 'unmounted',
+        label: '组件卸载事件',
+      },
+    ],
+    internal: selectEvents,
+  };
 
   return (
-    <div className="data-config-container flex flex-col gap-2">
+    <div className="data-config-container flex flex-col gap-2 px-2">
       <div className="flex gap-2 justify-between">
         <Label>交互事件</Label>
         <EventConfigDialog
-          events={eventList}
-          setEvents={setEventList}
+          eventType={eventType}
+          events={events || []}
           openType="create"
-          icon={<CirclePlus />}
+          trigger={<CirclePlus />}
+          currentEvent={{} as EventSchema}
+          onSave={(event) => {
+            addCurrentCmpEvents(event);
+          }}
         />
       </div>
       <ScrollArea className="flex-1 min-h-0">
-        {eventList.length > 0 ? (
+        {events && events?.length > 0 ? (
           <div className="flex flex-col gap-2">
-            {eventList.map((item) => {
+            {events?.map((item) => {
               return (
-                <div className="item rounded-[4px] border w-full p-2 py-1 text-sm" key={item.label}>
+                <div className="item rounded-[4px] border w-full p-2 py-1 text-sm" key={item.id}>
                   <div className="info flex flex-col">
                     <div className="operation flex justify-between items-center">
-                      <Label className="dark:text-gray-400">{item.label}</Label>
+                      <Label className="dark:text-gray-400 text-[16px]">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Checkbox
+                              checked={item.active}
+                              onCheckedChange={(value) => {
+                                updateCurrentCmpEvents({ ...item, active: value as boolean });
+                              }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>启用事件</TooltipContent>
+                        </Tooltip>
+                        <span>{item.name}</span>
+                      </Label>
                       <div className="flex items-center">
                         <EventConfigDialog
-                          events={eventList}
-                          setEvents={setEventList}
+                          eventType={eventType}
+                          events={events}
                           openType="update"
-                          icon={<SquarePen />}
-                          updateEvent={item}
+                          trigger={<SquarePen />}
+                          currentEvent={item}
+                          onSave={(event) => {
+                            updateCurrentCmpEvents(event);
+                          }}
                         />
-                        <Button size="sm" variant="ghost">
-                          <Trash2 className="size-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="ghost">
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex gap-2 items-center">
+                                <TriangleAlert className="text-amber-500 size-4" />
+                                删除事件
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                确定要删除选中的事件吗？
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>取消</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => {
+                                  removeCurrentCmpEvents(item.id);
+                                }}
+                              >
+                                确定
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
-                    <div>{item.actions?.map((item) => item.label)?.join(',')}</div>
+                    <div className="flex gap-2 flex-wrap text-[12px] mt-1">
+                      {item.actions?.map((action) => (
+                        <div
+                          className="rounded-[4px] border p-1 border-primary text-primary"
+                          key={action.type}
+                        >
+                          {action.label}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               );
