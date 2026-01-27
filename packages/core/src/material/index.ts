@@ -1,5 +1,6 @@
 import { ChartBarHorizontalMeta } from "./chart/bar-horizontal/schema";
 import { ChartBarVerticalMeta } from "./chart/bar-vertical/schema";
+import { ImageMeta } from "./media/image/schema";
 import { TextMeta } from "./typography/common/text/schema";
 import { TextData1Meta } from "./typography/data/text1/schema";
 
@@ -7,7 +8,8 @@ export const materialCmp = {
   'chart-bar-vertical': ChartBarVerticalMeta,
   'chart-bar-horizontal': ChartBarHorizontalMeta,
   'text': TextMeta,
-  'text-data-1': TextData1Meta
+  'text-data-1': TextData1Meta,
+  'image': ImageMeta
 } as const;
 
 export type MaterialType = keyof typeof materialCmp;
@@ -61,7 +63,7 @@ export const materialCmpList = [
     cover: 'https://hhxy511.oss-cn-beijing.aliyuncs.com/uploads/text-data-1.png'
   },
   {
-    id: 'photo',
+    id: 'image',
     category_id: '3',
     name: '图片',
     cover: 'https://hhxy511.oss-cn-beijing.aliyuncs.com/uploads/photo.png'

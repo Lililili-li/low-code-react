@@ -19,21 +19,6 @@ import { defaultOption, TextPropsSchema } from './schema';
 import ColorPicker from '@repo/ui/components/color-picker';
 import { Switch } from '@repo/ui/components/switch';
 
-const alignOptions = [
-  {
-    label: '左对齐',
-    value: 'left',
-  },
-  {
-    label: '居中',
-    value: 'center',
-  },
-  {
-    label: '右对齐',
-    value: 'right',
-  },
-];
-
 const fontWeightOptions = [
   {
     label: 'normal',

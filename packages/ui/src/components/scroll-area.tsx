@@ -25,7 +25,7 @@ const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
             viewportClassName
           )}
         >
-          <div className="w-full">
+          <div className="w-full table table-fixed">
             {children}
           </div>
         </ScrollAreaPrimitive.Viewport>

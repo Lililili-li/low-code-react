@@ -80,7 +80,6 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       const cmpHeight = style.height as number | undefined;
       const x = (e.clientX - rect.left - ((cmpWidth || 0) * zoom) / 2) / zoom;
       const y = (e.clientY - rect.top - ((cmpHeight || 0) * zoom) / 2) / zoom;
-
       const component: ComponentSchema = {
         id: new Date().getTime().toString(),
         type: cmpType,
@@ -90,7 +89,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
           left: Number(x.toFixed(0)),
           top: Number(y.toFixed(0)),
         },
-        visibleProp: schemaMeta.visibleProp as VisibleConfig ,
+        visibleProp: schemaMeta.visibleProp as VisibleConfig,
         lock: (schemaMeta.lock ?? false) as boolean,
         animation: {
           enable: false, // 是否开启动画
@@ -101,7 +100,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
           direction: 'normal', // 动画方向
           speed: 'linear', // 动画缓动函数
         },
-        props: schemaMeta.props || {},
+        props: (cmpData.url ? { ...schemaMeta.props, option: { ...schemaMeta.props.option, url: cmpData.url } } : schemaMeta.props) || {},
       };
       dragStateRef.current.draggedCmp = component;
       dragStateRef.current.dom = {

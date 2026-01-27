@@ -3,7 +3,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { useDesignStore } from '@/store/design';
 import { Button } from '@repo/ui/components/button';
 import { Toggle } from '@repo/ui/components/toggle';
-import { AppWindow, Home, Save, Settings2 } from 'lucide-react';
+import { AppWindow, FileImage, Home, Save, Settings2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import PageManage from './components/PageManage';
 import pageApi from '@/api/page';
@@ -13,8 +13,9 @@ import FullScreenLoading from '@/components/FullScreenLoading';
 import { useDesignStateStore } from '@/store';
 import { useDesignComponentsStore } from '@/store/design/components';
 import { useDesignDatasourceStore } from '@/store/design/datasource';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import hotkeys from 'hotkeys-js';
+import DraggableModal from './components/DraggableModal';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -46,12 +47,24 @@ const Header = () => {
     };
   }, []);
 
+  const [modalVisible, setModalVisible] = useState(false);
+
   return (
     <div className="flex items-center px-4 h-full justify-between relative">
       <div className="header-left flex gap-2">
         <Button size="sm" variant="outline" onClick={() => navigate('/manage/dashboard')}>
           <Home />
           <span>首页</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setModalVisible(true);
+          }}
+        >
+          <FileImage />
+          <span>资源</span>
         </Button>
         <Toggle
           size="sm"
@@ -80,6 +93,12 @@ const Header = () => {
         <LanguageToggle />
       </div>
       <FullScreenLoading visible={loading} />
+      <DraggableModal
+        title="资源列表"
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        width={350}
+      ></DraggableModal>
     </div>
   );
 };
