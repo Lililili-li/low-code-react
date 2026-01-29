@@ -50,7 +50,7 @@ const Props = ({
   return (
     <div className="props-panel flex flex-col gap-2 px-2 w-full mt-2">
       <div className="upload h-[200px]">
-        <FileUpload value={option.url} onChange={(value) => updateOptions('url', value)} />
+        <FileUpload value={option.url} onChange={(value) => updateOptions('url', value)} type="image" />
       </div>
       <div className="url flex gap-2 w-full">
         <Textarea

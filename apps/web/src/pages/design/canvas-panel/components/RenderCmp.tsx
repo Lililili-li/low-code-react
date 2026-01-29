@@ -1,16 +1,10 @@
 import materialCmp, { MaterialType } from '@repo/core/material';
 import { handleAnimationStyle, handleAnimationClass } from '@repo/core/compiler/animation';
-import { ActionSchema, ComponentSchema } from '@repo/core/types';
+import { ComponentSchema } from '@repo/core/types';
 import { useDesignComponentsStore } from '@/store/design/components';
 import { useDesignStateStore, useDesignStore } from '@/store';
 import { getVariableValue } from '@repo/core/variable';
 import { useDesignDatasourceStore } from '@/store/design/datasource';
-import {
-  parseChangeVariableAction,
-  parseFetchApiAction,
-  parseNavToLinkAction,
-  parseNavToPageAction,
-} from '@repo/core/event';
 
 const eventsMap: Record<string, any> = {};
 const RenderCmp = () => {
@@ -90,35 +84,6 @@ const RenderCmp = () => {
 
     const Component = materialCmp[item.type as MaterialType].component;
     const animationClass = handleAnimationClass(item.animation);
-    item.events?.forEach((event) => {
-      if (event.type === 'chartClick') return
-      eventsMap['on' + event.type.charAt(0).toUpperCase() + event.type.slice(1)] = (e: any) => {
-        event.actions.forEach((action) => {
-          if (action.type === 'changeVariable') {
-            const changeVariableFunc = parseChangeVariableAction(
-              action.value as ActionSchema['changeVariable'],
-            );
-            const copyState = { ...state };
-            changeVariableFunc?.(e, copyState);
-            setState?.(copyState);
-          }
-          if (action.type === 'navToPage') {
-            parseNavToPageAction(action.value as ActionSchema['navToPage']);
-          }
-          if (action.type === 'navToLink') {
-            parseNavToLinkAction(action.value as ActionSchema['navToLink']);
-          }
-          if (action.type === 'fetchAPI') {
-            parseFetchApiAction(
-              action.value as ActionSchema['fetchAPI'],
-              state,
-              datasource,
-              setState,
-            );
-          }
-        });
-      };
-    });
     return (
       shouldVisible(item) && (
         <div

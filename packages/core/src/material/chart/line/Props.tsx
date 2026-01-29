@@ -16,9 +16,12 @@ import {
   AccordionTrigger,
 } from '@repo/ui/components/accordion';
 import { Input } from '@repo/ui/components/input';
-import { Slider } from '@repo/ui/components/slider';
 import ColorPicker from '@repo/ui/components/color-picker';
-import { BarSeriesOption, DatasetOption, EChartsOption } from 'echarts/types/dist/shared';
+import {
+  DatasetOption,
+  EChartsOption,
+  LineSeriesOption,
+} from 'echarts/types/dist/shared';
 import type { ZRFontWeight } from 'echarts/types/src/util/types.js';
 import { Button } from '@repo/ui/components/button';
 import { CirclePlus, Settings, Trash2 } from 'lucide-react';
@@ -84,6 +87,7 @@ const Props = ({
   const { props } = schema || {};
 
   const option = props?.option || {};
+  
   const dataType = props?.dataType || ('1' as '1' | '2' | '3');
 
   const datasetOption = {
@@ -94,24 +98,22 @@ const Props = ({
   // series配置
   const originSeriesOption = (
     Array.isArray(option.series) ? option.series : [option.series]
-  ) as BarSeriesOption[]; // 默认就是
-  const seriesOption: BarSeriesOption[] = originSeriesOption.map((item) => ({
+  ) as LineSeriesOption[]; // 默认就是
+  const seriesOption: LineSeriesOption[] = originSeriesOption.map((item) => ({
     ...item,
     name: item?.name || '',
-    barWidth: item.barWidth || 20,
     itemStyle: {
       borderRadius: 0,
       ...item.itemStyle,
     },
     label: {
-      show: true,
+      show: item?.label?.show || false,
       color: '#fff',
       fontSize: 12,
       fontWeight: 'normal',
       ...item?.label,
     },
   }));
-  const isStack = seriesOption.some((series) => series?.stack === 'stack');
   const [currentSeriesIndex, setCurrentSeriesIndex] = useState(0);
 
   const updateOption = (key: string, options: any) => {
@@ -160,7 +162,7 @@ const Props = ({
   return (
     <div className="props-panel flex flex-col gap-0">
       <div className="item flex justify-between gap-2 items-center px-2 mt-2">
-        <div className="shrink-0 w-[25%]">
+        <div className="shrink-0 w-[28%]">
           <Label>数据类型</Label>
         </div>
         <Select value={dataType} onValueChange={handleChangeDataType}>
@@ -284,7 +286,7 @@ const Props = ({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Label className="shrink-0 w-[25%]">图例名称</Label>
+                  <Label className="shrink-0 w-[28%]">图例名称</Label>
                   <Input
                     value={seriesOption[currentSeriesIndex].name}
                     onChange={(e) => {
@@ -295,7 +297,7 @@ const Props = ({
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Label className="shrink-0 w-[25%]">取值字段</Label>
+                  <Label className="shrink-0 w-[28%]">取值字段</Label>
                   <Input
                     value={datasetOption.dimensions[currentSeriesIndex + 1] as string}
                     onChange={(e) => {
@@ -306,18 +308,43 @@ const Props = ({
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Label className="shrink-0 w-[25%]">标签显示</Label>
+                  <Label className="shrink-0 w-[28%]">对应坐标轴</Label>
+                  <div className="flex items-center gap-4 flex-1">
+                    <Select
+                      value={seriesOption[currentSeriesIndex].yAxisIndex?.toString() || '0'}
+                      onValueChange={(value) => {
+                        seriesOption[currentSeriesIndex].yAxisIndex = Number(value);
+                        updateOption('series', seriesOption);
+                      }}
+                    >
+                      <SelectTrigger size="sm" className="w-full">
+                        <div className="flex items-center gap-2 justify-between relative">
+                          <SelectValue placeholder="请选择坐标轴"></SelectValue>
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {Array.isArray(option.yAxis) && option.yAxis.map((item, index) => {
+                            return <SelectItem value={index.toString()}>{item.name}</SelectItem>
+                          })}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-between">
+                  <Label className="shrink-0 w-[28%]">标签显示</Label>
                   <Switch
-                    defaultChecked={seriesOption[currentSeriesIndex].label?.show}
+                    defaultChecked={seriesOption[currentSeriesIndex]?.label?.show}
                     onCheckedChange={(value) => {
-                      seriesOption[currentSeriesIndex].label!.show = value;
+                      seriesOption[currentSeriesIndex]!.label!.show = value;
                       updateOption('series', seriesOption);
                     }}
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Label className="shrink-0 w-[25%]">字体大小</Label>
-                  <div className="flex items-center gap-4 w-50">
+                  <Label className="shrink-0 w-[28%]">字体大小</Label>
+                  <div className="flex items-center gap-4 w-full">
                     <Input
                       type="number"
                       defaultValue={seriesOption[currentSeriesIndex].label?.fontSize}
@@ -331,8 +358,8 @@ const Props = ({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Label className="shrink-0 w-[25%]">字体颜色</Label>
-                  <div className="flex items-center gap-4 w-50">
+                  <Label className="shrink-0 w-[28%]">字体颜色</Label>
+                  <div className="flex items-center gap-4 w-full">
                     <ColorPicker
                       value={seriesOption[currentSeriesIndex].label?.color}
                       onChange={(value) => {
@@ -343,8 +370,8 @@ const Props = ({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Label className="shrink-0 w-[25%]">字体粗细</Label>
-                  <div className="flex items-center gap-4">
+                  <Label className="shrink-0 w-[28%]">字体粗细</Label>
+                  <div className="flex items-center gap-4 flex-1">
                     <Select
                       value={seriesOption[currentSeriesIndex].label?.fontWeight as string}
                       onValueChange={(value) => {
@@ -352,7 +379,7 @@ const Props = ({
                         updateOption('series', seriesOption);
                       }}
                     >
-                      <SelectTrigger size="sm" className="w-50">
+                      <SelectTrigger size="sm" className="w-full">
                         <div className="flex items-center gap-2 justify-between relative">
                           <SelectValue placeholder="请选择数据类型"></SelectValue>
                         </div>
@@ -366,61 +393,35 @@ const Props = ({
                     </Select>
                   </div>
                 </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="bar">
-            <AccordionTrigger>柱体设置</AccordionTrigger>
-            <AccordionContent className="flex flex-col gap-4 text-balance">
-              <div className="flex gap-2">
-                <Label className="shrink-0 w-[25%]">启用堆积</Label>
-                <Switch
-                  id="stack"
-                  defaultChecked={isStack}
-                  onCheckedChange={(value) => {
-                    seriesOption.forEach((item) => {
-                      if (value) {
-                        item['stack'] = 'stack';
-                      } else {
-                        item['stack'] = '';
-                      }
-                    });
-                    updateOption?.('series', seriesOption);
-                  }}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Label className="shrink-0 w-[25%]">柱体宽度</Label>
-                <div className="flex items-center gap-4 w-50">
-                  <Slider
-                    defaultValue={[seriesOption[0].barWidth as number]}
-                    max={100}
-                    step={1}
-                    onValueChange={(value) => {
-                      seriesOption.forEach((item) => {
-                        item.barWidth = value[0];
-                      });
-                      updateOption?.('series', seriesOption);
-                    }}
-                  />
-                  <span>{seriesOption[0].barWidth as number}</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Label className="shrink-0 w-[25%]">柱体圆角</Label>
-                <div className="flex items-center gap-4 w-50">
-                  <Slider
-                    defaultValue={[seriesOption[0].itemStyle?.borderRadius as number]}
-                    max={100}
-                    step={1}
-                    onValueChange={(value) => {
-                      seriesOption.forEach((item) => {
-                        item.itemStyle!.borderRadius = value[0];
-                      });
-                      updateOption?.('series', seriesOption);
-                    }}
-                  />
-                  <span>{seriesOption[0].itemStyle?.borderRadius as number}</span>
+                <div className="flex gap-2">
+                  <Label className="shrink-0 w-[28%]">标记图形</Label>
+                  <div className="flex items-center gap-4 flex-1">
+                    <Select
+                      value={seriesOption[currentSeriesIndex].symbol as string}
+                      onValueChange={(value) => {
+                        seriesOption[currentSeriesIndex].symbol = value;
+                        updateOption('series', seriesOption);
+                      }}
+                    >
+                      <SelectTrigger size="sm" className="w-full">
+                        <div className="flex items-center gap-2 justify-between relative">
+                          <SelectValue placeholder="请选择标记图形"></SelectValue>
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="circle">圆形</SelectItem>
+                          <SelectItem value="rect">矩形</SelectItem>
+                          <SelectItem value="roundRect">圆角矩形</SelectItem>
+                          <SelectItem value="triangle">三角形</SelectItem>
+                          <SelectItem value="diamond">菱形</SelectItem>
+                          <SelectItem value="pin">尖头</SelectItem>
+                          <SelectItem value="arrow">箭头</SelectItem>
+                          <SelectItem value="none">无</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </AccordionContent>
@@ -434,13 +435,13 @@ const Props = ({
           <AccordionItem value="xAxis">
             <AccordionTrigger>X轴设置</AccordionTrigger>
             <AccordionContent className="flex flex-col gap-4">
-              <AxisProps axisType="xAxis" axis={option.xAxis} updateOption={updateOption} />
+              <AxisProps axis={option.xAxis as EChartsOption['xAxis']} axisType="xAxis" updateOption={updateOption} />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="yAxis">
             <AccordionTrigger>Y轴设置</AccordionTrigger>
             <AccordionContent className="flex flex-col gap-4">
-              <AxisProps axisType="yAxis" axis={option.yAxis} updateOption={updateOption} />
+              <AxisProps axis={option.yAxis as EChartsOption['yAxis']} axisType="yAxis" updateOption={updateOption} />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="legend">

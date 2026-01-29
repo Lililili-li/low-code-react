@@ -7,7 +7,6 @@ import resourceApi from '@/api/resource';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { Input } from '@repo/ui/components/input';
 import Select from '@/components/Select';
-import dayjs from 'dayjs';
 import Empty from '@/components/Empty';
 import commonApi from '@/api/common';
 
@@ -116,7 +115,7 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
         backgroundColor: theme === 'dark' ? '#18181b' : '#fff',
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        zIndex: 10,
+        zIndex: 11,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -176,11 +175,11 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
                   );
                 }}
               >
-                <img src={item.url} alt={item.name} className="w-24 h-20 rounded-[4px] border" />
+                <img src={item.url} alt={item.name} className="w-24 max-h-20 rounded-[4px] border object-contain" />
                 <div className="flex-1 flex flex-col gap-2">
                   <div className="font-bold text-sm">{item.name}</div>
-                  <div className="text-sm">
-                    {dayjs(item.created_at).format('YYYY-MM-DD HH:mm:ss')}
+                  <div className="text-sm text-gray-400">
+                    {item.description}
                   </div>
                 </div>
               </div>

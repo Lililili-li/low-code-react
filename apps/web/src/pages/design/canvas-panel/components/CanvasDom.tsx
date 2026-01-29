@@ -147,7 +147,7 @@ const CanvasDom = ({
               width: pageSchemaSubset.width,
               height: pageSchemaSubset.height,
               ...(pageSchemaSubset.background.useType === '1'
-                ? { backgroundImage: `url(${pageSchemaSubset.background.image})` }
+                ? { backgroundImage: `url(${pageSchemaSubset.background.image})`, backgroundSize: '100% 100%' }
                 : { backgroundColor: pageSchemaSubset.background.color }),
             }}
           >

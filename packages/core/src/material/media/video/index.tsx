@@ -1,7 +1,7 @@
 import { FC } from 'react';
-import { ImagePropsSchema } from './schema';
+import { VideoPropsSchema } from './schema';
 
-const Image: FC<ImagePropsSchema> = ({ props, style, className }) => {
+const Video: FC<VideoPropsSchema> = ({ props, style, className }) => {
   const { option } = props;
   const transformParts = [
     `rotateX(${style?.rotateX ?? 0}deg)`,
@@ -19,21 +19,21 @@ const Image: FC<ImagePropsSchema> = ({ props, style, className }) => {
         height: style?.height,
         transform: transformParts.join(' '),
         position: 'relative',
-        animationTimingFunction: 'linear',
-        animationDuration: option?.duration + 's',
-        animationName: option?.open ? option?.animationName : 'none',
-        animationIterationCount: option?.time === '-1' ? 'infinite' : option?.time,
       }}
       className={`${className ? className : ''}`}
     >
-      <img
+      <video
         src={option?.url}
-        alt=""
         style={{ width: '100%', height: '100%' }}
         className={`object-${option?.fitCover}`}
+        autoPlay={option?.autoPlay}
+        loop={option?.loop}
+        muted={option?.muted}
+        controls={option?.controls}
+        playsInline
       />
     </div>
   );
 };
 
-export default Image;
+export default Video;

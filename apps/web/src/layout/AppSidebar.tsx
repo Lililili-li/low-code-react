@@ -1,6 +1,6 @@
 import { Button } from '@repo/ui/components/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@repo/ui/components/sidebar';
-import { BookOpenText, Database, HelpCircle, Map, Settings, Settings2 } from 'lucide-react';
+import { BookOpenText, Database, HelpCircle, Map, Puzzle, Settings, Settings2 } from 'lucide-react';
 import { IconAppCenter, IconSemiLogo } from '@douyinfe/semi-icons';
 import { Menu, MenuItem } from '@/components/Menu';
 import { LayoutDashboard, FolderKanban, Image, Layers, Globe, Component } from 'lucide-react';
@@ -38,12 +38,7 @@ const AppSidebar = () => {
       //     icon: <IconAppCenter className="size-4" />,
       //     path: '/manage/resource/application',
       //   },
-      //   {
-      //     key: 'component',
-      //     label: '组件资源',
-      //     icon: <Layers className="size-4" />,
-      //     path: '/manage/resource/component',
-      //   },
+
       //   {
       //     key: 'image',
       //     label: '图片资源',
@@ -58,6 +53,12 @@ const AppSidebar = () => {
       label: '资源管理',
       icon: <Globe className="size-4" />,
       children: [
+        {
+          key: 'component',
+          label: '组件资源',
+          icon: <Puzzle className="size-4" />,
+          path: '/manage/resource/component',
+        },
         {
           key: 'file',
           label: '静态资源',

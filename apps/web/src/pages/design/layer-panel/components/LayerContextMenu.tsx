@@ -1,5 +1,5 @@
 import { useComponentOperations } from '@/composable/use-component-operations';
-import { useDesignStore } from '@/store/design';
+import { useDesignComponentsStore } from '@/store/design/components';
 import { Cut20Filled } from '@ricons/fluent';
 import {
   ArrowUpFromLine,
@@ -16,9 +16,9 @@ import { Item, Separator, Submenu } from 'react-contexify';
 import { toast } from 'sonner';
 
 const LayerContextMenu = ({ onDeleteClick }: { onDeleteClick: () => void }) => {
-  const currentCmpId = useDesignStore((state) => state.currentCmpId);
-  const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
-  const currentCmp = useDesignStore((state) => state.componentsMap.get(currentCmpId));
+  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
+  const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
+  const currentCmp = useDesignComponentsStore((state) => state.componentsMap.get(currentCmpId));
 
   const { copyComponent, cutComponent, combinationComponent, splitComponent, setLayerLevel } =
     useComponentOperations();

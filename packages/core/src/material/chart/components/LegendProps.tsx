@@ -22,7 +22,7 @@ const LegendProps = ({ option, updateOption }: LegendProps) => {
   // legend配置
   const originLegendOption = Array.isArray(option.legend) ? option.legend[0] : option.legend;
   const legendOption = {
-    show: true,
+    show: false,
     type: 'plain',
     left: 'auto',
     top: 'auto',

@@ -17,6 +17,7 @@ export interface FileResourceProps {
   format: string
   created_at: string
   updated_at: string
+  description: string
 }
 
 export interface SaveFileResourceProps extends Omit<FileResourceProps, 'id' | 'created_at' | 'updated_at'> { }

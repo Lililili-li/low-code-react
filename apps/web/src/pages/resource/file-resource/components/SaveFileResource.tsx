@@ -28,6 +28,7 @@ import Select from '@/components/Select';
 import FileUpload from '@/components/FileUpload';
 import commonApi from '@/api/common';
 import resourceApi from '@/api/resource';
+import { Textarea } from '@repo/ui/components/textarea';
 
 const SaveFileResource = ({
   getList,
@@ -54,6 +55,7 @@ const SaveFileResource = ({
       size: params.file.size,
       format,
       url: params.file.url,
+      description: params.description,
     };
     if (type === 'create') {
       return resourceApi.createFileResource(newParams);
@@ -83,6 +85,7 @@ const SaveFileResource = ({
     }),
     size: z.number(),
     format: z.string(),
+    description: z.string(),
   });
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -97,6 +100,7 @@ const SaveFileResource = ({
       },
       size: 0,
       format: '',
+      description: '',
     },
   });
 
@@ -114,6 +118,7 @@ const SaveFileResource = ({
         },
         size: data.size,
         format: data.format,
+        description: data.description,
       });
     },
   });
@@ -151,7 +156,7 @@ const SaveFileResource = ({
                       <span>文件名称</span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入项目名称" {...field} />
+                      <Input placeholder="请输入文件名称" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -169,7 +174,7 @@ const SaveFileResource = ({
                     <Select
                       {...field}
                       options={categoryOptions}
-                      placeholder="请选择行业"
+                      placeholder="请选择文件分类"
                       className="w-full"
                     />
                     <FormMessage />
@@ -204,6 +209,21 @@ const SaveFileResource = ({
                         description="支持图片以及视频格式"
                         disabled={type === 'update'}
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      <span>文件描述</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="请输入文件描述" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -28,6 +28,7 @@ import resourceApi from '@/api/resource';
 import Select from '@/components/Select';
 import { byteToMB } from '@repo/shared/index';
 import commonApi from '@/api/common';
+import dayjs from 'dayjs';
 
 const formatOptions = ['png', 'jpg', 'jpeg', 'svg', 'mp3', 'mp4'];
 
@@ -134,9 +135,10 @@ const Projects = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[100px]">ID</TableHead>
-                <TableHead className="w-[300px]">资源</TableHead>
+                <TableHead className="w-[300px]">资源名称</TableHead>
                 <TableHead>文件大小</TableHead>
                 <TableHead>文件格式</TableHead>
+                <TableHead className="w-[300px]">文件描述</TableHead>
                 <TableHead>创建时间</TableHead>
                 <TableHead className="w-[240px]">操作</TableHead>
               </TableRow>
@@ -155,7 +157,8 @@ const Projects = () => {
                       </TableCell>
                       <TableCell>{byteToMB(item.size).toFixed(2)}MB</TableCell>
                       <TableCell>{item.format}</TableCell>
-                      <TableCell>{item.created_at}</TableCell>
+                      <TableCell>{item.description}</TableCell>
+                      <TableCell>{dayjs(item.created_at).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Button

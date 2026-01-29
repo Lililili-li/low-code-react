@@ -10,7 +10,7 @@ const Layout = lazy(() => import('@/layout'));
 
 const Dashboard = lazy(() => import('@/pages/dashboard/Dashboard'));
 const Application = lazy(() => import('@/pages/application'));
-const Components = lazy(() => import('@/pages/component/Component'));
+const Components = lazy(() => import('@/pages/resource/component-resource'));
 const FileResource = lazy(() => import('@/pages/resource/file-resource'));
 const MapResource = lazy(() => import('@/pages/resource/map-resource'));
 

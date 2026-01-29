@@ -15,7 +15,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 import { HelpCircle, Settings } from 'lucide-react';
 
-const PageConfig = ({ pageSchema, updatePageSchema }: { pageSchema: Omit<PageSchema, 'components' | 'state'>; updatePageSchema: any }) => {
+const PageConfig = ({ pageSchema, updatePageSchema }: { pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>; updatePageSchema: any }) => {
   return (
     <Sheet>
       <SheetTrigger asChild>

@@ -105,7 +105,7 @@ const ColorPicker = ({
                   type="button"
                   className={cn(
                     'size-6 rounded-sm border border-border cursor-pointer transition-transform hover:scale-110',
-                    value.toLowerCase() === color.toLowerCase() &&
+                    value && value?.toLowerCase() === color?.toLowerCase() &&
                       'ring-2 ring-primary ring-offset-1',
                   )}
                   style={{ backgroundColor: color }}

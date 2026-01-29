@@ -15,11 +15,11 @@ import {
   Unlock,
 } from 'lucide-react';
 import { Cut20Filled } from '@ricons/fluent';
-import { useDesignStore } from '@/store/design';
 import { ComponentSchema } from '@repo/core/types';
 import { useComponentOperations } from '@/composable/use-component-operations';
 import { toast } from 'sonner';
 import { Item, Separator, Submenu, contextMenu } from 'react-contexify';
+import { useDesignComponentsStore } from '@/store/design/components';
 
 const CanvasMenu = () => {
   const { pasteComponent } = useComponentOperations();
@@ -179,11 +179,11 @@ const ComponentMenu = ({
 };
 
 const CanvasContextMenu = ({ onDeleteClick }: { onDeleteClick: () => void }) => {
-  const selectedCmpIds = useDesignStore((state) => state.selectedCmpIds);
-  const currentCmpId = useDesignStore((state) => state.currentCmpId);
-  const pageComponents = useDesignStore((state) => state.pageSchema.components);
+  const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
+  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
+  const pageComponents = useDesignComponentsStore((state) => state.components);
   const currentCmp = pageComponents.find((c) => c.id === currentCmpId);
-  const updateCurrentCmp = useDesignStore((state) => state.updateCurrentCmp);
+  const updateCurrentCmp = useDesignComponentsStore((state) => state.updateCurrentCmp);
 
   return (
     <>

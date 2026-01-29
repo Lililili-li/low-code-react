@@ -103,7 +103,7 @@ export const defaultOption: EChartsOption = {
       splitLine: {
         show: true,
         lineStyle: {
-          color: ['#fff'],
+          color: '#fff',
           opacity: 0.06
         }
       }

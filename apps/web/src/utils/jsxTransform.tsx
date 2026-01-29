@@ -12,8 +12,53 @@ export function executeJSCode(
 ): React.ComponentType<any> {
   const { scope = {}, imports = {} } = options;
 
+  // 处理空代码
+  if (!code || !code.trim()) {
+    return () => null;
+  }
+
   try {
-    const transformedCode = Babel.transform(code, {
+    // 提取组件名：优先使用 export default 导出的组件
+    let componentName: string | null = null;
+    
+    // 1. 优先匹配 export default 后面的组件名
+    const exportDefaultMatch = code.match(/export\s+default\s+(\w+)/);
+    if (exportDefaultMatch) {
+      componentName = exportDefaultMatch[1];
+    } else {
+      // 2. 匹配 export default function/const 声明
+      const exportDefaultFuncMatch = code.match(/export\s+default\s+function\s+(\w+)/);
+      const exportDefaultConstMatch = code.match(/export\s+default\s+const\s+(\w+)/);
+      if (exportDefaultFuncMatch) {
+        componentName = exportDefaultFuncMatch[1];
+      } else if (exportDefaultConstMatch) {
+        componentName = exportDefaultConstMatch[1];
+      } else {
+        // 3. 如果没有 export default，使用最后一个声明的函数/const（通常是主组件）
+        const allFunctionMatches = [...code.matchAll(/(?:const|function)\s+(\w+)\s*(?:=\s*\(|=\s*function|\()/g)];
+        if (allFunctionMatches.length > 0) {
+          componentName = allFunctionMatches[allFunctionMatches.length - 1][1];
+        }
+      }
+    }
+
+    // 如果没有找到任何组件声明，返回空组件
+    if (!componentName) {
+      return () => null;
+    }
+
+    // 检查代码是否包含完整的函数体（至少有配对的括号）
+    const hasCompleteFunction = /(?:function\s+\w+\s*\([^)]*\)\s*\{|const\s+\w+\s*=\s*(?:\([^)]*\)|[^=])\s*=>)/.test(code);
+    if (!hasCompleteFunction) {
+      return () => null;
+    }
+
+    // 移除 import 和 export 语句，因为在 Function 构造器中无法使用
+    let processedCode = code
+      .replace(/import\s+.*?from\s+['"].*?['"];?\s*/g, '') // 移除 import
+      .replace(/export\s+(default\s+)?/g, ''); // 移除 export 和 export default
+    
+    const transformedCode = Babel.transform(processedCode, {
       presets: ['react', 'typescript'],
       filename: 'virtual.tsx',
     }).code;
@@ -31,11 +76,6 @@ export function executeJSCode(
 
     const scopeKeys = Object.keys(allScope);
     const scopeValues = Object.values(allScope);
-
-    // 提取函数名
-    const functionMatch = code.match(/function\s+(\w+)/);
-    const constMatch = code.match(/const\s+(\w+)\s*=/);
-    const componentName = functionMatch?.[1] || constMatch?.[1] || 'Component';
 
     const wrappedCode = `
       ${transformedCode}

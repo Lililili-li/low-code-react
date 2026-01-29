@@ -1,15 +1,21 @@
 import { ChartBarHorizontalMeta } from "./chart/bar-horizontal/schema";
 import { ChartBarVerticalMeta } from "./chart/bar-vertical/schema";
 import { ImageMeta } from "./media/image/schema";
+import { VideoMeta } from "./media/video/schema";
 import { TextMeta } from "./typography/common/text/schema";
 import { TextData1Meta } from "./typography/data/text1/schema";
+import { TimeTextMeta } from "./typography/common/time/schema";
+import { ChartLineMeta } from "./chart/line/schema";
 
 export const materialCmp = {
   'chart-bar-vertical': ChartBarVerticalMeta,
   'chart-bar-horizontal': ChartBarHorizontalMeta,
+  'chart-line': ChartLineMeta,
   'text': TextMeta,
   'text-data-1': TextData1Meta,
-  'image': ImageMeta
+  'image': ImageMeta,
+  'video': VideoMeta,
+  'time-text': TimeTextMeta
 } as const;
 
 export type MaterialType = keyof typeof materialCmp;
@@ -51,10 +57,22 @@ export const materialCmpList = [
     cover: 'https://hhxy511.oss-cn-beijing.aliyuncs.com/uploads/bar-horizontal.png'
   },
   {
+    id: 'chart-line',
+    category_id: '1',
+    name: '折线图',
+    cover: 'https://hhxy511.oss-cn-beijing.aliyuncs.com/uploads/line.png'
+  },
+  {
     id: 'text',
     category_id: '2',
     name: '文本框',
     cover: 'https://hhxy511.oss-cn-beijing.aliyuncs.com/uploads/text_static.png'
+  },
+  {
+    id: 'time-text',
+    category_id: '2',
+    name: '实时时间',
+    cover: 'https://hhxy511.oss-cn-beijing.aliyuncs.com/uploads/text-time.png'
   },
   {
     id: 'text-data-1',

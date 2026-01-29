@@ -7,6 +7,7 @@ export interface FileUploadProps {
   onChange?: (url: string) => void;
   value?: string;
   className?: string;
+  type: 'image' | 'video'
 }
 
 const FileUpload: FC<FileUploadProps> = ({
@@ -15,9 +16,10 @@ const FileUpload: FC<FileUploadProps> = ({
   onChange,
   value = '',
   className = '',
+  type = 'image'
 }) => {
   const [fileUrl, setFileUrl] = useState<string>(value);
-  const [fileType, setFileType] = useState<'image' | 'video'>('image');
+  const [fileType, setFileType] = useState<'image' | 'video'>(type);
   const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 

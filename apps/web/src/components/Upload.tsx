@@ -24,6 +24,7 @@ interface UploadProps {
   description?: React.ReactNode;
   model?: 'picture' | 'file';
   trigger?: React.ReactNode;
+  height?: number
 }
 
 const Upload = ({
@@ -36,6 +37,7 @@ const Upload = ({
   disabled = false,
   className,
   description,
+  height
 }: UploadProps) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   useEffect(() => {
@@ -104,13 +106,13 @@ const Upload = ({
             return updated;
           });
         } catch {
-          setFileList((prev) => {
-            const updated = prev.map((f) =>
-              f.uid === uid ? { ...f, status: 'error' as const } : f,
-            );
-            onChange?.(updated);
-            return updated;
-          });
+          // setFileList((prev) => {
+          //   const updated = prev.map((f) =>
+          //     f.uid === uid ? { ...f, status: 'error' as const } : f,
+          //   );
+          //   onChange?.(updated);
+          //   return updated;
+          // });
         }
       }
 
@@ -133,7 +135,7 @@ const Upload = ({
       {fileList.map((file) => (
         <div
           key={file.uid}
-          className="relative group w-full h-[150px] rounded-md border border-border overflow-hidden bg-muted"
+          className={`relative group w-full h-[${height || 150}px] rounded-md border border-border overflow-hidden bg-muted`}
         >
           {file.status === 'uploading' ? (
             <div className="w-full h-full flex items-center justify-center">

@@ -43,9 +43,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(({
         disabled={disabled}
       >
         <div className="flex items-center gap-2 justify-between flex-1 relative">
-          <SelectValue placeholder={placeholder}>
-            {value ? (options.find((item) => item.value === value)?.label || value + '%') : undefined}
-          </SelectValue>
+          <SelectValue placeholder={placeholder} />
         </div>
       </SelectTrigger>
       <SelectContent>

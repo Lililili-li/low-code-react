@@ -42,6 +42,7 @@ import {
   DialogClose,
 } from '@repo/ui/components/dialog';
 import { cloneDeep } from 'lodash-es';
+import AxisProps from '../components/AxisProps';
 
 const dataTypeOptions = [
   {
@@ -409,6 +410,18 @@ const Props = ({
             <AccordionTrigger>标题设置</AccordionTrigger>
             <AccordionContent className="flex flex-col gap-4">
               <TitleProps option={option as EChartsOption} updateOption={updateOption} />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="xAxis">
+            <AccordionTrigger>X轴设置</AccordionTrigger>
+            <AccordionContent className="flex flex-col gap-4">
+              <AxisProps axisType="xAxis" axis={option.xAxis} updateOption={updateOption} />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="yAxis">
+            <AccordionTrigger>Y轴设置</AccordionTrigger>
+            <AccordionContent className="flex flex-col gap-4">
+              <AxisProps axisType="yAxis" axis={option.yAxis} updateOption={updateOption} />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="legend">

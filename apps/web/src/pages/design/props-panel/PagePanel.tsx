@@ -171,8 +171,8 @@ const PagePanel = () => {
                   type="number"
                   min={0}
                   defaultValue={pageSchema.height}
-                  onEnterSearch={(e) => {
-                    updatePageSchema('height', Number(e.currentTarget.value));
+                  onEnterSearch={(value) => {
+                    updatePageSchema('height', Number(value));
                   }}
                 />
                 <InputGroupAddon>高度</InputGroupAddon>

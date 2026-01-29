@@ -11,11 +11,10 @@ import { Button } from '@repo/ui/components/button';
 import MonacoEditor from '@repo/ui/components/monaco-editor';
 import { SheetClose } from '@repo/ui/components/sheet';
 import { Fullscreen } from 'lucide-react';
-import { ChartPropsSchema } from '../bar-vertical/schema';
 
 interface OptionProps {
-  schema?: ChartPropsSchema;
-  updateSchema?: (updates: Partial<ChartPropsSchema>) => void;
+  schema?: any;
+  updateSchema?: (updates: any) => void;
 }
 const OptionProps = ({ schema, updateSchema }: OptionProps) => {
   const { props } = schema || {};
