@@ -1,9 +1,7 @@
 import React, { useRef, useCallback, useState } from 'react';
 import { useDesignStore } from '@/store/design';
 import { useShallow } from 'zustand/react/shallow';
-import RenderCmp from './RenderCmp';
 import CanvasContextMenu from './CanvasContextMenu';
-import HelperLine from './HelperLine';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +18,7 @@ import { Menu, useContextMenu } from 'react-contexify';
 import { useTheme } from '@/composable/use-theme';
 import { useCanvasEvent } from '@/composable/use-canvas-event';
 import { useDesignComponentsStore } from '@/store/design/components';
+import RenderPage from './RenderPage';
 
 const MENU_ID = 'canvas-context-menu';
 
@@ -29,6 +28,8 @@ const CONTAINER_SIZE = {
 };
 
 // 画布在容器中的起始偏移（居中）
+
+// 生成滤镜样式
 
 const CanvasDom = ({
   canvasRef,
@@ -50,11 +51,11 @@ const CanvasDom = ({
       width: state.pageSchema.width,
       height: state.pageSchema.height,
       background: state.pageSchema.background,
+      filter: state.pageSchema.filter,
     })),
   );
   const components = useDesignComponentsStore((state) => state.components);
   const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
-
 
   const { spacePressed, setScope, clearScope } = useCanvasHotKeys(() =>
     setTimeout(() => setDeleteDialogOpen(true)),
@@ -135,25 +136,15 @@ const CanvasDom = ({
           className="canvas-scroll-container"
           style={{ width: CONTAINER_SIZE.width, height: CONTAINER_SIZE.height }}
         >
-          <div
-            className="canvas-content"
-            id="canvas-content"
-            style={{
-              transform: `scale(${effectiveZoom})`,
-              transformOrigin: 'top left',
-              position: 'absolute',
-              left: CANVAS_OFFSET.x,
-              top: CANVAS_OFFSET.y,
-              width: pageSchemaSubset.width,
-              height: pageSchemaSubset.height,
-              ...(pageSchemaSubset.background.useType === '1'
-                ? { backgroundImage: `url(${pageSchemaSubset.background.image})`, backgroundSize: '100% 100%' }
-                : { backgroundColor: pageSchemaSubset.background.color }),
-            }}
-          >
-            <RenderCmp />
-            <HelperLine />
-          </div>
+          <RenderPage
+            zoom={effectiveZoom}
+            left={CANVAS_OFFSET.x}
+            top={CANVAS_OFFSET.y}
+            width={pageSchemaSubset.width}
+            height={pageSchemaSubset.height}
+            background={pageSchemaSubset.background}
+            filter={pageSchemaSubset.filter}
+          />
         </div>
       </div>
       <Menu id={MENU_ID} theme={theme}>

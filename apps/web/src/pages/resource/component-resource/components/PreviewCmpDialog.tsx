@@ -9,8 +9,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 import { Button } from '@repo/ui/components/button';
 import { Eye } from 'lucide-react';
-import { createFunctionComponent } from '@/utils/jsxTransform';
 import { useDesignStateStore } from '@/store';
+import { createFunctionComponent } from '@repo/shared/index';
 
 const PreviewCmpDialog = ({ code }: { code: string }) => {
 

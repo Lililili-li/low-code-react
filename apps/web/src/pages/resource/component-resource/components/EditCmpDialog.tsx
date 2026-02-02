@@ -1,11 +1,10 @@
 import { useRequest } from 'ahooks';
 import componentApi from '@/api/component';
-import { ChevronLeft, Save } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronLeft, CircleHelp, Save } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { Button } from '@repo/ui/components/button';
 import MonacoEditor from '@repo/ui/components/monaco-editor';
 import { cloneDeep } from 'lodash-es';
-import { createFunctionComponent } from '@/utils/jsxTransform';
 import { useDesignStateStore } from '@/store';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
@@ -25,10 +24,25 @@ import { Input } from '@repo/ui/components/input';
 import { Switch } from '@repo/ui/components/switch';
 import Upload from '@/components/Upload';
 import commonApi from '@/api/common';
+import { createFunctionComponent } from '@repo/shared/index';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
+import { Checkbox } from '@repo/ui/components/checkbox';
+import Assistant from '@repo/ui/components/assistant'
+
+const dependencies = {
+  react: '^19.1.1',
+  axios: '^1.13.2',
+  dayjs: '^1.11.19',
+  ahooks: '^3.9.6',
+  'react-router': '^7.10.0',
+  'lodash-es': '^4.17.22',
+  'lucide-react': '^0.555.0',
+  state: '用于调用当前页面的变量，预览时不可见',
+};
 
 interface EditCmpDialogProps {
   id: string;
-  onBack: () => void
+  onBack: () => void;
 }
 
 const tabs = [
@@ -54,7 +68,7 @@ const EditCmpDialog = ({ id, onBack }: EditCmpDialogProps) => {
         name: data.name,
         description: data.description,
         is_active: data.is_active,
-        cover: data.cover
+        cover: data.cover,
       });
     },
   });
@@ -112,26 +126,46 @@ const EditCmpDialog = ({ id, onBack }: EditCmpDialogProps) => {
     },
   });
 
+  const [codeVisibleType, setCodeVisibleType] = useState<'code' | 'dependencies'>('code');
+  const codeVisibleTypeRef = useRef(codeVisibleType); // 用于更新显示的code值
+
+  const updateCodeVisibleType = (type: 'code' | 'dependencies') => {
+    codeVisibleTypeRef.current = type;
+    setCodeVisibleType(type);
+  };
+
+  const codeVisible =
+    codeVisibleType === 'code' ? code || '' : JSON.stringify(dependencies, null, 2);
+
+  const handleCodeChange = (value: string) => {
+    if (codeVisibleTypeRef.current === 'code') {
+      setCode(value);
+      setHasChange(true);
+    }
+  };
+
+  const [toggleAi, setToggleAi] = useState(false);
+
   return (
-    <div className="flex flex-col h-full px-3 pt-2">
-      <div className="header flex h-[40px] items-center justify-between text-sm relative">
+    <div className="flex flex-col h-full px-3">
+      <div className="header flex h-[50px] items-center justify-between text-sm relative">
         <div className="left flex h-full ">
           <div
             className="back flex items-center cursor-pointer"
             onClick={() => {
               navigate('/manage/resource/component');
-              onBack()
+              onBack();
             }}
           >
             <ChevronLeft className="size-5" />
             <span>返回</span>
           </div>
-          <div className="tab-list flex items-center h-full gap-[4px] absolute bottom-0 left-[60px]">
+          <div className="tab-list flex items-center h-[42px] gap-[4px] absolute bottom-0 left-[60px]">
             {tabs.map((item) => {
               return (
                 <div
                   key={item.value}
-                  className={`tab w-[75px] text-center relative rounded-tl-md rounded-tr-md justify-center h-full border flex items-center cursor-pointer ${item.value === activeTab ? 'dark:border-b-[#18181b] text-primary z-20 border-b-white' : 'border-b-transparent'}`}
+                  className={`tab w-[75px] h-full relative rounded-tl-md rounded-tr-md justify-center border flex pt-2 cursor-pointer ${item.value === activeTab ? 'dark:border-b-[#18181b] text-primary z-20 border-b-white' : 'border-b-transparent'}`}
                   onClick={() => setActiveTab(item.value)}
                 >
                   {hasChange && item.value === '1' && (
@@ -145,7 +179,16 @@ const EditCmpDialog = ({ id, onBack }: EditCmpDialogProps) => {
         </div>
         <div className="line absolute bottom-0 left-0 right-0 h-px dark:bg-[#232323] bg-[#e5e7eb]"></div>
         <div className="right">
-          <div className="actions">
+          <div className="actions flex items-center gap-2">
+            <div className="flex items-center gap-2 border h-8 px-2 rounded-md cursor-pointer" onClick={() => setToggleAi((prev) => !prev)}>
+              <Checkbox
+                id="terms-checkbox-2"
+                name="terms-checkbox-2"
+                checked={toggleAi}
+                onCheckedChange={(checked) => console.log(checked)}
+              />
+              AI助手
+            </div>
             <Button
               size="sm"
               variant="default"
@@ -164,27 +207,60 @@ const EditCmpDialog = ({ id, onBack }: EditCmpDialogProps) => {
           </div>
         </div>
       </div>
-      <div className="content flex-1 flex gap-2 py-2">
+      <div className="content flex-1 pb-2">
         {activeTab === '1' ? (
-          <>
-            <div className="code-input flex-1 h-full">
-              <MonacoEditor
-                value={code || ''}
-                language="typescriptreact"
-                onChange={(value) => {
-                  setCode(value);
-                  setHasChange(true);
-                }}
-                onSave={handleSave}
-                height={'100%'}
-                className="h-full"
-                readOnly={loading}
-              />
+          <div className={`grid grid-cols-${toggleAi?'3': '2'} gap-2 h-full`}>
+            <div className="code-input flex-1 h-full flex flex-col gap-2">
+              <div className="tabs flex justify-between items-center border-b h-[40px]">
+                <div
+                  className={`tab cursor-pointer h-full flex items-center px-2 border-b-2 ${codeVisibleType === 'code' ? 'border-b-primary border-b-2' : 'border-b-transparent'}`}
+                  onClick={() => updateCodeVisibleType('code')}
+                >
+                  index.tsx
+                </div>
+                <div
+                  className={`tab cursor-pointer h-full flex gap-1 items-center px-2 border-b-2 ${codeVisibleType === 'dependencies' ? 'border-b-primary border-b-2' : 'border-b-transparent'}`}
+                  onClick={() => updateCodeVisibleType('dependencies')}
+                >
+                  <span>Dependencies</span>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <CircleHelp className="size-4 text-orange-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>相关依赖可以直接使用无需引入</p>
+                      <p>例如：useState、ahooks、axios等</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <div className="edit-container flex-1">
+                <MonacoEditor
+                  value={codeVisible}
+                  language={codeVisibleType === 'code' ? 'typescriptreact' : 'json'}
+                  onChange={handleCodeChange}
+                  onSave={handleSave}
+                  height={'100%'}
+                  className="h-full w-full"
+                  readOnly={loading || codeVisibleType === 'dependencies'}
+                />
+              </div>
             </div>
-            <div className="preview h-full flex-1">
-              <Component />
+            <div className="preview h-full flex-1 flex flex-col gap-2">
+              <div className="title border-b h-[40px] flex items-center shrink-0">组件预览</div>
+              <div className="preview-cmp flex-1">
+                <Component />
+              </div>
             </div>
-          </>
+            {
+              toggleAi && (
+                <div className="ai-assistant flex-1 flex flex-col gap-2 h-full">
+                  <div className="title border-b h-[40px] flex items-center shrink-0">Ai助手</div>
+                  <Assistant />
+                </div>
+              )
+            }
+          </div>
         ) : (
           <div className="form-container w-[50%]">
             <Form {...form}>
@@ -245,7 +321,7 @@ const EditCmpDialog = ({ id, onBack }: EditCmpDialogProps) => {
                           <Upload
                             value={[{ url: field.value || '', uid: Date.now().toString() }]}
                             onChange={(value) => {
-                              if (value.length === 1 && !!value[0].url ) {
+                              if (value.length === 1 && !!value[0].url) {
                                 console.log(value);
                                 field.onChange(value[0].url);
                               }

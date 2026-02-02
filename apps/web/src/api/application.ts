@@ -7,6 +7,7 @@ export interface CreateApplicationParams {
   status: number
   width: number
   height: number
+  cover?: string
 }
 
 export interface ApplicationProps {

@@ -3,6 +3,7 @@
   "include": ["."],
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "lib": ["ES2020", "DOM"]
   }
 }

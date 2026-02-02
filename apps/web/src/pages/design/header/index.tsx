@@ -85,7 +85,7 @@ const Header = () => {
           <Save />
           <span>保存</span>
         </Button>
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="outline" onClick={() => window.open('/preview/' + pageSchema.id)}>
           <AppWindow />
           <span>预览</span>
         </Button>

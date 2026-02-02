@@ -8,13 +8,16 @@
   "peerDependencies": {
     "axios": "^1.13.2",
     "sonner": "^2.0.7",
-    "mitt": "^3.0.1"
+    "mitt": "^3.0.1",
+    "react": "^19.1.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "eslint": "^8.57.0",
-    "typescript": "5.5.4"
+    "typescript": "5.5.4",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7"
   },
   "exports": {
     "./app": "./src/app/index.ts",

@@ -17,6 +17,18 @@ import PageConfig from './components/page-config';
 import commonApi from '@/api/common';
 import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
 import { useDesignStore } from '@/store/design';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@repo/ui/components/accordion';
+import { useShallow } from 'zustand/react/shallow';
+import { useQuery } from '@/composable/use-query';
+import applicationApi from '@/api/application';
+import { useRequest } from 'ahooks';
+import { domToBlob } from 'modern-screenshot';
+import { toast } from 'sonner';
 
 const bgApply = [
   {
@@ -117,9 +129,13 @@ const themes = [
 ];
 
 const applicationCover = '//heartmm.xyz/static/cover.png';
-
 const PagePanel = () => {
-  const { pageSchema, updatePageSchema } = useDesignStore();
+  const { pageSchema, updatePageSchema } = useDesignStore(
+    useShallow((state) => ({
+      pageSchema: state.pageSchema,
+      updatePageSchema: state.updatePageSchema,
+    })),
+  );
 
   const getThemeLine = useCallback((theme: { value: string[]; label: string }) => {
     const str = `linear-gradient(to right,${theme.value.join(',')})`;
@@ -135,6 +151,177 @@ const PagePanel = () => {
       setFiles([{ url: pageSchema.background.image, uid: id }]);
     }
   }, [pageSchema.background]);
+
+  const queryParams = useQuery();
+
+  const { data: application, runAsync: getApplication } = useRequest(
+    () => {
+      return applicationApi.getApplicationById(Number(queryParams?.id));
+    },
+    {
+      refreshDeps: [queryParams?.id],
+    },
+  );
+
+  const { runAsync: updateApplicationCover } = useRequest(
+    (path: string) =>
+      applicationApi.updateApplication(
+        {
+          cover: path,
+        },
+        Number(queryParams?.id),
+      ),
+    {
+      manual: true,
+    },
+  );
+
+  const uploadCover = async () => {
+    let tempContainer: HTMLDivElement | null = null;
+    try {
+      toast.loading('正在生成封面...');
+
+      // 创建 Canvas 元素
+      const canvas = document.createElement('canvas');
+      canvas.width = pageSchema.width * 2; // 2倍清晰度
+      canvas.height = pageSchema.height * 2;
+      const ctx = canvas.getContext('2d')!;
+      ctx.scale(2, 2);
+
+      // 1. 绘制背景
+      if (pageSchema.background.useType === '1' && pageSchema.background.image) {
+        // 加载背景图 - 尝试不同的方式处理 CORS
+        const bgImg = new Image();
+        
+        try {
+          // 先尝试带 crossOrigin
+          bgImg.crossOrigin = 'anonymous';
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('超时')), 5000);
+            bgImg.onload = () => {
+              clearTimeout(timeout);
+              resolve();
+            };
+            bgImg.onerror = () => {
+              clearTimeout(timeout);
+              reject(new Error('加载失败'));
+            };
+            bgImg.src = pageSchema.background.image;
+          });
+          ctx.drawImage(bgImg, 0, 0, pageSchema.width, pageSchema.height);
+        } catch (error) {
+          console.warn('背景图加载失败，尝试不使用 crossOrigin:', error);
+          
+          // 如果失败，尝试不带 crossOrigin（但这样可能导致 canvas 被污染）
+          const bgImg2 = new Image();
+          try {
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => reject(new Error('超时')), 5000);
+              bgImg2.onload = () => {
+                clearTimeout(timeout);
+                resolve();
+              };
+              bgImg2.onerror = () => {
+                clearTimeout(timeout);
+                reject(new Error('加载失败'));
+              };
+              bgImg2.src = pageSchema.background.image;
+            });
+            ctx.drawImage(bgImg2, 0, 0, pageSchema.width, pageSchema.height);
+          } catch (error2) {
+            console.warn('背景图完全加载失败，使用灰色背景');
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, pageSchema.width, pageSchema.height);
+          }
+        }
+      } else {
+        // 纯色背景
+        ctx.fillStyle = pageSchema.background.color;
+        ctx.fillRect(0, 0, pageSchema.width, pageSchema.height);
+      }
+
+      // 2. 创建临时容器渲染组件
+      tempContainer = document.createElement('div');
+      tempContainer.style.position = 'fixed';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.zIndex = '-1';
+      document.body.appendChild(tempContainer);
+
+      // 创建组件容器
+      const componentsContainer = document.createElement('div');
+      componentsContainer.style.width = `${pageSchema.width}px`;
+      componentsContainer.style.height = `${pageSchema.height}px`;
+      componentsContainer.style.position = 'relative';
+
+      // 获取所有组件
+      const shadowHost = document.getElementById('shadow-host');
+      const shadowRoot = shadowHost?.shadowRoot;
+      
+      if (shadowRoot) {
+        // 复制样式
+        const styles = shadowRoot.querySelectorAll('style');
+        styles.forEach(style => {
+          tempContainer!.appendChild(style.cloneNode(true));
+        });
+
+        // 复制组件
+        const canvasContent = shadowRoot.querySelector('#canvas-content');
+        if (canvasContent) {
+          const components = canvasContent.querySelectorAll('.canvas-render-container');
+          components.forEach(comp => {
+            const compClone = comp.cloneNode(true) as HTMLElement;
+            compClone.querySelectorAll('.cmp-mask, .move-corner, .move-rect, .helper-line').forEach(el => el.remove());
+            componentsContainer.appendChild(compClone);
+          });
+        }
+      }
+
+      tempContainer.appendChild(componentsContainer);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 3. 将组件渲染到 Canvas 上
+      const componentsBlob = await domToBlob(componentsContainer, {
+        width: pageSchema.width,
+        height: pageSchema.height,
+        scale: 2,
+        backgroundColor: null, // 透明背景
+      });
+
+      const componentsImg = new Image();
+      await new Promise<void>((resolve) => {
+        componentsImg.onload = () => resolve();
+        componentsImg.src = URL.createObjectURL(componentsBlob);
+      });
+
+      ctx.drawImage(componentsImg, 0, 0, pageSchema.width, pageSchema.height);
+      URL.revokeObjectURL(componentsImg.src);
+
+      // 4. 将 Canvas 转换为 Blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob!), 'image/png', 1.0);
+      });
+
+      // 上传到服务器
+      const formData = new FormData();
+      formData.append('file', blob, `application-cover-${queryParams?.id}.png`);
+      
+      const uploadResult = await commonApi.uploadFile(formData);
+      await updateApplicationCover(uploadResult.path);
+      
+      toast.success('封面更新成功');
+      getApplication()
+    } catch (error) {
+      console.error('封面上传失败:', error);
+      toast.error('封面上传失败，请重试');
+    } finally {
+      // 清理临时容器
+      if (tempContainer && document.body.contains(tempContainer)) {
+        document.body.removeChild(tempContainer);
+      }
+      toast.dismiss();
+    }
+  };
 
   return (
     <div className="page-panel-container min-w-[300px]">
@@ -332,13 +519,13 @@ const PagePanel = () => {
             <div className="picture mt-4">
               <Label>应用封面</Label>
               <div className="mt-3">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={uploadCover}>
                   <Cut24Filled />
                   <span>截取画板</span>
                 </Button>
-                {applicationCover && (
+                {(application?.cover || applicationCover) && (
                   <div className="picture-preview mt-3">
-                    <img src={applicationCover} alt="" />
+                    <img src={application?.cover || applicationCover} alt="" />
                   </div>
                 )}
               </div>
@@ -349,7 +536,7 @@ const PagePanel = () => {
             </div>
           </TabsContent>
           <TabsContent value="theme">
-            <div className="theme-list mt-2">
+            <div className="theme-list">
               <Button variant="outline" className="w-full">
                 <PlusCircle></PlusCircle>添加主题
               </Button>
@@ -375,88 +562,165 @@ const PagePanel = () => {
                 </div>
               ))}
             </div>
-            <div className="filter mt-5">
-              <Label className="flex items-center gap-4 justify-between ">
-                <span>页面滤镜</span>
-                <Switch
-                  value={pageSchema.filter?.open ? 'on' : 'off'}
-                  onCheckedChange={(value) =>
-                    updatePageSchema('filter', {
-                      ...pageSchema.filter,
-                      open: value,
-                    })
-                  }
-                />
-              </Label>
-              {pageSchema.filter?.open && (
-                <div className={`filter-options mt-3 flex flex-col gap-2 text-sm font-medium`}>
+            <Accordion value="filter" type="single" className="mt-2">
+              <AccordionItem value="filter">
+                <AccordionTrigger>页面滤镜</AccordionTrigger>
+                <AccordionContent>
                   <div className="flex items-center gap-8">
-                    <span className="w-[60px]">对比度</span>
+                    <span className="w-[60px]">是否开启</span>
                     <div className="flex items-center gap-4 flex-1">
-                      <Slider
-                        className="flex-1"
-                        value={[pageSchema.filter?.contrast || 0]}
-                        onValueChange={(value) =>
+                      <Switch
+                        checked={pageSchema.filter?.open}
+                        onCheckedChange={(value) =>
                           updatePageSchema('filter', {
                             ...pageSchema.filter,
-                            contrast: value[0],
+                            open: value,
                           })
                         }
                       />
-                      <span>{pageSchema.filter?.contrast}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-8">
-                    <span className="w-[60px]">饱和度</span>
-                    <div className="flex items-center gap-4 flex-1">
-                      <Slider
-                        className="flex-1"
-                        value={[pageSchema.filter?.saturation || 0]}
-                        onValueChange={(value) =>
-                          updatePageSchema('filter', {
-                            ...pageSchema.filter,
-                            saturation: value[0],
-                          })
-                        }
-                      />
-                      <span>{pageSchema.filter?.saturation}</span>
+                  <div className={`filter-options mt-3 flex flex-col gap-2 text-sm font-medium`}>
+                    <div className="flex items-center gap-8">
+                      <span className="w-[60px]">对比度</span>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Slider
+                          className="flex-1"
+                          value={[pageSchema.filter?.contrast || 0]}
+                          onValueChange={(value) =>
+                            updatePageSchema('filter', {
+                              ...pageSchema.filter,
+                              contrast: value[0],
+                            })
+                          }
+                          max={400}
+                        />
+                        <span>{pageSchema.filter?.contrast}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <span className="w-[60px]">饱和度</span>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Slider
+                          className="flex-1"
+                          value={[pageSchema.filter?.saturation || 0]}
+                          onValueChange={(value) =>
+                            updatePageSchema('filter', {
+                              ...pageSchema.filter,
+                              saturation: value[0],
+                            })
+                          }
+                          max={400}
+                        />
+                        <span>{pageSchema.filter?.saturation}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <span className="w-[60px]">亮度</span>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Slider
+                          className="flex-1"
+                          value={[pageSchema.filter?.brightness || 0]}
+                          onValueChange={(value) =>
+                            updatePageSchema('filter', {
+                              ...pageSchema.filter,
+                              brightness: value[0],
+                            })
+                          }
+                          max={400}
+                        />
+                        <span>{pageSchema.filter?.brightness}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <span className="w-[60px]">透明度</span>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Slider
+                          className="flex-1"
+                          value={[pageSchema.filter?.opacity || 0]}
+                          onValueChange={(value) => {
+                            updatePageSchema('filter', {
+                              ...pageSchema.filter,
+                              opacity: value[0],
+                            });
+                          }}
+                          max={100}
+                        />
+                        <span>{pageSchema.filter?.opacity}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <span className="w-[60px]">色相</span>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Slider
+                          className="flex-1"
+                          value={[pageSchema.filter?.hueRotate || 0]}
+                          onValueChange={(value) => {
+                            updatePageSchema('filter', {
+                              ...pageSchema.filter,
+                              hueRotate: value[0],
+                            });
+                          }}
+                          max={360}
+                        />
+                        <span>{pageSchema.filter?.hueRotate}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <span className="w-[60px]">灰度</span>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Slider
+                          className="flex-1"
+                          value={[pageSchema.filter?.grayscale || 0]}
+                          onValueChange={(value) => {
+                            updatePageSchema('filter', {
+                              ...pageSchema.filter,
+                              grayscale: value[0],
+                            });
+                          }}
+                          max={360}
+                        />
+                        <span>{pageSchema.filter?.grayscale}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <span className="w-[60px]">反转</span>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Slider
+                          className="flex-1"
+                          value={[pageSchema.filter?.invert || 0]}
+                          onValueChange={(value) => {
+                            updatePageSchema('filter', {
+                              ...pageSchema.filter,
+                              invert: value[0],
+                            });
+                          }}
+                          max={100}
+                        />
+                        <span>{pageSchema.filter?.invert}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <span className="w-[60px]">模糊</span>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Slider
+                          className="flex-1"
+                          value={[pageSchema.filter?.blur || 0]}
+                          onValueChange={(value) => {
+                            updatePageSchema('filter', {
+                              ...pageSchema.filter,
+                              blur: value[0],
+                            });
+                          }}
+                          max={10}
+                        />
+                        <span>{pageSchema.filter?.blur}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-8">
-                    <span className="w-[60px]">亮度</span>
-                    <div className="flex items-center gap-4 flex-1">
-                      <Slider
-                        className="flex-1"
-                        value={[pageSchema.filter?.brightness || 0]}
-                        onValueChange={(value) =>
-                          updatePageSchema('filter', {
-                            ...pageSchema.filter,
-                            brightness: value[0],
-                          })
-                        }
-                      />
-                      <span>{pageSchema.filter?.brightness}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-8">
-                    <span className="w-[60px]">透明度</span>
-                    <div className="flex items-center gap-4 flex-1">
-                      <Slider
-                        className="flex-1"
-                        value={[pageSchema.filter?.opacity || 0]}
-                        onValueChange={(value) => {
-                          updatePageSchema('filter', {
-                            ...pageSchema.filter,
-                            opacity: value[0],
-                          });
-                        }}
-                      />
-                      <span>{pageSchema.filter?.opacity}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </TabsContent>
         </div>
       </Tabs>

@@ -39,5 +39,13 @@ export {
   smartParseFunction,
   type FunctionParseOptions,
   type FunctionExecutionResult
-} from './handleFun';
+} from './parse-function';
+
+
+export {
+  type TransformOptions,
+  executeJSCode,
+  createComponentFromJSX,
+  createFunctionComponent
+} from './parse-code'
 

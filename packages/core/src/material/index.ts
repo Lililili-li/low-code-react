@@ -6,6 +6,7 @@ import { TextMeta } from "./typography/common/text/schema";
 import { TextData1Meta } from "./typography/data/text1/schema";
 import { TimeTextMeta } from "./typography/common/time/schema";
 import { ChartLineMeta } from "./chart/line/schema";
+import { ReactCodeMeta } from "./code/react/schema";
 
 export const materialCmp = {
   'chart-bar-vertical': ChartBarVerticalMeta,
@@ -15,7 +16,8 @@ export const materialCmp = {
   'text-data-1': TextData1Meta,
   'image': ImageMeta,
   'video': VideoMeta,
-  'time-text': TimeTextMeta
+  'time-text': TimeTextMeta,
+  'react': ReactCodeMeta,
 } as const;
 
 export type MaterialType = keyof typeof materialCmp;
@@ -24,7 +26,7 @@ export const materialCategories = [
   {
     id: '1',
     name: '图表',
-    icon: 'chart-pie',
+    icon: 'ChartPie',
   },
   {
     id: '2',
@@ -40,10 +42,24 @@ export const materialCategories = [
     id: '4',
     name: '指标',
     icon: 'LayoutGrid',
+  },
+  {
+    id: '99',
+    name: '神器',
+    icon: 'Boxes',
   }
 ]
 
-export const materialCmpList = [
+type MaterialCmpProps = {
+  id: string,
+  category_id: string,
+  name: string,
+  cover: string,
+  remote?: boolean
+  props?: Record<string, any>
+}
+
+export const materialCmpList: MaterialCmpProps[] = [
   {
     id: 'chart-bar-vertical',
     category_id: '1',

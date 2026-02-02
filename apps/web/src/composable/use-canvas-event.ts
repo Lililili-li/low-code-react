@@ -80,6 +80,14 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       const cmpHeight = style.height as number | undefined;
       const x = (e.clientX - rect.left - ((cmpWidth || 0) * zoom) / 2) / zoom;
       const y = (e.clientY - rect.top - ((cmpHeight || 0) * zoom) / 2) / zoom;
+      // cmpData.url是用于区分是否为资源列表拖拽的
+      // cmpData.remote代表的是自定义组件
+      let props = schemaMeta.props || {};
+      if (cmpData.remote) {
+        props = { ...props, option: cmpData.props };
+      } else if (cmpData.url) {
+        props = { ...props, option: { ...props.option, url: cmpData.url } };
+      }
       const component: ComponentSchema = {
         id: new Date().getTime().toString(),
         type: cmpType,
@@ -100,7 +108,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
           direction: 'normal', // 动画方向
           speed: 'linear', // 动画缓动函数
         },
-        props: (cmpData.url ? { ...schemaMeta.props, option: { ...schemaMeta.props.option, url: cmpData.url } } : schemaMeta.props) || {},
+        props,
       };
       dragStateRef.current.draggedCmp = component;
       dragStateRef.current.dom = {

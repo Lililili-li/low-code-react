@@ -141,13 +141,17 @@ export interface PageSchema {
     color: string,
     image: string,
   },
-  adapterType: '1' | '2' | '3' | '4' | '5',
+  adapterType: '1' | '2' | '3' | '4' | '5', // 1.自适应 2.平铺 3.宽度铺满，高度自适应 4.高度铺满，宽度自适应 5.原始宽高
   filter?: {
     open?: boolean,
     contrast?: number,
     saturation?: number,
     brightness?: number,
     opacity?: number,
+    hueRotate?: number,
+    grayscale?: number,
+    invert?: number,
+    blur?: number,
   },
   globalHeaders: string,
   globalCss: string,

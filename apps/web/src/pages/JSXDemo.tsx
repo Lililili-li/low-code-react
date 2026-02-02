@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { executeJSCode, createFunctionComponent } from '../utils/jsxTransform';
+import { executeJSCode, createFunctionComponent } from '@repo/shared/index';
 import { IconSearch } from '@douyinfe/semi-icons';
 import { Heart } from 'lucide-react';
 import request from '@repo/shared/request';

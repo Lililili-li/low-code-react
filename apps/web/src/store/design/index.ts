@@ -53,10 +53,14 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       adapterType: '1',
       filter: {
         open: false,
-        contrast: 0,
-        saturation: 0,
-        brightness: 0,
-        opacity: 0,
+        contrast: 100,
+        saturation: 100,
+        brightness: 100,
+        opacity: 100,
+        hueRotate: 0,
+        grayscale: 0,
+        invert: 0,
+        blur: 0
       },
       globalHeaders: '{}',
       globalCss: '',

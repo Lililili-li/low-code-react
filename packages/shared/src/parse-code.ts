@@ -6,6 +6,92 @@ export interface TransformOptions {
   imports?: Record<string, any>;
 }
 
+// 提取代码中的任意值 Tailwind 类并动态注入样式
+function injectArbitraryValueStyles(code: string) {
+  // 匹配所有任意值类：bg-[xxx]、text-[xxx]、border-[xxx]、w-[xxx]、h-[xxx] 等
+  const arbitraryValuePattern = /(?:bg|text|border|border-t|border-b|border-l|border-r|w|h|min-w|min-h|max-w|max-h|p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|space-x|space-y|rounded|top|bottom|left|right)-\[([^\]]+)\]/g;
+  
+  const matches = [...code.matchAll(arbitraryValuePattern)];
+  
+  if (matches.length === 0) return;
+  
+  // 检查是否已经注入过样式
+  const styleId = 'dynamic-tailwind-styles';
+  let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+  
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.id = styleId;
+    document.head.appendChild(styleElement);
+  }
+  
+  const existingStyles = new Set(styleElement.textContent?.split('\n').filter(Boolean) || []);
+  const newStyles: string[] = [];
+  
+  matches.forEach((match) => {
+    const fullClass = match[0];
+    const value = match[1];
+    
+    // 转义类名中的特殊字符用于 CSS 选择器
+    const escapedClass = fullClass.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/#/g, '\\#');
+    
+    let cssRule = '';
+    
+    // 根据不同的类前缀生成对应的 CSS
+    if (fullClass.startsWith('bg-[')) {
+      cssRule = `.${escapedClass} { background-color: ${value} !important; }`;
+    } else if (fullClass.startsWith('text-[')) {
+      // text-[xxx] 可能是颜色或字体大小
+      if (value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl') || value.match(/^[a-z]+$/i)) {
+        // 颜色值：#xxx, rgb(), hsl(), red 等
+        cssRule = `.${escapedClass} { color: ${value} !important; }`;
+      } else if (value.match(/^\d+(?:px|rem|em|pt|%)?$/)) {
+        // 字体大小：12px, 1.5rem, 16 等
+        const fontSize = value.match(/\d+$/) ? `${value}px` : value;
+        cssRule = `.${escapedClass} { font-size: ${fontSize} !important; }`;
+      } else if (value === 'center' || value === 'left' || value === 'right' || value === 'justify') {
+        // 文字对齐
+        cssRule = `.${escapedClass} { text-align: ${value} !important; }`;
+      } else {
+        // 其他情况，尝试作为颜色处理
+        cssRule = `.${escapedClass} { color: ${value} !important; }`;
+      }
+    } else if (fullClass.startsWith('border-[')) {
+      cssRule = `.${escapedClass} { border-color: ${value} !important; }`;
+    } else if (fullClass.startsWith('border-t-[')) {
+      cssRule = `.${escapedClass} { border-top-color: ${value} !important; }`;
+    } else if (fullClass.startsWith('border-b-[')) {
+      cssRule = `.${escapedClass} { border-bottom-color: ${value} !important; }`;
+    } else if (fullClass.startsWith('border-l-[')) {
+      cssRule = `.${escapedClass} { border-left-color: ${value} !important; }`;
+    } else if (fullClass.startsWith('border-r-[')) {
+      cssRule = `.${escapedClass} { border-right-color: ${value} !important; }`;
+    } else if (fullClass.startsWith('w-[')) {
+      cssRule = `.${escapedClass} { width: ${value} !important; }`;
+    } else if (fullClass.startsWith('h-[')) {
+      cssRule = `.${escapedClass} { height: ${value} !important; }`;
+    } else if (fullClass.startsWith('min-w-[')) {
+      cssRule = `.${escapedClass} { min-width: ${value} !important; }`;
+    } else if (fullClass.startsWith('min-h-[')) {
+      cssRule = `.${escapedClass} { min-height: ${value} !important; }`;
+    } else if (fullClass.startsWith('max-w-[')) {
+      cssRule = `.${escapedClass} { max-width: ${value} !important; }`;
+    } else if (fullClass.startsWith('max-h-[')) {
+      cssRule = `.${escapedClass} { max-height: ${value} !important; }`;
+    } else if (fullClass.startsWith('rounded-[')) {
+      cssRule = `.${escapedClass} { border-radius: ${value} !important; }`;
+    }
+    
+    if (cssRule && !existingStyles.has(cssRule)) {
+      newStyles.push(cssRule);
+    }
+  });
+  
+  if (newStyles.length > 0) {
+    styleElement.textContent += '\n' + newStyles.join('\n');
+  }
+}
+
 export function executeJSCode(
   code: string,
   options: TransformOptions = {}
@@ -16,6 +102,9 @@ export function executeJSCode(
   if (!code || !code.trim()) {
     return () => null;
   }
+
+  // 动态注入任意值 Tailwind 类的样式
+  injectArbitraryValueStyles(code);
 
   try {
     // 提取组件名：优先使用 export default 导出的组件
