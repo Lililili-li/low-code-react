@@ -7,6 +7,7 @@ import { TextData1Meta } from "./typography/data/text1/schema";
 import { TimeTextMeta } from "./typography/common/time/schema";
 import { ChartLineMeta } from "./chart/line/schema";
 import { ReactCodeMeta } from "./code/react/schema";
+import { PageRouterMeta } from "./dynamic-component/schema";
 
 export const materialCmp = {
   'chart-bar-vertical': ChartBarVerticalMeta,
@@ -18,6 +19,7 @@ export const materialCmp = {
   'video': VideoMeta,
   'time-text': TimeTextMeta,
   'react': ReactCodeMeta,
+  'page-router': PageRouterMeta,
 } as const;
 
 export type MaterialType = keyof typeof materialCmp;
@@ -106,6 +108,12 @@ export const materialCmpList: MaterialCmpProps[] = [
     id: 'video',
     category_id: '3',
     name: '视频',
+    cover: 'https://hhxy511.oss-cn-beijing.aliyuncs.com/uploads/video.png'
+  },
+  {
+    id: 'page-router',
+    category_id: '99',
+    name: '动态组件',
     cover: 'https://hhxy511.oss-cn-beijing.aliyuncs.com/uploads/video.png'
   }
 ]

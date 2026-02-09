@@ -1,3 +1,4 @@
+import { EventSchema } from "@repo/core/types";
 import { callSendRequest } from "../datasource";
 import { ActionSchema, DatasourceSchema } from "../types";
 import { stringToFunction } from "@repo/shared/index";
@@ -30,7 +31,6 @@ export const parseNavToLinkAction = (action: ActionSchema['navToLink']) => {
     acc[param.key] = param.value;
     return acc;
   }, {} as Record<string, string>);
-
   setTimeout(() => {
     if (isBlank) {
       window.open(`${linkUrl}?${new URLSearchParams(params).toString()}`, '_blank');
@@ -47,7 +47,7 @@ export const parseFetchApiAction = (action: ActionSchema['fetchAPI'], state: Rec
   if (datasourceId.length === 0) return;
   const promiseArray: Promise<any>[] = []
   const copyState = { ...state }
-  
+
   datasource.forEach(item => {
     if (datasourceId.includes(item.id)) {
       promiseArray.push(callSendRequest(item, copyState))
@@ -57,3 +57,34 @@ export const parseFetchApiAction = (action: ActionSchema['fetchAPI'], state: Rec
     onStateChange(copyState)
   })
 }
+
+
+
+export const handleEventActions = ({ actions, onStateChange, state, datasource }: { actions?: EventSchema['actions'], state: Record<string, any>, datasource: DatasourceSchema[], onStateChange: (value: Record<string, any>) => void }, e?: any) => {
+  e.stopPropagation();
+  e.preventDefault();
+  actions?.forEach((action: any) => {
+    if (action.type === 'changeVariable') {
+      const changeVariableFunc = parseChangeVariableAction(
+        action.value as ActionSchema['changeVariable'],
+      );
+      const copyState = { ...state };
+      changeVariableFunc?.(e, copyState);
+      onStateChange?.(copyState);
+    }
+    if (action.type === 'navToPage') {
+      parseNavToPageAction(action.value as ActionSchema['navToPage']);
+    }
+    if (action.type === 'navToLink') {
+      parseNavToLinkAction(action.value as ActionSchema['navToLink']);
+    }
+    if (action.type === 'fetchAPI') {
+      parseFetchApiAction(
+        action.value as ActionSchema['fetchAPI'],
+        state,
+        datasource,
+        onStateChange,
+      );
+    }
+  });
+};

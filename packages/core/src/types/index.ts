@@ -66,6 +66,7 @@ export interface EventSchema {
 
 export interface ComponentSchema {
   id: string;                    // 组件唯一标识
+  parentId?: string;              // 父组件id
   type?: string;                  // 组件类型
   group?: boolean                // 是否为分组
   name: string;                  // 组件名称

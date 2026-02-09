@@ -22,6 +22,7 @@
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
     "hotkeys-js": "4.0.0-beta.7",
+    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "i18next": "^25.7.1",
     "immer": "^11.0.1",

@@ -56,7 +56,6 @@ const actionType = [
   },
 ];
 
-
 const EventConfigDialog = ({
   eventType,
   events,
@@ -381,12 +380,17 @@ const EventConfigDialog = ({
                       {activeAction?.type === 'navToLink' && (
                         <NavToLink
                           value={performAction.navToLink || ({} as ActionSchema['navToLink'])}
-                          onValueChange={(value) =>
+                          onValueChange={(value) => {
+                            console.log({
+                              ...performAction,
+                              navToLink: value,
+                            });
+
                             setPerformAction({
                               ...performAction,
                               navToLink: value,
-                            })
-                          }
+                            });
+                          }}
                         />
                       )}
                       {activeAction?.type === 'fetchAPI' && (
@@ -439,19 +443,19 @@ const EventConfig = ({ selectEvents }: { selectEvents: { type: string; label: st
   const eventType = {
     common: [
       {
-        type: 'click',
+        type: 'onClick',
         label: '单击事件',
       },
       {
-        type: 'doubleClick',
+        type: 'onDoubleClick',
         label: '双击事件',
       },
       {
-        type: 'mouseEnter',
+        type: 'onMouseEnter',
         label: '鼠标移入事件',
       },
       {
-        type: 'mouseLeave',
+        type: 'onMouseLeave',
         label: '鼠标移出事件',
       },
       {

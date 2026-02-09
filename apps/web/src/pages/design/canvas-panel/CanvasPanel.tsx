@@ -172,7 +172,23 @@ const CanvasPanel = () => {
           <style>{AnimationCss}</style>
           <style>{shadowStyles}</style>
           <style>{ReactContexifyCss}</style>
-          <style>{globalCss}</style>
+          <style>{(() => {
+            try {
+              if (!globalCss || typeof globalCss !== 'string') return '/* No global CSS */';
+              if (globalCss.trim() === '') return '/* Empty global CSS */';
+              // Basic CSS validation - check for balanced braces
+              const openBraces = (globalCss.match(/{/g) || []).length;
+              const closeBraces = (globalCss.match(/}/g) || []).length;
+              if (openBraces !== closeBraces) {
+                console.warn('Global CSS has unbalanced braces, using fallback');
+                return '/* Invalid global CSS - unbalanced braces */';
+              }
+              return globalCss;
+            } catch (error) {
+              console.error('Error processing global CSS:', error);
+              return '/* Error processing global CSS */';
+            }
+          })()}</style>
           <style>{tailwindCss}</style>
           <div className={`${theme === 'dark' ? 'dark ruler-wrapper' : 'ruler-wrapper'} `}>
             <div className="ruler-top-row" style={{ height: RULER_SIZE }}>

@@ -44,6 +44,9 @@ const TimeText: FC<TimeTextPropsSchema> = ({ props, style, className }) => {
         width: style?.width,
         height: style?.height,
         transform: transformParts.join(' '),
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         ...styles,
       }}
       className={className}

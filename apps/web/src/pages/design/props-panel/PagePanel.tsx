@@ -27,8 +27,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { useQuery } from '@/composable/use-query';
 import applicationApi from '@/api/application';
 import { useRequest } from 'ahooks';
-import { domToBlob } from 'modern-screenshot';
 import { toast } from 'sonner';
+import { toPng } from 'html-to-image';
 
 const bgApply = [
   {
@@ -181,126 +181,62 @@ const PagePanel = () => {
     try {
       toast.loading('正在生成封面...');
 
-      // 创建 Canvas 元素
-      const canvas = document.createElement('canvas');
-      canvas.width = pageSchema.width * 2; // 2倍清晰度
-      canvas.height = pageSchema.height * 2;
-      const ctx = canvas.getContext('2d')!;
-      ctx.scale(2, 2);
-
-      // 1. 绘制背景
-      if (pageSchema.background.useType === '1' && pageSchema.background.image) {
-        // 加载背景图 - 尝试不同的方式处理 CORS
-        const bgImg = new Image();
-        
-        try {
-          // 先尝试带 crossOrigin
-          bgImg.crossOrigin = 'anonymous';
-          await new Promise<void>((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('超时')), 5000);
-            bgImg.onload = () => {
-              clearTimeout(timeout);
-              resolve();
-            };
-            bgImg.onerror = () => {
-              clearTimeout(timeout);
-              reject(new Error('加载失败'));
-            };
-            bgImg.src = pageSchema.background.image;
-          });
-          ctx.drawImage(bgImg, 0, 0, pageSchema.width, pageSchema.height);
-        } catch (error) {
-          console.warn('背景图加载失败，尝试不使用 crossOrigin:', error);
-          
-          // 如果失败，尝试不带 crossOrigin（但这样可能导致 canvas 被污染）
-          const bgImg2 = new Image();
-          try {
-            await new Promise<void>((resolve, reject) => {
-              const timeout = setTimeout(() => reject(new Error('超时')), 5000);
-              bgImg2.onload = () => {
-                clearTimeout(timeout);
-                resolve();
-              };
-              bgImg2.onerror = () => {
-                clearTimeout(timeout);
-                reject(new Error('加载失败'));
-              };
-              bgImg2.src = pageSchema.background.image;
-            });
-            ctx.drawImage(bgImg2, 0, 0, pageSchema.width, pageSchema.height);
-          } catch (error2) {
-            console.warn('背景图完全加载失败，使用灰色背景');
-            ctx.fillStyle = '#f0f0f0';
-            ctx.fillRect(0, 0, pageSchema.width, pageSchema.height);
-          }
-        }
-      } else {
-        // 纯色背景
-        ctx.fillStyle = pageSchema.background.color;
-        ctx.fillRect(0, 0, pageSchema.width, pageSchema.height);
-      }
-
-      // 2. 创建临时容器渲染组件
+      // 创建临时容器
       tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
       tempContainer.style.left = '-9999px';
       tempContainer.style.top = '0';
       tempContainer.style.zIndex = '-1';
-      document.body.appendChild(tempContainer);
+      tempContainer.style.width = `${pageSchema.width}px`;
+      tempContainer.style.height = `${pageSchema.height}px`;
+      tempContainer.style.backgroundColor = pageSchema.background.color.includes('oklch') ? '#f0f0f0' : pageSchema.background.color;
+      
+      // 如果有背景图片，设置背景
+      if (pageSchema.background.useType === '1' && pageSchema.background.image) {
+        tempContainer.style.backgroundImage = `url(${pageSchema.background.image})`;
+        tempContainer.style.backgroundSize = 'cover';
+        tempContainer.style.backgroundPosition = 'center';
+        tempContainer.style.backgroundRepeat = 'no-repeat';
+      }
 
-      // 创建组件容器
-      const componentsContainer = document.createElement('div');
-      componentsContainer.style.width = `${pageSchema.width}px`;
-      componentsContainer.style.height = `${pageSchema.height}px`;
-      componentsContainer.style.position = 'relative';
-
-      // 获取所有组件
+      // 获取原始组件并复制
       const shadowHost = document.getElementById('shadow-host');
       const shadowRoot = shadowHost?.shadowRoot;
       
       if (shadowRoot) {
-        // 复制样式
-        const styles = shadowRoot.querySelectorAll('style');
-        styles.forEach(style => {
-          tempContainer!.appendChild(style.cloneNode(true));
-        });
-
-        // 复制组件
         const canvasContent = shadowRoot.querySelector('#canvas-content');
         if (canvasContent) {
+          // 复制所有组件
           const components = canvasContent.querySelectorAll('.canvas-render-container');
           components.forEach(comp => {
             const compClone = comp.cloneNode(true) as HTMLElement;
+            // 移除控制元素
             compClone.querySelectorAll('.cmp-mask, .move-corner, .move-rect, .helper-line').forEach(el => el.remove());
-            componentsContainer.appendChild(compClone);
+            tempContainer?.appendChild(compClone);
           });
         }
       }
 
-      tempContainer.appendChild(componentsContainer);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // 添加到页面
+      document.body.appendChild(tempContainer);
+      
+      // 等待渲染
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // 3. 将组件渲染到 Canvas 上
-      const componentsBlob = await domToBlob(componentsContainer, {
+      // 直接使用 html-to-image 截图整个容器
+      console.log('开始使用 html-to-image 截图...');
+      const dataUrl = await toPng(tempContainer, {
         width: pageSchema.width,
         height: pageSchema.height,
-        scale: 2,
-        backgroundColor: null, // 透明背景
+        quality: 0.8,
+        pixelRatio: 1
       });
+      
+      console.log('html-to-image 截图完成');
 
-      const componentsImg = new Image();
-      await new Promise<void>((resolve) => {
-        componentsImg.onload = () => resolve();
-        componentsImg.src = URL.createObjectURL(componentsBlob);
-      });
-
-      ctx.drawImage(componentsImg, 0, 0, pageSchema.width, pageSchema.height);
-      URL.revokeObjectURL(componentsImg.src);
-
-      // 4. 将 Canvas 转换为 Blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => resolve(blob!), 'image/png', 1.0);
-      });
+      // 转换为 Blob
+      const blob = await fetch(dataUrl).then(res => res.blob());
+      console.log('生成图片大小:', blob.size, 'bytes');
 
       // 上传到服务器
       const formData = new FormData();
@@ -345,8 +281,8 @@ const PagePanel = () => {
                   placeholder="请输入宽度"
                   type="number"
                   min={0}
-                  defaultValue={pageSchema.width}
-                  onEnterSearch={(e) => {
+                  value={pageSchema.width}
+                  onChange={(e) => {
                     updatePageSchema('width', Number(e.currentTarget.value));
                   }}
                 />
@@ -357,9 +293,9 @@ const PagePanel = () => {
                   placeholder="请输入高度"
                   type="number"
                   min={0}
-                  defaultValue={pageSchema.height}
-                  onEnterSearch={(value) => {
-                    updatePageSchema('height', Number(value));
+                  value={pageSchema.height}
+                  onChange={(e) => {
+                    updatePageSchema('height', Number(e.currentTarget.value));
                   }}
                 />
                 <InputGroupAddon>高度</InputGroupAddon>

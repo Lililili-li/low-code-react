@@ -15,7 +15,13 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip';
 import { HelpCircle, Settings } from 'lucide-react';
 
-const PageConfig = ({ pageSchema, updatePageSchema }: { pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>; updatePageSchema: any }) => {
+const PageConfig = ({
+  pageSchema,
+  updatePageSchema,
+}: {
+  pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>;
+  updatePageSchema: any;
+}) => {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -56,7 +62,11 @@ const PageConfig = ({ pageSchema, updatePageSchema }: { pageSchema: Omit<PageSch
                 </TooltipContent>
               </Tooltip>
             </Label>
-            <MonacoEditor value={pageSchema.globalHeaders} onChange={(value) => updatePageSchema('globalHeaders', value)} language="javascript" />
+            <MonacoEditor
+              value={JSON.stringify(pageSchema.globalHeaders, null, 2) || ''}
+              onChange={(value) => updatePageSchema('globalHeaders', value)}
+              language="javascript"
+            />
           </div>
           <div className="host">
             <Label className="mb-4">
@@ -71,7 +81,11 @@ const PageConfig = ({ pageSchema, updatePageSchema }: { pageSchema: Omit<PageSch
                 </TooltipContent>
               </Tooltip>
             </Label>
-            <MonacoEditor value={pageSchema.globalCss} onChange={(value) => updatePageSchema('globalCss', value)} language="css" />
+            <MonacoEditor
+              value={pageSchema.globalCss || ''}
+              onChange={(value) => updatePageSchema('globalCss', value)}
+              language="css"
+            />
           </div>
         </div>
         <SheetFooter>

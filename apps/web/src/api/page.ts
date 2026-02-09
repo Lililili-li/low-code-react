@@ -7,7 +7,7 @@ export interface CreatePageParams {
 }
 
 export interface PageProps {
-  id: number
+  id: string
   name: string
   application_id: number
 }

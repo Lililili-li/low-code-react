@@ -21,7 +21,7 @@ export const useAppStore = create<AppState & AppActions>()(
       },
       updateAppConfig: (config:Partial<AppState['config']>) => {
         set((state) => {
-          state.panelConfig = {...state.panelConfig, ...config}
+          state.config = {...state.config, ...config}
         })
       }
     })),
@@ -35,7 +35,7 @@ export const useAppStore = create<AppState & AppActions>()(
           return { state: { config }, version: 0 };
         },
         setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify(value.state.panelConfig));
+          localStorage.setItem(name, JSON.stringify(value.state.config));
         },
         removeItem: (name) => localStorage.removeItem(name),
       },

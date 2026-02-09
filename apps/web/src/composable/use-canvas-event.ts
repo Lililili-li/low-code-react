@@ -20,6 +20,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
   const components = useDesignComponentsStore((state) => state.components);
   const addComponent = useDesignComponentsStore((state) => state.addComponent);
   const setCurrentCmpId = useDesignComponentsStore((state) => state.setCurrentCmpId);
+  const setCurrentCmp = useDesignComponentsStore((state) => state.setCurrentCmp);
   const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
   const updateCurrentCmp = useDesignComponentsStore((state) => state.updateCurrentCmp);
   const updateSelectCmp = useDesignComponentsStore((state) => state.updateSelectCmp);
@@ -86,7 +87,12 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       if (cmpData.remote) {
         props = { ...props, option: cmpData.props };
       } else if (cmpData.url) {
-        props = { ...props, option: { ...props.option, url: cmpData.url } };
+        // Check if props has option property before accessing it
+        if ('option' in props) {
+          props = { ...props, option: { ...props.option, url: cmpData.url } };
+        } else {
+          props = { ...props, option: { url: cmpData.url } };
+        }
       }
       const component: ComponentSchema = {
         id: new Date().getTime().toString(),
@@ -119,6 +125,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       };
       addComponent(component, true);
       setCurrentCmpId(component.id);
+      setCurrentCmp({id: component.id, parentId: ''})
       setSelectedCmpIds([component.id]); // 默认放到多选数组中
       setScope('canvas');
     },
@@ -229,6 +236,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       } else if (target.className.endsWith('scale')) {
         handleScaleSelect(e, target);
       } else {
+        setCurrentCmp({id: '', parentId: ''})
         setCurrentCmpId('');
         setSelectedCmpIds([]);
       }

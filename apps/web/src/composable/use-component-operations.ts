@@ -49,13 +49,21 @@ export function useComponentOperations() {
         const copyCmp = { ...selectCmp }
         copyCmp.id = (new Date().getTime() + index).toString()
         copyCmp.name = selectCmp.name + '副本-' + (index + 1)
+        
+        if (copyCmp.group) {
+          copyCmp.children = copyCmp.children?.map(item => ({ ...item, id: (new Date().getTime() + index).toString() }))
+        }
         components.push(copyCmp)
       })
       copy(JSON.stringify(components))
       components = []
     } else {
       if (!component) return
-      copy(JSON.stringify(component))
+      const willCopyComponent = {...component}
+      if (willCopyComponent.group) {
+        willCopyComponent.children = willCopyComponent.children?.map((item, index) => ({ ...item, id: (new Date().getTime() + index).toString() }))
+      }
+      copy(JSON.stringify(willCopyComponent))
     }
     isCopy = true
   }
@@ -279,7 +287,7 @@ export function useComponentOperations() {
     const component = {
       group: true,
       id: new Date().getTime().toString(),
-      name: '组合组件_' + Date.now(),
+      name: '组合组件_' + Date.now().toString().slice(-4),
       visibleProp: {
         type: 'normal',
         value: true
@@ -326,7 +334,7 @@ export function useComponentOperations() {
         newStyle.left = newStyle.left !== 0 ? Number((child.style?.left as number) - (component.style?.left as number)) : newStyle.left;
         newStyle.top = newStyle.top !== 0 ? Number((child.style?.top as number) - (component.style?.top as number)) : newStyle.top;
       }
-      return { ...child, style: newStyle };
+      return { ...child, style: newStyle, parentId: component.id };
     })
     component.style!.width = maxWidth - (component.style!.left as number);
     component.style!.height = maxHeight - (component.style!.top as number);

@@ -4,6 +4,8 @@ import { PageSchema } from '@repo/core/types'
 import { useDesignStateStore } from './state'
 import { useDesignComponentsStore } from "./components";
 import { useDesignDatasourceStore } from "./datasource";
+import { PageProps } from "@/api/page";
+
 
 export interface DesignState {
   panelConfig: {
@@ -17,7 +19,8 @@ export interface DesignState {
     },
     mutually: boolean
   }
-  pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>
+  pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>,
+  pages: PageProps[]
 }
 
 export interface DesignActions {
@@ -27,6 +30,7 @@ export interface DesignActions {
   setPageSchema: (pageSchema: PageSchema) => void
   updatePageSchema: (key: keyof Omit<PageSchema, 'components' | 'state'>, value: any) => void
   setMutually: (open: boolean) => void
+  setPages: (pages: PageProps[]) => void
 }
 
 export const useDesignStore = create<DesignState & DesignActions>()(
@@ -65,7 +69,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       globalHeaders: '{}',
       globalCss: '',
     },
-
+    pages: [],
     setSiderBarModel: (siderBarModel: DesignState['panelConfig']['siderBarModel'] | null) => {
       set((state) => {
         state.panelConfig.siderBarModel = siderBarModel
@@ -84,7 +88,8 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         const { setState } = useDesignStateStore.getState()
         const { setComponents } = useDesignComponentsStore.getState()
         const { setDatasource } = useDesignDatasourceStore.getState()
-        state.pageSchema = { ...state.pageSchema, ...pageSchema }
+        
+        state.pageSchema = pageSchema
         setState(pageSchema?.state || {})
         setComponents(pageSchema?.components || [])
         setDatasource(pageSchema?.datasource || [])
@@ -103,6 +108,12 @@ export const useDesignStore = create<DesignState & DesignActions>()(
     setMutually: (open: boolean) => {
       set((state) => {
         state.panelConfig.mutually = open
+      })
+    },
+
+    setPages(pages: PageProps[]) {
+      set((state) => {
+        state.pages = pages
       })
     }
   }))

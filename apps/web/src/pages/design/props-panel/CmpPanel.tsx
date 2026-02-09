@@ -29,6 +29,7 @@ import { useComponentOperations } from '@/composable/use-component-operations';
 import AnimateConfig from './components/animate-config';
 import { ComponentSchema } from '@repo/core/types';
 import { useDesignComponentsStore } from '@/store/design/components';
+import { useDesignStore } from '@/store';
 
 export interface ConfigProps {
   component: ComponentSchema;
@@ -37,12 +38,29 @@ export interface ConfigProps {
 
 const CmpPanel = () => {
   const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
+  const currentCmpParent = useDesignComponentsStore((state) => state.currentCmp);
   const updateCurrentCmp = useDesignComponentsStore((state) => state.updateCurrentCmp);
-  const currentCmp = useDesignComponentsStore((state) =>
-    state.components.find((item) => item.id === currentCmpId),
-  );
+  const dynamicPages = useDesignStore((state) => state.pages);
+  const components = useDesignComponentsStore((state) => state.components);
 
-  const PropsCmp = materialCmp[currentCmp?.type as MaterialType]?.propsPanel;
+  const currentCmp = useDesignComponentsStore((state) =>{
+    if (currentCmpParent.id && currentCmpParent.parentId) {
+      const parentCmp = components.find((item) => item.id === currentCmpParent.parentId);
+      return parentCmp?.children?.find((item) => item.id === currentCmpParent.id);
+    } else {
+      return state.components.find((item) => item.id === currentCmpId);
+    }
+  }
+  ); 
+  let PropsCmp = null;
+
+  if (currentCmpParent.id && currentCmpParent.parentId) {
+    const parentCmp = components.find((item) => item.id === currentCmpParent.parentId);
+    const cmpType = parentCmp?.children?.find((item) => item.id === currentCmpParent.id)?.type;
+    PropsCmp = materialCmp[cmpType as MaterialType]?.propsPanel;
+  } else {
+    PropsCmp = materialCmp[currentCmp?.type as MaterialType]?.propsPanel;
+  }
 
   const cmpSelectEvents = materialCmp[currentCmp?.type as MaterialType]?.events || []; // 组件的内置事件
 
@@ -60,12 +78,10 @@ const CmpPanel = () => {
             <Settings className="size-3.5" />
             <span>属性</span>
           </TabsTrigger>
-          {!currentCmp?.group && (
-            <TabsTrigger value="event">
-              <Wrench className="size-3.5" />
-              <span>交互</span>
-            </TabsTrigger>
-          )}
+          <TabsTrigger value="event">
+            <Wrench className="size-3.5" />
+            <span>交互</span>
+          </TabsTrigger>
           {!currentCmp?.group && (
             <TabsTrigger value="animate">
               <Film className="size-3.5" />
@@ -279,6 +295,7 @@ const CmpPanel = () => {
                 )}
                 schema={currentCmp as any}
                 updateSchema={updateCurrentCmp}
+                pages={dynamicPages.map((item) => ({ label: item.name, value: item.id }))}
               />
             )}
           </TabsContent>

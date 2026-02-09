@@ -1,13 +1,15 @@
 import materialCmp, { MaterialType } from '@repo/core/material';
 import { handleAnimationStyle, handleAnimationClass } from '@repo/core/compiler/animation';
-import { ComponentSchema } from '@repo/core/types';
+import { ComponentSchema, DataType, PageSchema } from '@repo/core/types';
 import { useDesignComponentsStore } from '@/store/design/components';
 import { useDesignStateStore, useDesignStore } from '@/store';
 import { getVariableValue } from '@repo/core/variable';
 import { useDesignDatasourceStore } from '@/store/design/datasource';
-import { memo } from 'react';
-
-const eventsMap: Record<string, any> = {};
+import { memo, useRef, useEffect, useState } from 'react';
+import { handleEventActions } from '@repo/core/event';
+import { useRequest } from 'ahooks';
+import pageApi from '@/api/page';
+import { PageRouterPropsSchema } from '@repo/core/material/dynamic-component/schema';
 
 const shouldVisible = (item: ComponentSchema, state: any) => {
   if (item.visibleProp?.type === 'normal') {
@@ -23,25 +25,78 @@ interface SingleComponentProps {
   currentCmpId: string;
   selectedCmpIds: string[];
   hoverId: string;
-  state: any;
-  datasource: any;
   mutually: boolean;
+  preview?: boolean;
   setHoverId: (id: string) => void;
-  setState: (value: any) => void;
 }
 
-const SingleComponent = memo(({ 
-  item, 
-  currentCmpId, 
-  selectedCmpIds, 
-  hoverId, 
-  state, 
-  datasource, 
+const SingleComponent = ({
+  item,
+  currentCmpId,
+  selectedCmpIds,
+  hoverId,
   mutually,
   setHoverId,
-  setState 
+  preview,
 }: SingleComponentProps) => {
+  const state = useDesignStateStore((state) => state.state);
+  const setState = useDesignStateStore((state) => state.setState);
+  const datasource = useDesignDatasourceStore((state) => state.datasource);
+
+  const eventsMap = useRef<Record<string, any>>({});
+  const stateRef = useRef(state);
+  const datasourceRef = useRef(datasource);
+  const setStateRef = useRef(setState);
+
+  const [dynamicPageSchema, setDynamicPageSchema] = useState<PageSchema>({
+    components: [],
+    state: {},
+    datasource: [],
+  } as unknown as PageSchema);
+
+  const { runAsync: getPage } = useRequest((id) => pageApi.getPageById(id), {
+    manual: true,
+    onSuccess: (value) => {
+      setDynamicPageSchema(value.schema);
+    },
+  });
+
+  // 更新 ref 值
+  useEffect(() => {
+    stateRef.current = state;
+    datasourceRef.current = datasource;
+    setStateRef.current = setState;
+  }, [state, datasource, setState]);
+
+  useEffect(() => {
+    const props = item.props as PageRouterPropsSchema['props'];
+    if (props?.pageId) {
+      if (props.dataType === DataType.Normal) {
+        getPage(props?.pageId);
+      } else {
+        const pageId = getVariableValue(props.pageId, state);
+        getPage(pageId);
+      }
+    }
+  }, [item.props, state]);
+
   if (!shouldVisible(item, state)) return null;
+
+  item.events?.forEach((event) => {
+    if (!['mounted', 'unmounted'].includes(event.type)) {
+      eventsMap.current[event.type] = (e: any) => {
+        handleEventActions(
+          {
+            actions: event.actions,
+            state: stateRef.current,
+            datasource: datasourceRef.current,
+            onStateChange: setStateRef.current,
+          },
+          e,
+        );
+      };
+    }
+  });
 
   if (item.group) {
     return (
@@ -56,45 +111,45 @@ const SingleComponent = memo(({
         onMouseEnter={() => setHoverId(item.id)}
         onMouseLeave={() => setHoverId('')}
       >
-        {item.children && (
-          <>
-            {item.children.map((child) => {
-              const ChildComponent = materialCmp[child.type as MaterialType].component;
-              const animationClass = handleAnimationClass(child.animation);
-              return (
-                <div
-                  style={{
-                    ...child.style,
-                    position: 'absolute',
-                    ...handleAnimationStyle(child.animation),
-                  }}
-                  className={animationClass}
-                  key={child.id}
-                >
-                  <ChildComponent {...(child as any)} state={state} />
-                </div>
-              );
-            })}
-          </>
+        <div className="cmp-group-container h-full" {...eventsMap.current}>
+          {item.children && (
+            <>
+              {item.children.map((child) => {
+                return (
+                  <SingleComponent
+                    item={child}
+                    currentCmpId={currentCmpId}
+                    selectedCmpIds={selectedCmpIds}
+                    hoverId={hoverId}
+                    mutually={mutually}
+                    setHoverId={setHoverId}
+                    preview={preview}
+                    key={child.id}
+                  />
+                );
+              })}
+            </>
+          )}
+        </div>
+        {!preview && (
+          <div
+            className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''} ${hoverId === item.id ? 'cmp-mask-hover' : ''}`}
+            id={`cmp-mask-id-${item.id}`}
+            data-lock={item.lock}
+            style={{
+              left: 0,
+              top: 0,
+              width: item.style?.width,
+              height: item.style?.height,
+            }}
+          />
         )}
-        <div
-          className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''} ${hoverId === item.id ? 'cmp-mask-hover' : ''}`}
-          id={`cmp-mask-id-${item.id}`}
-          data-lock={item.lock}
-          style={{
-            left: 0,
-            top: 0,
-            width: item.style?.width,
-            height: item.style?.height,
-          }}
-        />
       </div>
     );
   }
 
   const Component = materialCmp[item.type as MaterialType].component;
   const animationClass = handleAnimationClass(item.animation);
-  
   return (
     <div
       className={`${animationClass} canvas-render-container`}
@@ -103,20 +158,24 @@ const SingleComponent = memo(({
       style={{
         ...item.style,
         ...handleAnimationStyle(item.animation),
-        position: 'absolute'
+        position: 'absolute',
       }}
       onMouseEnter={() => setHoverId(item.id)}
       onMouseLeave={() => setHoverId('')}
     >
-      <div className="cmp-container h-full" {...eventsMap}>
+      <div className="cmp-container h-full" {...eventsMap.current}>
         <Component
           {...(item as any)}
           state={state}
           onStateChange={setState}
           datasource={datasource}
+          props={{
+            ...(item as any).props,
+            pageSchema: dynamicPageSchema,
+          }}
         />
       </div>
-      {!mutually && (
+      {!mutually && !preview && (
         <div
           className={`cmp-mask ${(currentCmpId === item.id || selectedCmpIds.includes(item.id)) && !item.lock ? 'cmp-mask-active' : ''} ${hoverId === item.id ? 'cmp-mask-hover' : ''}`}
           id={`cmp-mask-id-${item.id}`}
@@ -144,43 +203,14 @@ const SingleComponent = memo(({
       )}
     </div>
   );
-}, (prevProps, nextProps) => {
-  // 只在真正影响渲染的 props 变化时才重新渲染
-  const isCurrentOrSelected = 
-    prevProps.currentCmpId === prevProps.item.id || 
-    prevProps.selectedCmpIds.includes(prevProps.item.id) ||
-    nextProps.currentCmpId === nextProps.item.id || 
-    nextProps.selectedCmpIds.includes(nextProps.item.id);
-  
-  const isHovered = 
-    prevProps.hoverId === prevProps.item.id || 
-    nextProps.hoverId === nextProps.item.id;
+};
 
-  // 如果组件被选中、hover 或者是当前组件，需要更新
-  if (isCurrentOrSelected || isHovered) {
-    return (
-      prevProps.item === nextProps.item &&
-      prevProps.currentCmpId === nextProps.currentCmpId &&
-      prevProps.hoverId === nextProps.hoverId &&
-      prevProps.selectedCmpIds === nextProps.selectedCmpIds
-    );
-  }
-
-  // 其他组件只在自身数据变化时更新
-  return prevProps.item === nextProps.item;
-});
-
-SingleComponent.displayName = 'SingleComponent';
-
-const RenderCmp = () => {
+const RenderCmp = ({ preview = false }: { preview?: boolean }) => {
   const components = useDesignComponentsStore((state) => state.components);
   const setHoverId = useDesignComponentsStore((state) => state.setHoverId);
   const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
   const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
   const hoverId = useDesignComponentsStore((state) => state.hoverId);
-  const state = useDesignStateStore((state) => state.state);
-  const setState = useDesignStateStore((state) => state.setState);
-  const datasource = useDesignDatasourceStore((state) => state.datasource);
   const mutually = useDesignStore((state) => state.panelConfig.mutually);
 
   return components.map((item) => (
@@ -190,11 +220,9 @@ const RenderCmp = () => {
       currentCmpId={currentCmpId}
       selectedCmpIds={selectedCmpIds}
       hoverId={hoverId}
-      state={state}
-      datasource={datasource}
       mutually={mutually}
       setHoverId={setHoverId}
-      setState={setState}
+      preview={preview}
     />
   ));
 };

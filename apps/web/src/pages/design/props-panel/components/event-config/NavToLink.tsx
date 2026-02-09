@@ -56,9 +56,9 @@ const NavToLink = ({
             <InputGroupInput
               placeholder="请输入跳转链接"
               defaultValue={params?.linkUrl || ''}
-              onEnterSearch={(value) => {
+              onChange={(e) => {
                 updateParams({
-                  linkUrl: value,
+                  linkUrl: e.target.value,
                   delay: params!.delay,
                   linkParams: params!.linkParams,
                   isBlank: params!.isBlank,
@@ -72,12 +72,12 @@ const NavToLink = ({
           <InputGroup className="w-[120px]">
             <InputGroupInput
               defaultValue={params?.delay || 0}
-              onEnterSearch={(value) => {
+              onChange={(e) => {
                 updateParams({
                   linkUrl: params!.linkUrl,
                   isBlank: params!.isBlank,
                   linkParams: params!.linkParams,
-                  delay: Number(value),
+                  delay: Number(e.target.value),
                 });
               }}
               type="number"
@@ -96,7 +96,8 @@ const NavToLink = ({
                     placeholder="参数名"
                     className="w-[150px]"
                     defaultValue={item.key}
-                    onEnterSearch={(value) => {
+                    onChange={(e) => {
+                      const value = e.target.value;
                       const newParams = [...params!.linkParams];
                       newParams[index] = { ...newParams[index], key: value };
                       updateParams({
@@ -110,7 +111,8 @@ const NavToLink = ({
                     placeholder="参数值"
                     className="w-[150px]"
                     defaultValue={item.value}
-                    onEnterSearch={(value) => {
+                    onChange={(e) => {
+                      const value = e.target.value;
                       const newParams = [...params!.linkParams];
                       newParams[index] = { ...newParams[index], value: value };
                       updateParams({

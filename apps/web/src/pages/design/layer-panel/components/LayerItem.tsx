@@ -35,6 +35,7 @@ const LayerItem = ({
   const addSelectedCmpIds = useDesignComponentsStore((state) => state.addSelectedCmpIds);
   const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
   const setCurrentCmpId = useDesignComponentsStore((state) => state.setCurrentCmpId);
+  const setCurrentCmp = useDesignComponentsStore((state) => state.setCurrentCmp);
   const updateCurrentCmp = useDesignComponentsStore((state) => state.updateCurrentCmp);
   const hoverId = useDesignComponentsStore((state) => state.hoverId);
   const setHoverId = useDesignComponentsStore((state) => state.setHoverId);
@@ -76,6 +77,7 @@ const LayerItem = ({
             className={`flex items-center justify-between gap-4 px-2 py-1 rounded hover:bg-[#f4f4f5] hover:dark:bg-[#27272a] cursor-pointer ${component.id === currentCmpId || selectedCmpIds.includes(component.id) ? 'bg-[#f4f4f5] dark:bg-[#27272a]' : ''}`}
             onClick={(e) => {
               e.preventDefault();
+              setCurrentCmp({id: '', parentId: ''})
               if (e.shiftKey) {
                 addSelectedCmpIds(component.id);
                 setCurrentCmpId('');
@@ -126,7 +128,7 @@ const LayerItem = ({
   }
   return (
     <div
-      className={`layer-item rounded-[4px] text-left border flex hover:bg-[#f4f4f5] hover:dark:bg-[#27272a] cursor-pointer min-h-10 p-2 transition-all group justify-between ${component.id === currentCmpId || component.id === hoverId || selectedCmpIds.includes(component.id) ? 'bg-[#f4f4f5] dark:bg-[#27272a]' : ''} ${selectedCmpIds.includes(component.id) ? 'dark:border-gray-500 border-[#7b92f9]' : 'border-transparent'}`}
+      className={`layer-item rounded-[4px] text-left border flex dark:border-gray-500 hover:bg-[#f4f4f5] hover:dark:bg-[#27272a] cursor-pointer h-12 p-2 transition-all group justify-between ${component.id === currentCmpId || component.id === hoverId || selectedCmpIds.includes(component.id) ? 'bg-[#f4f4f5] dark:bg-[#27272a]' : ''} ${selectedCmpIds.includes(component.id) ? ' border-[#7b92f9]' : 'border-transparent'}`}
       onMouseEnter={() => setHoverId(component.id)}
       onMouseLeave={() => setHoverId('')}
       onClick={(e) => {
@@ -134,8 +136,12 @@ const LayerItem = ({
         if (e.shiftKey) {
           addSelectedCmpIds(component.id);
           setCurrentCmpId('');
+          setCurrentCmp({id: '', parentId: ''})
         } else {
           setCurrentCmpId(component.id);
+          if (component.parentId) {
+            setCurrentCmp({id: component.id, parentId: component.parentId})
+          }
           setSelectedCmpIds([component.id]);
         }
       }}
@@ -146,7 +152,7 @@ const LayerItem = ({
           <img
             src="https://vue.jeesite.com/js/visual/img/assets/bar.png"
             alt=""
-            className="size-10 shrink-0 rounded-[4px] select-none border-2 border-gray-500"
+            className="w-10 h-8 shrink-0 rounded-[4px] select-none border-2 border-gray-500"
           />
         )}
         <div

@@ -1,11 +1,71 @@
-import { CSSProperties, FC } from 'react';
+import { CSSProperties, FC, useEffect, useRef } from 'react';
 import { TextPropsSchema } from './schema';
 import { getVariableValue } from '../../../../variable';
 import CountUp from 'react-countup';
 import bgIcon from '../assets/text-1.png';
+import { ActionSchema, DatasourceSchema, EventSchema } from '../../../../types';
+import {
+  parseChangeVariableAction,
+  parseFetchApiAction,
+  parseNavToLinkAction,
+  parseNavToPageAction,
+} from '../../../../event';
 
-const Text: FC<TextPropsSchema> = ({ props, style, state, className }) => {
+const Text: FC<
+  TextPropsSchema & {
+    onStateChange: (state: any) => void;
+    datasource: DatasourceSchema[];
+    state: Record<string, any>;
+  }
+> = ({ props, style, state, className, datasource, events, onStateChange }) => {
   const { option, dataType, variable } = props;
+
+  const datasourceRef = useRef(datasource);
+  const stateRef = useRef(state);
+  const onMountedActions = useRef(events?.find((item) => item.type === 'mounted')?.actions);
+  const onUnmountedActions = useRef(events?.find((item) => item.type === 'unmounted')?.actions);
+
+  const onMountedEvent = events?.find((item) => item.type === 'mounted');
+  const onUnmountedEvent = events?.find((item) => item.type === 'unmounted');
+
+  const handleEventActions = (actions?: EventSchema['actions'], e?: any) => {
+    actions?.forEach((action) => {
+      if (action.type === 'changeVariable') {
+        const changeVariableFunc = parseChangeVariableAction(
+          action.value as ActionSchema['changeVariable'],
+        );
+        const copyState = { ...stateRef.current };
+        changeVariableFunc?.(e, copyState);
+        onStateChange?.(copyState);
+      }
+      if (action.type === 'navToPage') {
+        parseNavToPageAction(action.value as ActionSchema['navToPage']);
+      }
+      if (action.type === 'navToLink') {
+        parseNavToLinkAction(action.value as ActionSchema['navToLink']);
+      }
+      if (action.type === 'fetchAPI') {
+        parseFetchApiAction(
+          action.value as ActionSchema['fetchAPI'],
+          stateRef.current,
+          datasourceRef.current,
+          onStateChange,
+        );
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (onMountedEvent) {
+      handleEventActions(onMountedActions.current);
+    }
+    return () => {
+      if (onUnmountedEvent) {
+        handleEventActions(onUnmountedActions.current);
+      }
+    };
+  }, [onMountedEvent, onUnmountedEvent]);
+
   const transformParts = [
     `rotateX(${style?.rotateX ?? 0}deg)`,
     `rotateY(${style?.rotateY ?? 0}deg)`,
@@ -26,7 +86,7 @@ const Text: FC<TextPropsSchema> = ({ props, style, state, className }) => {
     color: option?.textFont.color,
     fontWeight: option?.textFont.fontWeight,
   } as CSSProperties;
-   const unitStyles = {
+  const unitStyles = {
     fontSize: option?.unit.fontSize,
     color: option?.unit.color,
     fontWeight: option?.unit.fontWeight,
@@ -40,6 +100,7 @@ const Text: FC<TextPropsSchema> = ({ props, style, state, className }) => {
       return Number(variableValue) || 0;
     }
   };
+
   return (
     <div
       style={{
@@ -61,7 +122,7 @@ const Text: FC<TextPropsSchema> = ({ props, style, state, className }) => {
           display: 'flex',
           alignItems: 'end',
           lineHeight: 1,
-          gap: 4
+          gap: 4,
         }}
       >
         <CountUp
@@ -70,9 +131,7 @@ const Text: FC<TextPropsSchema> = ({ props, style, state, className }) => {
           decimals={Number(option?.textFont.decimals)}
           separator={option?.textFont.isMonyFormat ? ',' : ''}
         />
-        <span style={{lineHeight: 1, ...unitStyles}}>
-          {option?.unit.content}
-        </span>
+        <span style={{ lineHeight: 1, ...unitStyles }}>{option?.unit.content}</span>
       </div>
       <div
         className="title"

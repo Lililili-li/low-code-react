@@ -76,7 +76,8 @@ const NavToPage = ({
                     placeholder="参数名"
                     className="w-[150px]"
                     defaultValue={item.key}
-                    onEnterSearch={(value) => {
+                    onChange={(e) => {
+                      const value = e.target.value;
                       const newParams = [...params!.linkParams];
                       newParams[index] = { ...newParams[index], key: value };
                       updateParams({
@@ -90,7 +91,8 @@ const NavToPage = ({
                     placeholder="参数值"
                     className="w-[150px]"
                     defaultValue={item.value}
-                    onEnterSearch={(value) => {
+                    onChange={(e) => {
+                      const value = e.target.value;
                       const newParams = [...params!.linkParams];
                       newParams[index] = { ...newParams[index], value: value };
                       updateParams({

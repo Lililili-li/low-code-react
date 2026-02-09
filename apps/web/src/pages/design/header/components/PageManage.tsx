@@ -14,7 +14,7 @@ import {
   AlertDialogAction,
 } from '@repo/ui/components/alert-dialog';
 
-import { ChevronDown, Edit, PlusCircle, Trash2 } from 'lucide-react';
+import { ChevronDown, Copy, Edit, PlusCircle, Trash2 } from 'lucide-react';
 import { IconAlertTriangle } from '@douyinfe/semi-icons';
 import CreatePage from '../../../application/components/PageCenter';
 import SavePage, { SavePageRef } from './SavePage';
@@ -71,6 +71,23 @@ const Select = ({
                   >
                     <span>{item.label}</span>
                     <div className="operate gap-1 flex items-center">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="p-0 size-6 rounded-[50%]"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              navigator.clipboard.writeText(item.value);
+                              toast.success('ID已复制到剪切板');
+                            }}
+                          >
+                            <Copy className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>复制ID</TooltipContent>
+                      </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -136,10 +153,8 @@ const Select = ({
 };
 
 const PageManage = () => {
-
-  const pageSchema = useDesignStore((state) => state.pageSchema)
-  const setPageSchema = useDesignStore((state) => state.setPageSchema)
-
+  const setPageSchema = useDesignStore((state) => state.setPageSchema);
+  const setPages = useDesignStore((state) => state.setPages);
   const [currentPage, setCurrentPage] = useState('1');
 
   const queryParams = useQuery();
@@ -148,28 +163,27 @@ const PageManage = () => {
     {
       onSuccess: (value) => {
         setCurrentPage(value[0].id.toString());
-      }
+        setPages(value);
+      },
     },
   );
 
   useRequest(() => pageApi.getPageById(currentPage), {
     onSuccess: (data: PageProps & { schema: PageSchema }) => {
       if (data) {
-        setPageSchema({
-          ...pageSchema,
-          ...data.schema
-        })
+        setPageSchema(data.schema);
       }
     },
     refreshDeps: [currentPage],
-  })
+  });
 
+  useRequest(() => pageApi.getPagesByApplicationId(Number(queryParams!.id)));
 
   const handleCreateSuccess = () => {
     toast.success('创建成功');
     getPagesByApplicationId();
-  }
-  
+  };
+
   return (
     <div className="header-center flex gap-1 items-center absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
       <Select
@@ -180,7 +194,9 @@ const PageManage = () => {
             value: item.id.toString(),
           })) || []
         }
-        onValueChange={setCurrentPage}
+        onValueChange={(value) => {
+          setCurrentPage(value);
+        }}
         placeholder="请选择页面"
       />
       <CreatePage

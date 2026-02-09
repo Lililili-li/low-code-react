@@ -100,6 +100,8 @@ const Preview = () => {
 
   const showScroll = pageSchema.adapterType === '3' || pageSchema.adapterType === '4';
 
+  
+
   return (
     <div
       className={`bg-[#18181b] h-dvh w-dvw ${showScroll ? 'overflow-x-hidden overflow-y-auto' : `${pageSchema.adapterType !== '5' ? 'overflow-hidden flex justify-center items-center' : ''} `} relative `}
@@ -125,7 +127,7 @@ const Preview = () => {
                   : { backgroundColor: pageSchema.background.color }),
               }}
             >
-              <RenderCmp />
+              <RenderCmp preview/>
             </div>
           </div>
         </div>
@@ -164,7 +166,7 @@ const Preview = () => {
                     : { backgroundColor: pageSchema.background.color }),
                 }}
               >
-                <RenderCmp />
+                <RenderCmp preview/>
               </div>
             </div>
           </div>

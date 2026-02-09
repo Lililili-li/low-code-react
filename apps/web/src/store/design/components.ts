@@ -7,6 +7,7 @@ import { createHistoryRecord, useHistoryStore } from "../history";
 interface ComponentsState {
   components: ComponentSchema[]
   currentCmpId: string
+  currentCmp: { id: string, parentId?: string }
   selectedCmpIds: string[]
   hoverId: string
   componentsMap: Map<string, ComponentSchema>
@@ -15,6 +16,7 @@ interface ComponentsState {
 interface ComponentsActions {
   setComponents: (components?: ComponentSchema[]) => void
   setCurrentCmpId: (id: string) => void
+  setCurrentCmp: (component: { id: string, parentId?: string }) => void
   updateCurrentCmp: (component: Partial<ComponentSchema>) => void
   addComponent: (component: ComponentSchema, recordHistory?: boolean) => void
   updateComponent: (id: string, component: Partial<ComponentSchema>) => void
@@ -37,10 +39,10 @@ export const useDesignComponentsStore = create<ComponentsState & ComponentsActio
     selectedCmpIds: [] as string[],
     hoverId: '',
     componentsMap: new Map(),
-
+    currentCmp: { id: '', parentId: '' },
     setComponents: (components?: ComponentSchema[]) => {
       set((state) => {
-        state.components = [...state.components, ...(components || [])];
+        state.components = components || [];
       })
     },
     setCurrentCmpId: (id: string) => {
@@ -48,12 +50,48 @@ export const useDesignComponentsStore = create<ComponentsState & ComponentsActio
         state.currentCmpId = id;
       })
     },
+    setCurrentCmp: (component: { id: string, parentId?: string }) => {
+      set((state) => {
+        state.currentCmp = component;
+      })
+    },
     // 更新当前选中的组件
     updateCurrentCmp: (component: Partial<ComponentSchema>) => {
       set((state) => {
-        const index = state.components.findIndex(item => item.id === component.id)
-        if (index !== -1) {
-          state.components[index] = { ...state.components[index], ...component } as Draft<ComponentSchema>
+        if (component.parentId) {
+          // 重新计算宽度高度以及left， top
+          const parentCmp = state.components.find(item => item.id === component.parentId)
+          if (parentCmp) {
+            parentCmp.children = parentCmp.children?.map(item => item.id === component.id ? { ...item, ...component } : item)
+            // Recalculate width and height for group components
+            if (parentCmp.group && parentCmp.children) {
+              let maxWidth = 0;
+              let maxHeight = 0;
+              let minLeft = Infinity;
+              let minTop = Infinity;
+              
+              parentCmp.children.forEach(child => {
+                const childLeft = (child.style?.left as number) || 0;
+                const childTop = (child.style?.top as number) || 0;
+                const childWidth = (child.style?.width as number) || 0;
+                const childHeight = (child.style?.height as number) || 0;
+                
+                minLeft = Math.min(minLeft, childLeft);
+                minTop = Math.min(minTop, childTop);
+                maxWidth = Math.max(maxWidth, childLeft + childWidth);
+                maxHeight = Math.max(maxHeight, childTop + childHeight);
+              });
+              
+              parentCmp.style!.width = maxWidth - minLeft;
+              parentCmp.style!.height = maxHeight - minTop;
+            }
+          }
+          
+        } else {
+          const index = state.components.findIndex(item => item.id === component.id)
+          if (index !== -1) {
+            state.components[index] = { ...state.components[index], ...component } as Draft<ComponentSchema>
+          }
         }
       })
     },

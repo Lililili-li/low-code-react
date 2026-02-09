@@ -2,14 +2,10 @@ import { FC, useCallback, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { ChartPropsSchema } from './schema';
 import {
-  parseChangeVariableAction,
-  parseFetchApiAction,
-  parseNavToLinkAction,
-  parseNavToPageAction,
+  handleEventActions,
 } from '../../../event';
-import { ActionSchema, DatasourceSchema } from '@/types';
+import { DatasourceSchema } from '@/types';
 import { getVariableValue } from '../../../variable';
-import { DatasetOption } from 'echarts/types/dist/shared';
 
 const BarVertical: FC<
   ChartPropsSchema & {
@@ -30,6 +26,8 @@ const BarVertical: FC<
   const datasourceRef = useRef(datasource);
   const stateRef = useRef(state);
   const eventActions = useRef(events?.find((item) => item.type === 'chartClick')?.actions);
+  const onMountedActions = useRef(events?.find((item) => item.type === 'mounted')?.actions);
+  const onUnmountedActions = useRef(events?.find((item) => item.type === 'unmounted')?.actions);
 
   useEffect(() => {
     datasourceRef.current = datasource;
@@ -38,37 +36,69 @@ const BarVertical: FC<
   }, [datasource, state, events]);
   const chartClickEvent = events?.find((item) => item.type === 'chartClick');
 
+  const onMountedEvent = events?.find((item) => item.type === 'mounted');
+  const onUnmountedEvent = events?.find((item) => item.type === 'unmounted');
+
+  // const handleEventActions = (actions?: EventSchema['actions'], e?: any) => {
+  //   actions?.forEach((action) => {
+  //     if (action.type === 'changeVariable') {
+  //       const changeVariableFunc = parseChangeVariableAction(
+  //         action.value as ActionSchema['changeVariable'],
+  //       );
+  //       const copyState = { ...stateRef.current };
+  //       changeVariableFunc?.(e, copyState);
+  //       onStateChange?.(copyState);
+  //     }
+  //     if (action.type === 'navToPage') {
+  //       parseNavToPageAction(action.value as ActionSchema['navToPage']);
+  //     }
+  //     if (action.type === 'navToLink') {
+  //       parseNavToLinkAction(action.value as ActionSchema['navToLink']);
+  //     }
+  //     if (action.type === 'fetchAPI') {
+  //       parseFetchApiAction(
+  //         action.value as ActionSchema['fetchAPI'],
+  //         stateRef.current,
+  //         datasourceRef.current,
+  //         onStateChange,
+  //       );
+  //     }
+  //   });
+  // };
   if (chartClickEvent) {
     eventsMap.current['click'] = useCallback(
       (e: any) => {
-        eventActions.current?.forEach((action) => {
-          if (action.type === 'changeVariable') {
-            const changeVariableFunc = parseChangeVariableAction(
-              action.value as ActionSchema['changeVariable'],
-            );
-            const copyState = { ...stateRef.current };
-            changeVariableFunc?.(e, copyState);
-            onStateChange?.(copyState);
-          }
-          if (action.type === 'navToPage') {
-            parseNavToPageAction(action.value as ActionSchema['navToPage']);
-          }
-          if (action.type === 'navToLink') {
-            parseNavToLinkAction(action.value as ActionSchema['navToLink']);
-          }
-          if (action.type === 'fetchAPI') {
-            parseFetchApiAction(
-              action.value as ActionSchema['fetchAPI'],
-              stateRef.current,
-              datasourceRef.current,
-              onStateChange,
-            );
-          }
-        });
+        handleEventActions(
+          {
+            actions: eventActions.current,
+            state: stateRef.current,
+            datasource: datasourceRef.current,
+            onStateChange,
+          },
+          e,
+        );
       },
       [eventActions, onStateChange, stateRef, datasourceRef],
     );
   }
+  useEffect(() => {
+    if (onMountedEvent) {
+      handleEventActions({
+        actions: onMountedActions.current,
+        state: stateRef.current,
+        datasource: datasourceRef.current,
+        onStateChange,
+      });
+    }
+    if (onUnmountedEvent) {
+      handleEventActions({
+        actions: onUnmountedActions.current,
+        state: stateRef.current,
+        datasource: datasourceRef.current,
+        onStateChange,
+      });
+    }
+  }, [onMountedEvent, onUnmountedEvent]);
 
   const newProps = { ...props };
   const newOption = { ...newProps.option };
