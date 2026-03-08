@@ -243,6 +243,49 @@
   }
 }
 
+// 新增的对齐辅助线样式
+.alignment-line {
+  pointer-events: none;
+  animation: fadeIn 0.2s ease-out;
+  
+  &.horizontal {
+    border-top: 1px dashed;
+    
+    &.strong {
+      border-color: #ff6b6b;
+      box-shadow: 0 0 4px rgba(255, 107, 107, 0.3);
+    }
+    
+    &.weak {
+      border-color: #4ecdc4;
+      box-shadow: 0 0 2px rgba(78, 205, 196, 0.2);
+    }
+  }
+  
+  &.vertical {
+    border-left: 1px dashed;
+    
+    &.strong {
+      border-color: #ff6b6b;
+      box-shadow: 0 0 4px rgba(255, 107, 107, 0.3);
+    }
+    
+    &.weak {
+      border-color: #4ecdc4;
+      box-shadow: 0 0 2px rgba(78, 205, 196, 0.2);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .contexify_theme-dark {
   background-color: #1b1b23 !important;
 

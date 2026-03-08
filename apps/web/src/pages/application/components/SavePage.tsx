@@ -36,7 +36,7 @@ const SavePage = ({
   application_id,
 }: {
   ref: React.Ref<SavePageRef>;
-  onCreateSuccess: () => void;
+  onCreateSuccess: (id: string) => void;
   application_id: number;
 }) => {
   const [pageFormVisible, setPageFormVisible] = useState(false);
@@ -58,10 +58,10 @@ const SavePage = ({
     () => pageApi.createPage({ ...form.getValues(), application_id }),
     {
       manual: true,
-      onSuccess: () => {
+      onSuccess: (data) => {
         setPageFormVisible(false);
         form.reset();
-        onCreateSuccess();
+        onCreateSuccess(data.id);
       },
     },
   );

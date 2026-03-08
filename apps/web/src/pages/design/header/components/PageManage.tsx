@@ -24,6 +24,7 @@ import pageApi, { PageProps } from '@/api/page';
 import { toast } from 'sonner';
 import { useDesignStore } from '@/store/design';
 import { PageSchema } from '@repo/core/types';
+import { useNavigate } from 'react-router';
 
 const Select = ({
   options,
@@ -156,15 +157,15 @@ const PageManage = () => {
   const setPageSchema = useDesignStore((state) => state.setPageSchema);
   const setPages = useDesignStore((state) => state.setPages);
   const [currentPage, setCurrentPage] = useState('1');
-
+  const navigate = useNavigate()
   const queryParams = useQuery();
   const { data: pageOptions, runAsync: getPagesByApplicationId } = useRequest(
-    () => pageApi.getPagesByApplicationId(Number(queryParams!.id)),
+    () => pageApi.getPagesByApplicationId(Number(queryParams!.applicationId)),
     {
       onSuccess: (value) => {
-        setCurrentPage(value[0].id.toString());
+        setCurrentPage(queryParams?.pageId? queryParams?.pageId: value[0].id.toString());
         setPages(value);
-      },
+      }
     },
   );
 
@@ -176,8 +177,6 @@ const PageManage = () => {
     },
     refreshDeps: [currentPage],
   });
-
-  useRequest(() => pageApi.getPagesByApplicationId(Number(queryParams!.id)));
 
   const handleCreateSuccess = () => {
     toast.success('创建成功');
@@ -196,6 +195,7 @@ const PageManage = () => {
         }
         onValueChange={(value) => {
           setCurrentPage(value);
+           navigate(`/design?applicationId=${queryParams!.applicationId}&pageId=${value}`)
         }}
         placeholder="请选择页面"
       />
@@ -205,7 +205,7 @@ const PageManage = () => {
             <PlusCircle />
           </Button>
         }
-        application_id={Number(queryParams!.id)}
+        application_id={Number(queryParams!.applicationId)}
         onCreateSuccess={handleCreateSuccess}
       />
     </div>

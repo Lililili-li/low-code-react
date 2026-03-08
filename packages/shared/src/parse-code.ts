@@ -170,7 +170,6 @@ export function executeJSCode(
       ${transformedCode}
       return ${componentName};
     `;
-
     const func = new Function(...scopeKeys, wrappedCode);
     const result = func(...scopeValues);
     

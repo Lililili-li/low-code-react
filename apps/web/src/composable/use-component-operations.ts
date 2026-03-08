@@ -183,7 +183,7 @@ export function useComponentOperations() {
       if (type === 'top') {
         updateCurrentCmp({ ...component!, style: { ...component?.style, zIndex: 99999 } })
       } else if (type === 'bottom') {
-        updateCurrentCmp({ ...component!, style: { ...component?.style, zIndex: -99999 } })
+        updateCurrentCmp({ ...component!, style: { ...component?.style, zIndex: 0 } })
       } else if (type === 'up') {
         const currentZIndex = Number(component?.style?.zIndex) || 0;
         updateCurrentCmp({ ...component!, style: { ...component?.style, zIndex: currentZIndex + 1 } })

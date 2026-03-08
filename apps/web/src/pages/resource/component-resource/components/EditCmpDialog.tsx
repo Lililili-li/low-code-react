@@ -148,7 +148,7 @@ const EditCmpDialog = ({ id, onBack }: EditCmpDialogProps) => {
 
   return (
     <div className="flex flex-col h-full px-3">
-      <div className="header flex h-[50px] items-center justify-between text-sm relative">
+      <div className="header flex h-[50px] items-center justify-between text-sm relative shrink-0">
         <div className="left flex h-full ">
           <div
             className="back flex items-center cursor-pointer"

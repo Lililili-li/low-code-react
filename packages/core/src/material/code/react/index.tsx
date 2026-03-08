@@ -1,21 +1,21 @@
 import { createFunctionComponent } from '@repo/shared/index';
+import { useMemo } from 'react';
 import { ReactCodePropsSchema } from './schema';
 
 const ReactComponent = ({
   props,
   state,
-}: ReactCodePropsSchema & { state: Record<string, any> }) => {
+  onStateChange,
+}: ReactCodePropsSchema & { state: Record<string, any>; onStateChange: (state: Record<string, any>) => void }) => {
   const { option } = props;
 
-  const Component = createFunctionComponent(option.code, {
-    imports: {
-      state,
-    },
-  });
+  const Component = useMemo(() => createFunctionComponent(option.code, {
+    imports: {},
+  }), [option.code]);
 
   return (
     <div className="react-code-cmp h-full">
-      <Component />
+      <Component state={state} setState={onStateChange} />
     </div>
   );
 };

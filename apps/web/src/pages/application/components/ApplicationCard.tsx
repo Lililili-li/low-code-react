@@ -22,11 +22,11 @@ const ApplicationCard = ({
   projectOptions,
 }: ApplicationCardProps) => {
 
-  const handleCreatePage = () => {
+  const handleCreatePage = (id: string) => {
     toast.success('创建成功');
     getApplications()
     setTimeout(() => {
-      window.open('/design?id=' + data.id, '_blank');
+      window.open('/design?applicationId=' + data.id + '&pageId=' + id, '_blank');
     }, 1000);
   };
 
@@ -52,7 +52,7 @@ const ApplicationCard = ({
           </div>
           <div className="dev w-[50%] text-muted-foreground">
             <span>所属行业：</span>
-            {data.industry?.name}
+            {data.category?.name}
           </div>
         </div>
         <div className="information flex items-center mt-2 text-sm">
@@ -132,7 +132,7 @@ const ApplicationCard = ({
                 variant="default"
                 size="sm"
                 onClick={() => {
-                  window.open('/design?id=' + data.id, '_blank');
+                  window.open('/design?applicationId=' + data.id + '&pageId=' + data.pages[0].id, '_blank');
                 }}
               >
                 <Wrench />

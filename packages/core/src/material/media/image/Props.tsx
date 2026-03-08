@@ -32,8 +32,6 @@ const Props = ({
   const { props } = schema || { option: {}, dataType: '1', variable: '' };
 
   const option = props?.option || defaultOption;
-  console.log(option);
-  
   const updateOptions = (key: string, value: any) => {
     return updateSchema?.({
       ...schema,

@@ -7,7 +7,7 @@ import Demo from '@/pages/Demo';
 
 const Login = lazy(() => import('@/pages/Login'));
 const Layout = lazy(() => import('@/layout'));
-const Preview = lazy(() => import('@/pages/Preview'));
+const Preview = lazy(() => import('@/pages/preview'));
 
 const Dashboard = lazy(() => import('@/pages/dashboard/Dashboard'));
 const Application = lazy(() => import('@/pages/application'));

@@ -13,7 +13,7 @@ const BarVertical: FC<
     datasource: DatasourceSchema[];
     state: Record<string, any>;
   }
-> = ({ props, style, state, events, onStateChange, datasource }) => {
+> = ({ props, style, state, events, onStateChange, datasource, className }) => {
   const transformParts = [
     `rotateX(${style?.rotateX ?? 0}deg)`,
     `rotateY(${style?.rotateY ?? 0}deg)`,
@@ -114,6 +114,7 @@ const BarVertical: FC<
       option={newOption}
       style={{ width: style?.width, height: style?.height, transform: transformParts.join(' ') }}
       onEvents={eventsMap.current}
+      className={className}
     />
   );
 };

@@ -28,6 +28,7 @@ import userApi from '@/api/user'
 import { UserState, useUserStore } from "@/store/user";
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next";
+import { Component as AnimatedCharactersLogin } from "@/components/AnimatedCharactersLogin";
 
 const Header = () => {
   return (
@@ -90,7 +91,7 @@ const Login = () => {
 
   return (
     <div className="login-container h-dvh flex flex-col">
-      <Header />
+      {/* <Header />
       <div className="content flex justify-center items-center flex-1 flex-col w-1/4 mx-auto">
         <h1 className="font-bold">{t('login.welcome')}</h1>
         <p className="text-sm text-gray-500 mt-2 ">{t('login.description')}</p>
@@ -164,7 +165,8 @@ const Login = () => {
             </Button>
           </form>
         </Form>
-      </div>
+      </div> */}
+      <AnimatedCharactersLogin />
     </div>
   );
 };

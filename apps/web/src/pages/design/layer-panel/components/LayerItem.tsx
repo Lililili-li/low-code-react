@@ -74,7 +74,7 @@ const LayerItem = ({
           className="flex flex-col gap-2"
         >
           <div
-            className={`flex items-center justify-between gap-4 px-2 py-1 rounded hover:bg-[#f4f4f5] hover:dark:bg-[#27272a] cursor-pointer ${component.id === currentCmpId || selectedCmpIds.includes(component.id) ? 'bg-[#f4f4f5] dark:bg-[#27272a]' : ''}`}
+            className={`flex items-center h-9 justify-between gap-4 px-2 py-1 rounded hover:bg-[#f4f4f5] hover:dark:bg-[#27272a] cursor-pointer ${component.id === currentCmpId || selectedCmpIds.includes(component.id) ? 'bg-[#f4f4f5] dark:bg-[#27272a]' : ''}`}
             onClick={(e) => {
               e.preventDefault();
               setCurrentCmp({id: '', parentId: ''})
@@ -88,14 +88,14 @@ const LayerItem = ({
             }}
           >
             <div className="flex gap-2 items-center text-sm">
-              {Boolean(collapsibleItem?.[component.id]) ? <FolderOpen /> : <FolderClosed />}
+              {Boolean(collapsibleItem?.[component.id]) ? <FolderOpen className='size-4.5'/> : <FolderClosed className='size-4.5' />}
               <span>{component.name}</span>
             </div>
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8"
+                className="size-6"
                 onClick={() => {
                   setCollapsibleItem?.((prev: any) => {
                     const newState = { ...prev };
@@ -128,7 +128,7 @@ const LayerItem = ({
   }
   return (
     <div
-      className={`layer-item rounded-[4px] text-left border flex dark:border-gray-500 hover:bg-[#f4f4f5] hover:dark:bg-[#27272a] cursor-pointer h-12 p-2 transition-all group justify-between ${component.id === currentCmpId || component.id === hoverId || selectedCmpIds.includes(component.id) ? 'bg-[#f4f4f5] dark:bg-[#27272a]' : ''} ${selectedCmpIds.includes(component.id) ? ' border-[#7b92f9]' : 'border-transparent'}`}
+      className={`layer-item rounded-[4px] text-left border flex hover:bg-[#f4f4f5] hover:dark:bg-[#27272a] cursor-pointer h-12 p-2 transition-all group justify-between ${component.id === currentCmpId || component.id === hoverId || selectedCmpIds.includes(component.id) ? 'bg-[#f4f4f5] dark:bg-[#27272a]' : ''} ${selectedCmpIds.includes(component.id) ? ' border-[#0d37f7]' : ''}`}
       onMouseEnter={() => setHoverId(component.id)}
       onMouseLeave={() => setHoverId('')}
       onClick={(e) => {
@@ -156,7 +156,7 @@ const LayerItem = ({
           />
         )}
         <div
-          className={`name select-none text-sm text-ellipsis whitespace-nowrap overflow-hidden flex-1 ${component.id === currentCmpId ? 'text-primary' : ''}`}
+          className={`name select-none text-sm text-ellipsis whitespace-nowrap overflow-hidden flex-1`}
         >
           {component.name}
         </div>
@@ -176,9 +176,9 @@ const LayerItem = ({
                 }
               >
                 {component.visibleProp?.value ? (
-                  <Eye12Regular className="size-5" />
+                  <Eye12Regular className="size-4" />
                 ) : (
-                  <EyeOff16Regular className="size-5 text-primary" />
+                  <EyeOff16Regular className="size-4 text-primary" />
                 )}
               </TooltipTrigger>
               <TooltipContent>{component.visibleProp?.value ? '隐藏' : '显示'}</TooltipContent>
@@ -193,9 +193,9 @@ const LayerItem = ({
               onClick={() => updateCurrentCmp({ ...component, lock: !component.lock })}
             >
               {component.lock ? (
-                <Unlock className="size-4 text-primary" />
+                <Unlock className="size-3.5 text-primary" />
               ) : (
-                <Lock className="size-4" />
+                <Lock className="size-3.5" />
               )}
             </TooltipTrigger>
             <TooltipContent>{component.lock ? '解锁' : '锁定'}</TooltipContent>

@@ -156,10 +156,10 @@ const PagePanel = () => {
 
   const { data: application, runAsync: getApplication } = useRequest(
     () => {
-      return applicationApi.getApplicationById(Number(queryParams?.id));
+      return applicationApi.getApplicationById(Number(queryParams?.applicationId));
     },
     {
-      refreshDeps: [queryParams?.id],
+      refreshDeps: [queryParams?.applicationId],
     },
   );
 
@@ -169,7 +169,7 @@ const PagePanel = () => {
         {
           cover: path,
         },
-        Number(queryParams?.id),
+        Number(queryParams?.applicationId),
       ),
     {
       manual: true,

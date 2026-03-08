@@ -15,7 +15,7 @@ import SavePage, { SavePageRef } from './SavePage';
 interface PageCenterProps {
   renderTrigger: React.ReactNode;
   type?: 'create' | 'update';
-  onCreateSuccess: () => void;
+  onCreateSuccess: (id: string) => void;
   application_id: number;
 }
 
@@ -102,8 +102,8 @@ const PageCenter = ({ renderTrigger, type = 'create', onCreateSuccess, applicati
       </DialogContent>
       <SavePage
         ref={savePageRef}
-        onCreateSuccess={() => {
-          onCreateSuccess();
+        onCreateSuccess={(id) => {
+          onCreateSuccess(id);
           setOpenDialog(false);
         }}
         application_id={application_id}

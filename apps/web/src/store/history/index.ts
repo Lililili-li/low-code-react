@@ -282,7 +282,7 @@ export const useHistoryStore = create<HistoryState & HistoryActions>()(
     redoRecords: [],
     currentIndex: -1,
     maxRecords: 50, // 最多保存50条记录
-
+    
     push: (record) => {
       set((state) => {
         // 如果当前不在最新位置，删除当前位置之后的所有记录

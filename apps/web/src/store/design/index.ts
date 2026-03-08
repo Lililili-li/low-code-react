@@ -9,7 +9,7 @@ import { PageProps } from "@/api/page";
 
 export interface DesignState {
   panelConfig: {
-    siderBarModel: 'material' | 'layers' | 'variable' | 'datasource' | null // 侧边栏当前打开的组件
+    siderBarModel: 'material' | 'layers' | 'variable' | 'datasource' | 'history' | null // 侧边栏当前打开的组件
     canvasPanel: {
       zoom: number
       lockZoom: boolean
@@ -17,7 +17,6 @@ export interface DesignState {
     propPanel: {
       open: boolean
     },
-    mutually: boolean
   }
   pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>,
   pages: PageProps[]
@@ -29,7 +28,6 @@ export interface DesignActions {
   setCanvasPanel: (canvasPanel: Partial<DesignState['panelConfig']['canvasPanel']>) => void
   setPageSchema: (pageSchema: PageSchema) => void
   updatePageSchema: (key: keyof Omit<PageSchema, 'components' | 'state'>, value: any) => void
-  setMutually: (open: boolean) => void
   setPages: (pages: PageProps[]) => void
 }
 
@@ -105,12 +103,6 @@ export const useDesignStore = create<DesignState & DesignActions>()(
         Object.assign(state.panelConfig.canvasPanel, canvasPanel)
       })
     },
-    setMutually: (open: boolean) => {
-      set((state) => {
-        state.panelConfig.mutually = open
-      })
-    },
-
     setPages(pages: PageProps[]) {
       set((state) => {
         state.pages = pages

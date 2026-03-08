@@ -5,6 +5,34 @@ import { RefObject, useCallback, useRef } from "react";
 import { eventBus } from '@repo/shared/index';
 import { createHistoryRecord, useHistoryStore } from "@/store/history";
 import { useDesignComponentsStore } from "@/store/design/components";
+import { useHelperLines } from "@/composable/use-helper-lines";
+
+// 节流函数
+const throttle = <T extends (...args: any[]) => void>(
+  func: T,
+  delay: number
+): ((...args: Parameters<T>) => void) => {
+  let timeoutId: NodeJS.Timeout | null = null;
+  let lastExecTime = 0;
+  
+  return (...args: Parameters<T>) => {
+    const currentTime = Date.now();
+    
+    if (currentTime - lastExecTime > delay) {
+      func(...args);
+      lastExecTime = currentTime;
+    } else {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => {
+        func(...args);
+        lastExecTime = Date.now();
+        timeoutId = null;
+      }, delay - (currentTime - lastExecTime));
+    }
+  };
+};
 
 interface CanvasEventProps {
   setScope: (key: string) => void
@@ -29,6 +57,16 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
   const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
 
   const pushHistory = useHistoryStore.getState().push;
+  
+  // 辅助线吸附系统
+  const { calculateSnap, calculateMultiSnap } = useHelperLines();
+
+  // 创建节流的辅助线更新函数
+  const throttledHelperLineUpdate = useRef(
+    throttle(() => {
+      eventBus.emit('handleHelperLine');
+    }, 16) // 约60fps
+  ).current;
 
 
 
@@ -244,7 +282,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
     [currentCmpId, components, setCurrentCmpId, spacePressed, selectedCmpIds],
   );
 
-  // 拖拽单个组件移动
+  // 拖拽单个组件移动 - 优化版本
   const handleDrag = useCallback(
     (
       moveX: number,
@@ -254,28 +292,59 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
     ) => {
       moveY = Number(Number(moveY).toFixed(0));
       moveX = Number(Number(moveX).toFixed(0));
+      
+      // 直接计算新位置，减少不必要的对象创建
+      const newLeft = dom.left + moveX;
+      const newTop = dom.top + moveY;
+      
+      // 简化吸附计算，只在必要时进行
+      let finalLeft = newLeft;
+      let finalTop = newTop;
+      
+      // 只在有其他组件时才计算吸附
+      if (components.length > 1) {
+        const tempComponent = {
+          ...draggedCmp,
+          style: {
+            ...draggedCmp.style,
+            left: newLeft,
+            top: newTop,
+          },
+        };
+        
+        const snapResult = calculateSnap(tempComponent, [draggedCmp.id]);
+        finalLeft = snapResult.snappedX;
+        finalTop = snapResult.snappedY;
+        
+        // 立即更新辅助线显示
+        eventBus.emit('handleHelperLine');
+      }
+      
+      // 应用最终位置
       updateCurrentCmp({
         ...draggedCmp,
         style: {
           ...draggedCmp.style,
-          left: dom.left + moveX,
-          top: dom.top + moveY,
+          left: finalLeft,
+          top: finalTop,
         },
       });
     },
-    [updateCurrentCmp],
+    [updateCurrentCmp, calculateSnap, components.length],
   );
 
-  // 拖拽多个组件移动
+  // 拖拽多个组件移动 - 优化版本
   const handleMultiDrag = useCallback(
     (moveX: number, moveY: number) => {
       const initialPositions = dragStateRef.current.multiDragInitialPositions;
       if (initialPositions.length === 0) return;
 
-      const updatedComponents = initialPositions
+      // 直接计算最终位置，减少中间步骤
+      const finalComponents = initialPositions
         .map((initial) => {
           const component = components.find((cmp) => cmp.id === initial.id);
           if (!component) return null;
+          
           return {
             ...component,
             style: {
@@ -286,9 +355,28 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
           };
         })
         .filter(Boolean) as ComponentSchema[];
-      updateSelectCmp(updatedComponents);
+      
+      // 只在有其他组件时才计算吸附
+      if (components.length > selectedCmpIds.length) {
+        const snapResult = calculateMultiSnap(finalComponents, selectedCmpIds);
+        
+        // 应用吸附偏移
+        finalComponents.forEach((component, index) => {
+          const initial = initialPositions[index];
+          component.style = {
+            ...component.style,
+            left: initial.left + moveX + snapResult.snappedX,
+            top: initial.top + moveY + snapResult.snappedY,
+          };
+        });
+        
+        // 立即更新辅助线显示
+        eventBus.emit('handleHelperLine');
+      }
+      
+      updateSelectCmp(finalComponents);
     },
-    [components, updateSelectCmp],
+    [components, updateSelectCmp, calculateMultiSnap, selectedCmpIds, components.length],
   );
 
   // 拖拽缩放
@@ -398,7 +486,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
     [setScrollX, setScrollY],
   );
 
-  // 鼠标移动综合处理
+  // 鼠标移动综合处理 - 优化版本
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       const dragState = dragStateRef.current;
@@ -427,9 +515,11 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       } else if (dragState.scale.isScaling) {
         handleScale(dragState.scale.direction, moveX, moveY, dragState.draggedCmp!, dragState.dom);
       }
-      eventBus.emit('handleHelperLine');
+      
+      // 使用节流的辅助线更新
+      throttledHelperLineUpdate();
     },
-    [zoom, handleDrag, handleScale, selectedCmpIds],
+    [zoom, handleDrag, handleScale, handleMultiDrag, selectedCmpIds, throttledHelperLineUpdate],
   );
 
   const isComponentMoved = (dragState: typeof dragStateRef.current) => {

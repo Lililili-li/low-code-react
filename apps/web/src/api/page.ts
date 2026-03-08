@@ -12,7 +12,7 @@ export interface PageProps {
   application_id: number
 }
 
-const createPage = (data: CreatePageParams) => {
+const createPage = (data: CreatePageParams): Promise<PageProps> => {
   return request.post('/application/page', data)
 }
 

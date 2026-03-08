@@ -11,7 +11,7 @@ import { Button } from '@repo/ui/components/button';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import Empty from '@/components/Empty';
 import SaveDatasource, { SaveDatasourceRef } from './components/SaveDatasource';
-import { useDesignDatasourceStore } from '@/store/design/dataSource';
+import { useDesignDatasourceStore } from '@/store/design/datasource';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/tooltip';
 import { cloneDeep } from 'lodash-es';
 import {
@@ -190,7 +190,7 @@ const DatasourcePanel = () => {
             deleteRecord={deleteRecord}
           />
         ) : (
-          <div className="variable-list border-t py-3 mt-3 gap-2">
+          <div className="py-3 mt-3 gap-2">
             <Empty description="暂无数据" />
           </div>
         )}

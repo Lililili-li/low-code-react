@@ -118,4 +118,6 @@ export const materialCmpList: MaterialCmpProps[] = [
   }
 ]
 
+export { DynamicComponentLoader, getSyncComponent, getLazyComponent } from './loader';
+
 export default materialCmp;
