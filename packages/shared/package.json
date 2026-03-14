@@ -17,9 +17,11 @@
     "eslint": "^8.57.0",
     "typescript": "5.5.4",
     "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7"
+    "@types/react-dom": "^19.1.7",
+    "@babel/standalone": "^7.28.5"
   },
   "exports": {
+    ".": "./src/index.ts",
     "./app": "./src/app/index.ts",
     "./request": "./src/request/index.ts",
     "./index": "./src/index.ts",

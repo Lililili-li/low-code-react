@@ -14,6 +14,7 @@
     "@douyinfe/semi-icons-lab": "^2.89.0",
     "@hookform/resolvers": "^5.2.2",
     "@repo/core": "workspace:*",
+    "@repo/react-repl": "workspace:*",
     "@repo/ui": "workspace:*",
     "@scena/react-ruler": "^0.19.0",
     "@tailwindcss/vite": "^4.1.17",

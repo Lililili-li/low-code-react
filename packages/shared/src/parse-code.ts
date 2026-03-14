@@ -142,16 +142,37 @@ export function executeJSCode(
       return () => null;
     }
 
-    // 移除 import 和 export 语句，因为在 Function 构造器中无法使用
+    // 移除 import 和 export 语句
     let processedCode = code
-      .replace(/import\s+.*?from\s+['"].*?['"];?\s*/g, '') // 移除 import
-      .replace(/export\s+(default\s+)?/g, ''); // 移除 export 和 export default
+      // 移除所有 import 语句
+      .replace(/\bimport\s+(?:(?:\w+|\{[^}]*\})\s+from\s+)?(?:['"][^'"]+['"]|[^;\n]+)[;\n]?/g, '')
+      // 移除 export 语句
+      .replace(/export\s+default\s+/g, '')
+      .replace(/export\s+(?:const|let|var|function|class)\s+/g, '')
+      .replace(/export\s*\{[^}]*\}[\s;]*/g, '')
+      .replace(/\bexport\b/g, '')
+      // 清理多余的空行和空格
+      .replace(/\n\s*\n\s*\n/g, '\n\n')
+      .replace(/;[\s]*;/g, ';')
+      .trim();
     
-    const transformedCode = Babel.transform(processedCode, {
-      presets: ['react', 'typescript'],
-      filename: 'virtual.tsx',
-    }).code;
-
+    console.log('Original code:', code);
+    console.log('Processed code:', processedCode);
+    
+    // 使用 Babel 转换 JSX
+    let transformedCode;
+    try {
+      transformedCode = Babel.transform(processedCode, {
+        presets: [['react', { runtime: 'classic' }]], // 使用 classic runtime 避免自动 import
+        filename: 'virtual.jsx',
+        plugins: [],
+        babelrc: false,
+        configFile: false
+      }).code;
+    } catch (babelError) {
+      transformedCode = processedCode;
+    }
+    
     const allScope = {
       React,
       useState: React.useState,
@@ -170,14 +191,31 @@ export function executeJSCode(
       ${transformedCode}
       return ${componentName};
     `;
-    const func = new Function(...scopeKeys, wrappedCode);
-    const result = func(...scopeValues);
     
-    if (typeof result === 'function') {
-      return result;
+    // 检查代码中是否还有 import 语句
+    if (wrappedCode.includes('import')) {
+      console.error('ERROR: Code still contains import statements!');
+      console.error('Problematic code:', wrappedCode);
+      return () => React.createElement('div', { 
+        style: { color: 'red', padding: '10px', border: '1px solid red', borderRadius: '4px' } 
+      }, '代码中仍包含 import 语句，无法执行');
     }
+    
+    try {
+      const func = new Function(...scopeKeys, wrappedCode);
+      const result = func(...scopeValues);
+      
+      if (typeof result === 'function') {
+        return result;
+      }
 
-    throw new Error('代码未返回有效的函数组件');
+      throw new Error('代码未返回有效的函数组件');
+    } catch (functionError) {
+      console.error('Function execution error:', functionError);
+      console.error('Scope keys:', scopeKeys);
+      console.error('Transformed code that caused error:', transformedCode);
+      throw functionError;
+    }
   } catch (error) {
     console.error('JS Code Execution Error:', error);
     return () => React.createElement('div', { 
@@ -194,8 +232,11 @@ export function createComponentFromJSX(
     const { scope = {}, imports = {} } = options;
     
     const code = Babel.transform(jsxString, {
-      presets: ['react', 'typescript'],
-      filename: 'virtual.tsx',
+      presets: [['react', { runtime: 'automatic' }]],
+      filename: 'virtual.jsx',
+      plugins: [],
+      babelrc: false,
+      configFile: false
     }).code;
 
     const allScope = {

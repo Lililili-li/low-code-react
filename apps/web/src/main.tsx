@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { enableMapSet } from "immer";
-import "@repo/ui/globals.css";
+import "@repo/ui/styles/globals.css";
 import "./style.css";
 import router from "@/router";
 import { RouterProvider } from "react-router";

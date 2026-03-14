@@ -8,7 +8,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@repo/ui/*": ["../../packages/ui/src/*"],
-      "@repo/core/*": ["../../packages/core/src/*"]
+      "@repo/core/*": ["../../packages/core/src/*"],
+      "@repo/react-repl": ["../../packages/react-repl/src/index.ts"]
     },
     "allowImportingTsExtensions":false
   }

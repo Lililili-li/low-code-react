@@ -1,0 +1,63 @@
+{
+  "name": "@repo/react-repl",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "A standalone React REPL component for live code editing and preview",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint \"**/*.ts*\"",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/shared": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "react": "^19.1.1",
+    "lucide-react": "^0.263.1"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "eslint": "^8.57.0",
+    "typescript": "5.5.4",
+    "tsup": "^7.2.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./styles": "./dist/styles.css"
+  },
+  "keywords": [
+    "react",
+    "repl",
+    "code-editor",
+    "live-preview",
+    "typescript",
+    "javascript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/low-code-react"
+  },
+  "author": "Your Name",
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

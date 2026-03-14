@@ -2,8 +2,6 @@ import { createBrowserRouter } from 'react-router';
 import AuthGuard from '@/components/AuthGuard';
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import JSXDemo from '@/pages/JSXDemo';
-import Demo from '@/pages/Demo';
 
 const Login = lazy(() => import('@/pages/Login'));
 const Layout = lazy(() => import('@/layout'));
@@ -16,11 +14,15 @@ const FileResource = lazy(() => import('@/pages/resource/file-resource'));
 const MapResource = lazy(() => import('@/pages/resource/map-resource'));
 
 const CategoryManage = lazy(() => import('@/pages/system/category-manage'));
-const Template = lazy(() => import('@/pages/template'));
+const JSXDemo = lazy(() => import('@/pages/JSXDemo'));
+const Demo = lazy(() => import('@/pages/Demo'));
+const ReactRepl = lazy(() => import('@/pages/ReactRepl'));
 
 const Design = lazy(() => import('@/pages/design'));
 
 const ProjectResource = lazy(() => import('@/pages/project/resource'));
+
+const Template = lazy(() => import('@/pages/template'));
 
 const router = createBrowserRouter([
   {
@@ -156,6 +158,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<LoadingSpinner />}>
         <Demo />
+      </Suspense>
+    ),
+  },
+  {
+    path: 'react-repl',
+    element: (
+      <Suspense fallback={<LoadingSpinner />}>
+        <ReactRepl />
       </Suspense>
     ),
   },
