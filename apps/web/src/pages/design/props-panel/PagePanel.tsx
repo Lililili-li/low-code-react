@@ -24,11 +24,13 @@ import {
   AccordionTrigger,
 } from '@repo/ui/components/accordion';
 import { useShallow } from 'zustand/react/shallow';
-import { useQuery } from '@/composable/use-query';
+import { parseQuery } from '@/composable/use-query';
 import applicationApi from '@/api/application';
 import { useRequest } from 'ahooks';
+import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import { toPng } from 'html-to-image';
+import { useNavigate } from 'react-router';
 
 const bgApply = [
   {
@@ -152,13 +154,21 @@ const PagePanel = () => {
     }
   }, [pageSchema.background]);
 
-  const queryParams = useQuery();
+  const queryParams = parseQuery<{applicationId: string, id: string}>();
+
+  const navigate = useNavigate();
 
   const { data: application, runAsync: getApplication } = useRequest(
     () => {
       return applicationApi.getApplicationById(Number(queryParams?.applicationId));
     },
+
     {
+      onError: (error) => {
+        if (isAxiosError(error) && error.response?.status === 403) {
+          navigate('/forbidden');
+        }
+      },
       refreshDeps: [queryParams?.applicationId],
     },
   );

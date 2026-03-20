@@ -3,6 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { persist } from "zustand/middleware";
 export interface UserState {
   user: {
+    id: string | null,
     avatar: string | null
     account: string,
     user_name: string,
@@ -21,6 +22,7 @@ export const useUserStore = create<UserState & UserActions>()(
   persist(
     immer((set) => ({
       user: {
+        id: null,
         avatar: null,
         account: '',
         user_name: '',
@@ -36,6 +38,7 @@ export const useUserStore = create<UserState & UserActions>()(
       clearUser: () => {
         set((state) => {
           state.user = {
+            id: null,
             avatar: null,
             account: '',
             user_name: '',

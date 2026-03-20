@@ -16,7 +16,7 @@ export const useAppStore = create<AppState & AppActions>()(
   persist(
     immer((set) => ({
       config: {
-        theme: 'light',
+        theme: 'dark',
         language: 'zh-CN',
       },
       updateAppConfig: (config:Partial<AppState['config']>) => {

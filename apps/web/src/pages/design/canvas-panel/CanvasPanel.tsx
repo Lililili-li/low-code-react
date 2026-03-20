@@ -5,7 +5,7 @@ import { useDesignStore } from '@/store/design';
 import ShadowView from 'react-shadow';
 import AnimationCss from 'animate.css?inline';
 import ReactContexifyCss from 'react-contexify/ReactContexify.css?inline';
-import tailwindCss from '@repo/ui/globals.css?inline';
+import tailwindCss from '@repo/ui/styles/globals.css?inline';
 import shadowStyles from './assets/ShadowDom.less?inline';
 import { useTheme } from '@/composable/use-theme';
 import Ruler from '@scena/react-ruler';
@@ -165,6 +165,8 @@ const CanvasPanel = () => {
     return () => eventBus.off('handleResize');
   }, []);
 
+
+
   return (
     <div className="canvas-panel w-full flex flex-col h-[calc(100vh-50px)]">
       <div className="canvas-container h-[calc(100%-50px)]">
@@ -172,23 +174,25 @@ const CanvasPanel = () => {
           <style>{AnimationCss}</style>
           <style>{shadowStyles}</style>
           <style>{ReactContexifyCss}</style>
-          <style>{(() => {
-            try {
-              if (!globalCss || typeof globalCss !== 'string') return '/* No global CSS */';
-              if (globalCss.trim() === '') return '/* Empty global CSS */';
-              // Basic CSS validation - check for balanced braces
-              const openBraces = (globalCss.match(/{/g) || []).length;
-              const closeBraces = (globalCss.match(/}/g) || []).length;
-              if (openBraces !== closeBraces) {
-                console.warn('Global CSS has unbalanced braces, using fallback');
-                return '/* Invalid global CSS - unbalanced braces */';
+          <style>
+            {(() => {
+              try {
+                if (!globalCss || typeof globalCss !== 'string') return '/* No global CSS */';
+                if (globalCss.trim() === '') return '/* Empty global CSS */';
+                // Basic CSS validation - check for balanced braces
+                const openBraces = (globalCss.match(/{/g) || []).length;
+                const closeBraces = (globalCss.match(/}/g) || []).length;
+                if (openBraces !== closeBraces) {
+                  console.warn('Global CSS has unbalanced braces, using fallback');
+                  return '/* Invalid global CSS - unbalanced braces */';
+                }
+                return globalCss;
+              } catch (error) {
+                console.error('Error processing global CSS:', error);
+                return '/* Error processing global CSS */';
               }
-              return globalCss;
-            } catch (error) {
-              console.error('Error processing global CSS:', error);
-              return '/* Error processing global CSS */';
-            }
-          })()}</style>
+            })()}
+          </style>
           <style>{tailwindCss}</style>
           <div className={`${theme === 'dark' ? 'dark ruler-wrapper' : 'ruler-wrapper'} `}>
             <div className="ruler-top-row" style={{ height: RULER_SIZE }}>

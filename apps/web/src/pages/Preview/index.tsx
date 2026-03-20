@@ -30,7 +30,7 @@ const Preview = () => {
         setPageSchema({
           ...pageSchema,
           ...data.schema,
-        });
+        }, data.id);
       }
     },
     refreshDeps: [queryParams.id],

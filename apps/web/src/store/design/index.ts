@@ -9,7 +9,7 @@ import { PageProps } from "@/api/page";
 
 export interface DesignState {
   panelConfig: {
-    siderBarModel: 'material' | 'layers' | 'variable' | 'datasource' | 'history' | null // 侧边栏当前打开的组件
+    siderBarModel: 'material' | 'layers' | 'variable' | 'datasource' | null // 侧边栏当前打开的组件
     canvasPanel: {
       zoom: number
       lockZoom: boolean
@@ -19,6 +19,7 @@ export interface DesignState {
     },
   }
   pageSchema: Omit<PageSchema, 'components' | 'state' | 'datasource'>,
+  schemaPageId: string
   pages: PageProps[]
 }
 
@@ -26,7 +27,7 @@ export interface DesignActions {
   setSiderBarModel: (siderBarModel: DesignState['panelConfig']['siderBarModel'] | null) => void
   setPropsPanelOpen: (open: boolean) => void
   setCanvasPanel: (canvasPanel: Partial<DesignState['panelConfig']['canvasPanel']>) => void
-  setPageSchema: (pageSchema: PageSchema) => void
+  setPageSchema: (pageSchema: PageSchema, pageId?: string) => void
   updatePageSchema: (key: keyof Omit<PageSchema, 'components' | 'state'>, value: any) => void
   setPages: (pages: PageProps[]) => void
 }
@@ -67,6 +68,7 @@ export const useDesignStore = create<DesignState & DesignActions>()(
       globalHeaders: '{}',
       globalCss: '',
     },
+    schemaPageId: '',
     pages: [],
     setSiderBarModel: (siderBarModel: DesignState['panelConfig']['siderBarModel'] | null) => {
       set((state) => {
@@ -81,13 +83,14 @@ export const useDesignStore = create<DesignState & DesignActions>()(
     },
 
     // 将获取的数据设置到store中，并且分开管理
-    setPageSchema: (pageSchema: PageSchema) => {
+    setPageSchema: (pageSchema: PageSchema, pageId?: string) => {
       set((state) => {
         const { setState } = useDesignStateStore.getState()
         const { setComponents } = useDesignComponentsStore.getState()
         const { setDatasource } = useDesignDatasourceStore.getState()
         
         state.pageSchema = pageSchema
+        state.schemaPageId = pageId || ''
         setState(pageSchema?.state || {})
         setComponents(pageSchema?.components || [])
         setDatasource(pageSchema?.datasource || [])

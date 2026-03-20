@@ -2,8 +2,9 @@ import { createBrowserRouter } from 'react-router';
 import AuthGuard from '@/components/AuthGuard';
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import Forbidden from '@/pages/forbidden';
 
-const Login = lazy(() => import('@/pages/Login'));
+const Login = lazy(() => import('@/pages/login'));
 const Layout = lazy(() => import('@/layout'));
 const Preview = lazy(() => import('@/pages/preview'));
 
@@ -23,6 +24,8 @@ const Design = lazy(() => import('@/pages/design'));
 const ProjectResource = lazy(() => import('@/pages/project/resource'));
 
 const Template = lazy(() => import('@/pages/template'));
+
+const CollaborateAuth = lazy(() => import('@/pages/collaborate/CollaborateAuth'));
 
 const router = createBrowserRouter([
   {
@@ -124,6 +127,22 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingSpinner />}>
             <Design />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'collaborate/:applicationId?/:pageId?',
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <CollaborateAuth />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'forbidden',
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Forbidden />
           </Suspense>
         ),
       },

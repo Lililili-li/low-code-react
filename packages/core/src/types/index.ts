@@ -70,9 +70,9 @@ export interface ComponentSchema {
   type?: string;                  // 组件类型
   group?: boolean                // 是否为分组
   name: string;                  // 组件名称
-  props?: {};                    // 组件属性
+  props?: Record<string, any>;                    // 组件属性
   events?: EventSchema[];          // 事件绑定
-  style?: ExtendedCSSProperties; // 样式
+  style: ExtendedCSSProperties; // 样式
   visibleProp: VisibleConfig;              // 是否隐藏
   lock: boolean;                 // 是否锁定
   animation?: AnimationConfig

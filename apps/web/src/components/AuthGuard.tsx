@@ -16,7 +16,7 @@ const AuthGuard: React.FC = () => {
 
   useEffect(() => {
     if (!hasToken && location.pathname !== '/login') {
-      navigate('/login', { replace: true, state: { from: location } })
+      navigate('/login?redirect=' + location.pathname + location.search)
     }
   }, [hasToken, location, navigate])
 

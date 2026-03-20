@@ -8,9 +8,8 @@ import {
 import SaveApplication from './SaveApplication';
 import { CircleX, FileInput, FolderPlus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useQuery } from '@/composable/use-query';
+import { parseQuery } from '@/composable/use-query';
 import Pagination from '@/components/Pagination';
-import Viewer from 'react-viewer';
 import ApplicationCard from './components/ApplicationCard';
 import { useRequest } from 'ahooks';
 import applicationApi, { ApplicationProps } from '@/api/application';
@@ -21,6 +20,7 @@ import Select from '@/components/Select';
 import { useSystemStore } from '@/store/system';
 import ProjectSelect from './components/ProjectSelect';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
+import ImagePreview from '@/components/ImagePreview';
 
 export const APP_STATUS = {
   1: '开发中',
@@ -36,7 +36,7 @@ const Application = () => {
     setVisible(true);
     setCurrentApp(data);
   };
-  const query = useQuery();
+  const query = parseQuery<{id: string}>();
 
   const [searchName, setSearchName] = useState('');
   const [queryParams, setQueryParams] = useState({
@@ -211,10 +211,11 @@ const Application = () => {
           </div>
         </ScrollArea>
       </div>
-      <Viewer
-        visible={visible}
-        onClose={() => setVisible(false)}
-        images={[{ src: currentApp.cover, alt: '' }]}
+      <ImagePreview
+        open={visible}
+        onOpenChange={setVisible}
+        src={currentApp.cover}
+        alt={currentApp.name || '应用封面'}
       />
     </div>
   );

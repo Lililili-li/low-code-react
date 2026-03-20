@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@repo/ui/components/button';
 import { cn } from '@repo/ui/lib/utils';
 import { Plus, X, Eye, Loader2 } from 'lucide-react';
-import Viewer from 'react-viewer';
+import ImagePreview from './ImagePreview';
 
 export interface UploadFile {
   uid: string;
@@ -209,10 +209,10 @@ const Upload = ({
         onChange={handleFileChange}
         disabled={disabled}
       />
-      <Viewer
-        images={[{ src: previewImage }]}
-        visible={previewOpen}
-        onClose={() => setPreviewOpen(false)}
+      <ImagePreview
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        src={previewImage}
       />
     </div>
   );

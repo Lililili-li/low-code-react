@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import Empty from '@/components/Empty';
 import { useNavigate } from 'react-router';
-import { useQuery } from '@/composable/use-query';
+import { parseQuery } from '@/composable/use-query';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Industry from '../components/Industry';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
@@ -61,7 +61,7 @@ const Projects = () => {
   };
 
   const navigate = useNavigate();
-  const query = useQuery();
+  const query = parseQuery();
 
   const isApplication = !!query?.id;
   if (isApplication)

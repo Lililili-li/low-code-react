@@ -30,6 +30,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import userApi from '@/api/user';
 import { UserState } from '@/store/user';
 import { toast } from 'sonner';
+import { parseQuery } from '@/composable/use-query';
 
 interface PupilProps {
   size?: number;
@@ -205,6 +206,8 @@ function LoginPage() {
   const [isPurplePeeking, setIsPurplePeeking] = useState(false);
 
   const { setUser } = useUserStore();
+  const queryParams = parseQuery<{ redirect: string }>();
+  
   const { loading: submitLoading, run: onSubmit } = useRequest(
     () => userApi.login(form.getValues()),
     {
@@ -222,9 +225,14 @@ function LoginPage() {
           localStorage.removeItem('rememberedAccount');
           localStorage.removeItem('rememberedPassword');
         }
-
         toast.success('登录成功');
-        navigate('/manage/dashboard');
+        const hasRedirect = Boolean(queryParams?.redirect);
+        
+        if (!hasRedirect) {
+          navigate('/manage/dashboard');
+        } else {
+          navigate(queryParams?.redirect as string);
+        }
       },
     },
   );
@@ -395,7 +403,7 @@ function LoginPage() {
             <div className="size-8 rounded-lg bg-primary-foreground/10 backdrop-blur-sm flex items-center justify-center">
               <Sparkles className="size-4" />
             </div>
-            <span>YourBrand</span>
+            <span>Mini Code</span>
           </div>
         </div>
 
@@ -758,7 +766,7 @@ function LoginPage() {
             <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Sparkles className="size-4 text-primary" />
             </div>
-            <span>YourBrand</span>
+            <span>Mini Code</span>
           </div>
 
           {/* Header */}

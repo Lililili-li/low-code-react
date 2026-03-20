@@ -16,16 +16,14 @@ import DatasourcePanel from './datasource-panel/DatasourcePanel';
 import { eventBus } from '@repo/shared/index';
 import { useEffect, useRef } from 'react';
 import TabMenu from '@/components/TabMenu';
-import { Clock, Database } from 'lucide-react';
+import { Database } from 'lucide-react';
 import { IconAppCenter, IconLayers, IconShare } from '@douyinfe/semi-icons';
-import HistoryPanel from './history-panel/HistoryPanel';
 
 const panelMap = {
   material: MaterialPanel,
   layers: LayerPanel,
   variable: VariablePanel,
   datasource: DatasourcePanel,
-  history: HistoryPanel
 };
 
 const Design = () => {
@@ -124,15 +122,6 @@ const Design = () => {
                       ),
                       value: 'datasource',
                     },
-                    {
-                      label: (
-                        <div className="flex flex-col gap-2 items-center">
-                          <Clock className="size-5" />
-                          <span className="text-[12px]">历史记录</span>
-                        </div>
-                      ),
-                      value: 'history',
-                    },
                   ]}
                   activeId={siderBarModel as string}
                   itemClassName="pl-2 py-3 justify-center rounded-none border-b"
@@ -142,7 +131,7 @@ const Design = () => {
                       setSiderBarModel(null);
                     } else {
                       siderBarPanelRef.current?.expand();
-                      setSiderBarModel(value as 'material' | 'layers' | 'variable' | 'datasource' | 'history');
+                      setSiderBarModel(value as 'material' | 'layers' | 'variable' | 'datasource');
                     }
                   }}
                 />
@@ -154,7 +143,6 @@ const Design = () => {
                     {siderBarModel === 'layers' && '图层'}
                     {siderBarModel === 'variable' && '变量'}
                     {siderBarModel === 'datasource' && '数据源'}
-                    {siderBarModel === 'history' && '历史记录'}
                   </div>
                 </div>
                 <div className="body flex-1 min-h-0">

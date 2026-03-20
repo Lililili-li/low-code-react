@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { useDesignStore } from '@/store/design';
 import { useShallow } from 'zustand/react/shallow';
 import CanvasContextMenu from './CanvasContextMenu';
@@ -19,6 +19,9 @@ import { useTheme } from '@/composable/use-theme';
 import { useCanvasEvent } from '@/composable/use-canvas-event';
 import { useDesignComponentsStore } from '@/store/design/components';
 import RenderPage from './RenderPage';
+import { useYjs } from '@/composable/collaboration/use-Yjs';
+import { parseQuery } from '@/composable/use-query';
+import { eventBus } from '@repo/shared';
 
 const MENU_ID = 'canvas-context-menu';
 
@@ -81,6 +84,9 @@ const CanvasDom = ({
     [canvasRef],
   );
 
+  const queryParams = parseQuery<{ applicationId: string; pageId: string }>();
+  const { addCanvasComponent, moveCanvasComponent, undoManage } = useYjs(queryParams?.pageId!);
+
   const {
     handleDrop,
     handleMouseDown,
@@ -96,6 +102,9 @@ const CanvasDom = ({
     setScrollX,
     setScrollY,
     clearScope,
+    addCanvasComponent,
+    moveCanvasComponent,
+    undoManage
   });
 
   const { deleteComponent } = useComponentOperations();
@@ -111,6 +120,18 @@ const CanvasDom = ({
   const { show } = useContextMenu({
     id: MENU_ID,
   });
+  useEffect(() => {
+    eventBus.on('handleRedo', () => {
+      undoManage?.redo()
+    })
+    eventBus.on('handleUndo', () => {
+      undoManage?.undo()
+    })
+    return () => {
+      eventBus.off('handleRedo')
+      eventBus.off('handleUndo')
+    }
+  }, [undoManage])
 
   return (
     <>

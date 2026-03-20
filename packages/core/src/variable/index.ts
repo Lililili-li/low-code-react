@@ -56,9 +56,9 @@ export const getVariableKey = (key: string) => {
 
 export const getVariableValue = (key: string, state: Record<string, any>) => {
   let stateClone = cloneDeep(state)
-  const keyArray = key.split('.')
+  const keyArray = key?.split('.')
   let value = stateClone
-  for (let i = 1; i < keyArray.length; i++) {
+  for (let i = 1; i < keyArray?.length; i++) {
     value = value[keyArray[i]]
   }
   return value

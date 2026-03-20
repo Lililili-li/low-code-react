@@ -1,5 +1,3 @@
-import LanguageToggle from '@/components/LanguageToggle';
-import ThemeToggle from '@/components/ThemeToggle';
 import { Button } from '@repo/ui/components/button';
 import { useSidebar } from '@repo/ui/components/sidebar';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@repo/ui/components/tooltip';
@@ -78,8 +76,6 @@ const AppHeader = () => {
         </Breadcrumb>
       </div>
       <div className="operation flex items-center gap-2 pr-2">
-        <ThemeToggle />
-        <LanguageToggle />
         <Popover>
           <PopoverTrigger asChild>
             <Avatar>

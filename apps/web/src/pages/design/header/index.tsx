@@ -1,5 +1,3 @@
-import LanguageToggle from '@/components/LanguageToggle';
-import ThemeToggle from '@/components/ThemeToggle';
 import { useDesignStore } from '@/store/design';
 import { Button } from '@repo/ui/components/button';
 import { Toggle } from '@repo/ui/components/toggle';
@@ -16,6 +14,7 @@ import { useDesignDatasourceStore } from '@/store/design/datasource';
 import { useEffect, useState } from 'react';
 import hotkeys from 'hotkeys-js';
 import DraggableModal from './components/DraggableModal';
+import Invitation from './components/Invitation';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -81,6 +80,7 @@ const Header = () => {
       <PageManage />
 
       <div className="header-right flex gap-2">
+        <Invitation />
         <Button size="sm" onClick={updatePageSchema}>
           <Save />
           <span>保存</span>
@@ -89,8 +89,6 @@ const Header = () => {
           <AppWindow />
           <span>预览</span>
         </Button>
-        <ThemeToggle />
-        <LanguageToggle />
       </div>
       <FullScreenLoading visible={loading} />
       <DraggableModal

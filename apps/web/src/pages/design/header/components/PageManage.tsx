@@ -19,7 +19,7 @@ import { IconAlertTriangle } from '@douyinfe/semi-icons';
 import CreatePage from '../../../application/components/PageCenter';
 import SavePage, { SavePageRef } from './SavePage';
 import { useRequest } from 'ahooks';
-import { useQuery } from '@/composable/use-query';
+import { parseQuery } from '@/composable/use-query';
 import pageApi, { PageProps } from '@/api/page';
 import { toast } from 'sonner';
 import { useDesignStore } from '@/store/design';
@@ -78,8 +78,8 @@ const Select = ({
                             variant="ghost"
                             className="p-0 size-6 rounded-[50%]"
                             onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
+                              e.preventDefault();
+                              e.stopPropagation();
                               navigator.clipboard.writeText(item.value);
                               toast.success('ID已复制到剪切板');
                             }}
@@ -157,31 +157,34 @@ const PageManage = () => {
   const setPageSchema = useDesignStore((state) => state.setPageSchema);
   const setPages = useDesignStore((state) => state.setPages);
   const [currentPage, setCurrentPage] = useState('1');
-  const navigate = useNavigate()
-  const queryParams = useQuery();
+  const navigate = useNavigate();
+  const queryParams = parseQuery<{ applicationId: string; pageId: string }>();
+
   const { data: pageOptions, runAsync: getPagesByApplicationId } = useRequest(
     () => pageApi.getPagesByApplicationId(Number(queryParams!.applicationId)),
     {
       onSuccess: (value) => {
-        setCurrentPage(queryParams?.pageId? queryParams?.pageId: value[0].id.toString());
+        setCurrentPage(queryParams?.pageId ? queryParams?.pageId : value[0].id.toString());
         setPages(value);
-      }
+        getPageById(queryParams?.pageId ? queryParams?.pageId : value[0].id.toString());
+      },
     },
   );
 
-  useRequest(() => pageApi.getPageById(currentPage), {
+  const { run: getPageById } = useRequest((id: string) => pageApi.getPageById(id), {
     onSuccess: (data: PageProps & { schema: PageSchema }) => {
       if (data) {
-        setPageSchema(data.schema);
+        setPageSchema(data.schema, data.id);
       }
     },
-    refreshDeps: [currentPage],
+    manual: true,
   });
 
   const handleCreateSuccess = () => {
     toast.success('创建成功');
     getPagesByApplicationId();
   };
+  
 
   return (
     <div className="header-center flex gap-1 items-center absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
@@ -195,7 +198,8 @@ const PageManage = () => {
         }
         onValueChange={(value) => {
           setCurrentPage(value);
-           navigate(`/design?applicationId=${queryParams!.applicationId}&pageId=${value}`)
+          navigate(`/design?applicationId=${queryParams!.applicationId}&pageId=${value}`);
+          getPageById(value);
         }}
         placeholder="请选择页面"
       />

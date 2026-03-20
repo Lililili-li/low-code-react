@@ -16,9 +16,8 @@ import { Item, Separator, Submenu } from 'react-contexify';
 import { toast } from 'sonner';
 
 const LayerContextMenu = ({ onDeleteClick }: { onDeleteClick: () => void }) => {
-  const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
   const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
-  const currentCmp = useDesignComponentsStore((state) => state.componentsMap.get(currentCmpId));
+  const currentCmp = useDesignComponentsStore((state) => state.components.find(item => item.id === state.currentCmpId));
 
   const { copyComponent, cutComponent, combinationComponent, splitComponent, setLayerLevel } =
     useComponentOperations();

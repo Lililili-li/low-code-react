@@ -6,6 +6,7 @@ import { Slider } from '@repo/ui/components/slider';
 import { useDesignStore } from '@/store/design';
 import HotKeyDialog from '../../components/HotKeyDialog';
 import { useHistoryStore } from '@/store/history';
+import { eventBus } from '@repo/shared';
 
 const ratioOptions = [
   {
@@ -50,8 +51,9 @@ const Toolbar = () => {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => historyStore.undo()}
-              disabled={!historyStore.canUndo()}
+              onClick={() => {
+                eventBus.emit('handleUndo')
+              }}
             >
               <Undo />
             </Button>
@@ -63,8 +65,9 @@ const Toolbar = () => {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => historyStore.redo()}
-              disabled={!historyStore.canRedo()}
+              onClick={() => {
+                eventBus.emit('handleRedo')
+              }}
             >
               <Redo />
             </Button>

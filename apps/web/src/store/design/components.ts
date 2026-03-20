@@ -10,11 +10,12 @@ interface ComponentsState {
   currentCmp: { id: string, parentId?: string }
   selectedCmpIds: string[]
   hoverId: string
-  componentsMap: Map<string, ComponentSchema>
 }
 
 interface ComponentsActions {
-  setComponents: (components?: ComponentSchema[]) => void
+  setComponents: (
+    components?: ComponentSchema[] | ((prev: ComponentSchema[]) => ComponentSchema[])
+  ) => void
   setCurrentCmpId: (id: string) => void
   setCurrentCmp: (component: { id: string, parentId?: string }) => void
   updateCurrentCmp: (component: Partial<ComponentSchema>) => void
@@ -38,11 +39,12 @@ export const useDesignComponentsStore = create<ComponentsState & ComponentsActio
     currentCmpId: '',
     selectedCmpIds: [] as string[],
     hoverId: '',
-    componentsMap: new Map(),
     currentCmp: { id: '', parentId: '' },
-    setComponents: (components?: ComponentSchema[]) => {
+    setComponents: (components?: ComponentSchema[] | ((prev: ComponentSchema[]) => ComponentSchema[])) => {
       set((state) => {
-        state.components = components || [];
+        state.components = typeof components === 'function'
+          ? components(state.components)
+          : (components || []);
       })
     },
     setCurrentCmpId: (id: string) => {
@@ -98,7 +100,6 @@ export const useDesignComponentsStore = create<ComponentsState & ComponentsActio
     addComponent: (component: ComponentSchema, recordHistory = false) => {
       set((state) => {
         state.components.push(component as Draft<ComponentSchema>)
-        state.componentsMap.set(component.id, component as Draft<ComponentSchema>)
       })
 
       // 记录历史
@@ -111,7 +112,6 @@ export const useDesignComponentsStore = create<ComponentsState & ComponentsActio
       set((state) => {
         components.forEach(item => {
           state.components.push(item as Draft<ComponentSchema>)
-          state.componentsMap.set(item.id, item as Draft<ComponentSchema>)
         })
       })
 

@@ -28,7 +28,7 @@ import applicationApi from '@/api/application';
 import { toast } from 'sonner';
 import React, { useEffect, useState } from 'react';
 import Select from '@/components/Select';
-import { useQuery } from '@/composable/use-query';
+import { parseQuery } from '@/composable/use-query';
 import { Computer, Fullscreen } from 'lucide-react';
 
 const statusOptions = [
@@ -50,7 +50,7 @@ const CreateApplication = ({
   renderTrigger: React.ReactNode;
   projectOptions: { label: string; value: string }[];
 }) => {
-  const query = useQuery();
+  const query = parseQuery<{id: string}>();
 
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -112,18 +112,33 @@ const CreateApplication = ({
     {
       manual: true,
       onSuccess: (data) => {
+        console.log(data);
+        
         form.reset({
           ...data,
           project_id: data.project_id.toString(),
           screen_size: data.width === 1920 && data.height === 1080 ? '1' : '2',
         });
       },
+      onError: (error) => {
+        console.log(error, 'error');
+        
+      },
+      onFinally: (data) => {
+        console.log(data, 'data');
+        
+      }
     },
   );
 
   useEffect(() => {
     if (type === 'update' && openDialog) {
-      getApplicationById();
+      try {
+        getApplicationById();
+      } catch (error) {
+        console.log(error);
+        
+      }
     }
   }, [openDialog]);
   return (

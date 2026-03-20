@@ -8,10 +8,10 @@ import applicationApi, { ApplicationProps } from '@/api/application';
 import projectApi from '@/api/project';
 import { useMemo, useState } from 'react';
 import ApplicationCard from '../application/components/ApplicationCard';
-import Viewer from 'react-viewer';
 import { Spinner } from '@repo/ui/components/spinner';
 import Empty from '@/components/Empty';
 import { useNavigate } from 'react-router';
+import ImagePreview from '@/components/ImagePreview';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -162,10 +162,11 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
-      <Viewer
-        visible={visible}
-        onClose={() => setVisible(false)}
-        images={[{ src: currentApp.cover, alt: '' }]}
+      <ImagePreview
+        open={visible}
+        onOpenChange={setVisible}
+        src={currentApp.cover}
+        alt={currentApp.name || '应用封面'}
       />
     </div>
   );

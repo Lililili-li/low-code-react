@@ -6,6 +6,7 @@ import { eventBus } from '@repo/shared/index';
 import { createHistoryRecord, useHistoryStore } from "@/store/history";
 import { useDesignComponentsStore } from "@/store/design/components";
 import { useHelperLines } from "@/composable/use-helper-lines";
+import { UndoManager } from "yjs";
 
 // 节流函数
 const throttle = <T extends (...args: any[]) => void>(
@@ -14,10 +15,10 @@ const throttle = <T extends (...args: any[]) => void>(
 ): ((...args: Parameters<T>) => void) => {
   let timeoutId: NodeJS.Timeout | null = null;
   let lastExecTime = 0;
-  
+
   return (...args: Parameters<T>) => {
     const currentTime = Date.now();
-    
+
     if (currentTime - lastExecTime > delay) {
       func(...args);
       lastExecTime = currentTime;
@@ -41,12 +42,32 @@ interface CanvasEventProps {
   spacePressed: boolean
   setScrollY: (scrollY: number) => void;
   setScrollX: (scrollX: number) => void;
+  addCanvasComponent: (schema: ComponentSchema) => void;
+  moveCanvasComponent: (id: string, left: number, top: number) => void;
+  undoManage: UndoManager | null;
 }
 
-export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setScrollY, setScrollX, clearScope }: CanvasEventProps) {
+export function useCanvasEvent({
+  setScope,
+  internalCanvasRef,
+  spacePressed,
+  setScrollY,
+  setScrollX,
+  clearScope,
+  addCanvasComponent,
+  moveCanvasComponent,
+}: CanvasEventProps): {
+  handleDrop: (e: React.DragEvent) => void;
+  handleMouseDown: (e: React.MouseEvent) => void;
+  handleMouseMove: (e: React.MouseEvent) => void;
+  handleMouseUp: () => void;
+  handleMouseLeave: () => void;
+  handleFocus: () => void;
+  handleBlur: () => void;
+} {
   const zoom = useDesignStore((state) => state.panelConfig.canvasPanel.zoom);
   const components = useDesignComponentsStore((state) => state.components);
-  const addComponent = useDesignComponentsStore((state) => state.addComponent);
+  // const addComponent = useDesignComponentsStore((state) => state.addComponent);
   const setCurrentCmpId = useDesignComponentsStore((state) => state.setCurrentCmpId);
   const setCurrentCmp = useDesignComponentsStore((state) => state.setCurrentCmp);
   const currentCmpId = useDesignComponentsStore((state) => state.currentCmpId);
@@ -57,7 +78,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
   const selectedCmpIds = useDesignComponentsStore((state) => state.selectedCmpIds);
 
   const pushHistory = useHistoryStore.getState().push;
-  
+
   // 辅助线吸附系统
   const { calculateSnap, calculateMultiSnap } = useHelperLines();
 
@@ -114,11 +135,11 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       const cmpData = JSON.parse(e.dataTransfer.getData('text/plain'));
       const cmpType = cmpData.id as MaterialType;
       const schemaMeta = materialCmp[cmpType].schema;
-      const style = (schemaMeta.style || {}) as any;
-      const cmpWidth = style.width as number | undefined;
-      const cmpHeight = style.height as number | undefined;
-      const x = (e.clientX - rect.left - ((cmpWidth || 0) * zoom) / 2) / zoom;
-      const y = (e.clientY - rect.top - ((cmpHeight || 0) * zoom) / 2) / zoom;
+      const style = (schemaMeta.style || {}) as ComponentSchema['style'];
+      const cmpWidth = Number(style.width);
+      const cmpHeight = Number(style.height);
+      const x = (e.clientX - rect.left - ((cmpWidth * zoom) / 2)) / zoom;
+      const y = (e.clientY - rect.top - ((cmpHeight * zoom) / 2)) / zoom;
       // cmpData.url是用于区分是否为资源列表拖拽的
       // cmpData.remote代表的是自定义组件
       let props = schemaMeta.props || {};
@@ -161,13 +182,14 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
         width: component.style?.width as number,
         height: component.style?.height as number,
       };
-      addComponent(component, true);
+      // addComponent(component, true);
+      addCanvasComponent(component);
       setCurrentCmpId(component.id);
-      setCurrentCmp({id: component.id, parentId: ''})
+      setCurrentCmp({ id: component.id, parentId: '' })
       setSelectedCmpIds([component.id]); // 默认放到多选数组中
       setScope('canvas');
     },
-    [zoom, addComponent, setCurrentCmpId],
+    [zoom, addCanvasComponent, setCurrentCmpId],
   );
 
   // 处理多选
@@ -274,7 +296,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       } else if (target.className.endsWith('scale')) {
         handleScaleSelect(e, target);
       } else {
-        setCurrentCmp({id: '', parentId: ''})
+        setCurrentCmp({ id: '', parentId: '' })
         setCurrentCmpId('');
         setSelectedCmpIds([]);
       }
@@ -292,15 +314,15 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
     ) => {
       moveY = Number(Number(moveY).toFixed(0));
       moveX = Number(Number(moveX).toFixed(0));
-      
+
       // 直接计算新位置，减少不必要的对象创建
       const newLeft = dom.left + moveX;
       const newTop = dom.top + moveY;
-      
+
       // 简化吸附计算，只在必要时进行
       let finalLeft = newLeft;
       let finalTop = newTop;
-      
+
       // 只在有其他组件时才计算吸附
       if (components.length > 1) {
         const tempComponent = {
@@ -311,15 +333,15 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
             top: newTop,
           },
         };
-        
+
         const snapResult = calculateSnap(tempComponent, [draggedCmp.id]);
         finalLeft = snapResult.snappedX;
         finalTop = snapResult.snappedY;
-        
+
         // 立即更新辅助线显示
         eventBus.emit('handleHelperLine');
       }
-      
+
       // 应用最终位置
       updateCurrentCmp({
         ...draggedCmp,
@@ -329,6 +351,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
           top: finalTop,
         },
       });
+      moveCanvasComponent(draggedCmp.id as string, finalLeft as number, finalTop as number);
     },
     [updateCurrentCmp, calculateSnap, components.length],
   );
@@ -344,7 +367,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
         .map((initial) => {
           const component = components.find((cmp) => cmp.id === initial.id);
           if (!component) return null;
-          
+
           return {
             ...component,
             style: {
@@ -355,11 +378,11 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
           };
         })
         .filter(Boolean) as ComponentSchema[];
-      
+
       // 只在有其他组件时才计算吸附
       if (components.length > selectedCmpIds.length) {
         const snapResult = calculateMultiSnap(finalComponents, selectedCmpIds);
-        
+
         // 应用吸附偏移
         finalComponents.forEach((component, index) => {
           const initial = initialPositions[index];
@@ -369,11 +392,11 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
             top: initial.top + moveY + snapResult.snappedY,
           };
         });
-        
+
         // 立即更新辅助线显示
         eventBus.emit('handleHelperLine');
       }
-      
+
       updateSelectCmp(finalComponents);
     },
     [components, updateSelectCmp, calculateMultiSnap, selectedCmpIds, components.length],
@@ -515,7 +538,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       } else if (dragState.scale.isScaling) {
         handleScale(dragState.scale.direction, moveX, moveY, dragState.draggedCmp!, dragState.dom);
       }
-      
+
       // 使用节流的辅助线更新
       throttledHelperLineUpdate();
     },
@@ -549,19 +572,7 @@ export function useCanvasEvent({ setScope, internalCanvasRef, spacePressed, setS
       } else {
         if (isComponentMoved(dragState)) {
           const currentCmp = components.find((item) => item.id === dragState.draggedCmp?.id);
-          pushHistory(
-            createHistoryRecord.move(
-              currentCmp!,
-              {
-                left: dragState.draggedCmp?.style?.left as number,
-                top: dragState.draggedCmp?.style?.top as number,
-              },
-              {
-                left: currentCmp?.style?.left as number,
-                top: currentCmp?.style?.top as number,
-              },
-            ),
-          );
+          
         }
       }
     }

@@ -156,9 +156,6 @@ export function executeJSCode(
       .replace(/;[\s]*;/g, ';')
       .trim();
     
-    console.log('Original code:', code);
-    console.log('Processed code:', processedCode);
-    
     // 使用 Babel 转换 JSX
     let transformedCode;
     try {
